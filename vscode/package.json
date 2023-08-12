@@ -1,0 +1,41 @@
+{
+  "name": "shark",
+  "displayName": "Shark",
+  "description": "Shark language support",
+  "version": "0.0.1",
+  "icon": "images/shark_ext_logo.png",
+  "engines": {
+    "vscode": "^1.76.0"
+  },
+  "categories": [
+    "Programming Languages"
+  ],
+  "contributes": {
+    "languages": [
+      {
+      "id": "shark",
+      "aliases": ["Shark", "shark"],
+      "extensions": [".shark",".srk"],
+      "configuration": "./language-configuration.json",
+      "icon": {
+        "light": "./images/shark_file_icon.svg",
+        "dark": "./images/shark_file_icon.svg"
+      }
+    },
+    {
+      "id": "egg",
+      "aliases": ["Egg", "egg"],
+      "extensions": [".egg"],
+      "icon": {
+        "light": "./images/egg_file_icon.svg",
+        "dark": "./images/egg_file_icon.svg"
+      }
+    }
+  ],
+    "grammars": [{
+      "language": "shark",
+      "scopeName": "source.shark",
+      "path": "./syntaxes/shark.tmLanguage.json"
+    }]
+  }
+}

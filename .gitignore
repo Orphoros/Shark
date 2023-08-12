@@ -1,0 +1,10 @@
+#Go artifacts
+coverage.out
+build
+
+#IDE artifacts
+.idea
+.vscode
+
+#System files
+*.DS_Store

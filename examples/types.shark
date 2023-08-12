@@ -1,0 +1,9 @@
+let a = "Hello World";
+let b = true;
+let c = 55555;
+let d = fn(x) { x + 10; };
+let e = [1, false, "John"]
+let f = { "name": "John", "age": 25 }
+let g = false;
+let length = len(a);
+puts(length)
