@@ -33,7 +33,7 @@ func main() {
 	flaggy.Bool(&measureDuration, "d", "duration", "Measure the duration of the execution")
 
 	flaggy.DefaultParser.ShowHelpOnUnexpected = true
-	flaggy.DefaultParser.AdditionalHelpAppend = "If no subcommand is specified, the REPL will be started."
+	flaggy.DefaultParser.AdditionalHelpAppend = "A subcommand is required"
 	flaggy.DefaultParser.AdditionalHelpPrepend = "Shark can interpret and execute SharkLang code."
 
 	runCommand := flaggy.NewSubcommand("run")
@@ -128,7 +128,7 @@ func main() {
 
 		emitter.EmitInstructionsTable(bytecode, os.Stdout)
 	} else {
-		flaggy.ShowHelpAndExit("A subcommand is required")
+		flaggy.ShowHelpAndExit("Error: No subcommand provided")
 	}
 
 	if measureDuration {
