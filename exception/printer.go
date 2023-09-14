@@ -1,12 +1,11 @@
 package exception
 
 import (
+	"fmt"
 	"os"
 	"strconv"
 	"strings"
-
-	"github.com/gookit/color"
-	chars "github.com/rivo/uniseg"
+	"unicode/utf8"
 )
 
 func PrintSharkLineError(err *SharkError, inputContent, inputName *string) {
@@ -26,9 +25,9 @@ func PrintSharkLineError(err *SharkError, inputContent, inputName *string) {
 		errType = "runtime"
 	}
 
-	color.Printf("<red1>%s_error[%04d]</>: %s\n", errType, err.ErrCode, err.ErrMsg)
+	fmt.Printf("%s_error[%04d]: %s\n", errType, err.ErrCode, err.ErrMsg)
 
-	color.Printf("<blue>  --></> %s:%d:%d\n<blue>%s|</>\n", *inputName, err.ErrCause[0].Line, err.ErrCause[0].Col, emptySpace)
+	fmt.Printf("  --> %s:%d:%d\n%s|\n", *inputName, err.ErrCause[0].Line, err.ErrCause[0].Col, emptySpace)
 
 	if len(err.ErrCause) > 0 {
 		lines := strings.Split(*inputContent, "\n")
@@ -43,23 +42,23 @@ func PrintSharkLineError(err *SharkError, inputContent, inputName *string) {
 				if cause.Line == cause.LineTo {
 					errorLineMarker = strings.Repeat(" ", cause.Col-1) + strings.Repeat("^", cause.ColTo-cause.Col)
 				} else if cause.Line == i {
-					errorLineMarker = strings.Repeat(" ", cause.Col-1) + strings.Repeat("^", chars.GraphemeClusterCount(curLineContent)-cause.Col+1)
+					errorLineMarker = strings.Repeat(" ", cause.Col-1) + strings.Repeat("^", utf8.RuneCountInString(curLineContent)-cause.Col+1)
 				} else if cause.LineTo == i {
 					errorLineMarker = strings.Repeat("^", cause.ColTo-1)
 				} else {
-					errorLineMarker = strings.Repeat("^", chars.GraphemeClusterCount((curLineContent)))
+					errorLineMarker = strings.Repeat("^", utf8.RuneCountInString((curLineContent)))
 				}
 
-				color.Printf("<blue>%d |</>\t%s\n", i, curLineContent)
+				fmt.Printf("%d |\t%s\n", i, curLineContent)
 
-				color.Printf("%s<blue>|</>\t<red>%s %s</>\n", emptySpace, errorLineMarker, msg)
-				color.Printf("%s<blue>|</>\n", emptySpace)
+				fmt.Printf("%s|\t%s %s\n", emptySpace, errorLineMarker, msg)
+				fmt.Printf("%s|\n", emptySpace)
 			}
 		}
 	}
 
 	if err.ErrHelpMsg != "" {
-		color.Printf("%s<cyan1>help</>: %s\n", emptySpace, err.ErrHelpMsg)
+		fmt.Printf("%shelp: %s\n", emptySpace, err.ErrHelpMsg)
 	}
 }
 
@@ -78,20 +77,20 @@ func PrintSharkRuntimeError(err *SharkError) {
 		errType = "runtime"
 	}
 
-	color.Printf("<red1>%s_error[%04d]</>: %s\n", errType, err.ErrCode, err.ErrMsg)
+	fmt.Printf("<red1>%s_error[%04d]: %s\n", errType, err.ErrCode, err.ErrMsg)
 
 	if err.ErrHelpMsg != "" {
-		color.Printf("\t<cyan1>-->help</>: %s\n", err.ErrHelpMsg)
+		fmt.Printf("\t-->help: %s\n", err.ErrHelpMsg)
 	}
 }
 
 func PrintExitMsg(msg string, exitCode int) {
-	color.Printf("<red>error</>: %s\n", msg)
+	fmt.Printf("error: %s\n", msg)
 	os.Exit(exitCode)
 }
 
 func PrintExitMsgCtx(msg, ctx string, exitCode int) {
-	color.Printf("<red>error</>: %s\n", msg)
-	color.Printf("<red>   --></> %s\n", ctx)
+	fmt.Printf("error: %s\n", msg)
+	fmt.Printf("   --> %s\n", ctx)
 	os.Exit(exitCode)
 }
