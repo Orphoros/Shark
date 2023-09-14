@@ -8,7 +8,6 @@ import (
 	"shark/compiler"
 	"shark/emitter"
 	"shark/exception"
-	"shark/repl"
 	"shark/serializer"
 	"shark/util"
 	"time"
@@ -129,9 +128,7 @@ func main() {
 
 		emitter.EmitInstructionsTable(bytecode, os.Stdout)
 	} else {
-		fmt.Printf("Shark %s\n", formatVersion())
-		fmt.Printf("Type exit(); to close the program\n")
-		repl.Start(os.Stdout)
+		flaggy.ShowHelpAndExit("A subcommand is required")
 	}
 
 	if measureDuration {
