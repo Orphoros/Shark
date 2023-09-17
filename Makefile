@@ -75,3 +75,6 @@ dep:
 check:
 	@echo "Detected OS:   ${DETECTED_OS}"
 	@echo "Detected ARCH: ${MACHINE}"
+
+coverage:
+	@go tool cover -html=coverage.out
