@@ -136,13 +136,3 @@ func Exit(args ...Object) Object {
 func newError(format string, a ...interface{}) *Error {
 	return &Error{Message: fmt.Sprintf(format, a...)}
 }
-
-func GetBuiltinByName(name string) *Builtin {
-	for _, b := range Builtins {
-		if b.Name == name {
-			return b.Builtin
-		}
-	}
-
-	return nil
-}

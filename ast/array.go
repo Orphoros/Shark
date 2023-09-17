@@ -17,7 +17,7 @@ func (al *ArrayLiteral) TokenLiteral() string { return al.Token.Literal }
 func (al *ArrayLiteral) String() string {
 	var out string
 
-	elements := []string{}
+	var elements []string
 
 	for _, e := range al.Elements {
 		elements = append(elements, e.String())

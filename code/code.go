@@ -204,4 +204,4 @@ func ReadUint16(ins Instructions) uint16 {
 	return binary.BigEndian.Uint16(ins)
 }
 
-func ReadUint8(ins Instructions) uint8 { return uint8(ins[0]) }
+func ReadUint8(ins Instructions) uint8 { return ins[0] }

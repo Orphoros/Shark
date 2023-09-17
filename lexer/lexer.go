@@ -44,121 +44,121 @@ func (l *Lexer) readChar() {
 func (l *Lexer) NextToken() token.Token {
 	var tok token.Token
 	l.skipWhitespace()
-	if l.ch == rune('/') && l.peekChar() == rune('/') {
+	if l.ch == '/' && l.peekChar() == '/' {
 		l.skipSingleLineComment()
 		return l.NextToken()
 	}
-	if l.ch == rune('/') && l.peekChar() == rune('*') {
+	if l.ch == '/' && l.peekChar() == '*' {
 		l.skipMultiLineComment()
 	}
 	switch l.ch {
-	case rune('='):
-		if l.peekChar() == rune('=') {
+	case '=':
+		if l.peekChar() == '=' {
 			ch := l.ch
 			l.readChar()
 			tok = l.newToken(token.EQ, string(ch)+string(l.ch))
 		} else {
 			tok = l.newToken(token.ASSIGN, string(l.ch))
 		}
-	case rune(';'):
+	case ';':
 		tok = l.newToken(token.SEMICOLON, string(l.ch))
-	case rune('('):
+	case '(':
 		tok = l.newToken(token.LPAREN, string(l.ch))
-	case rune(')'):
+	case ')':
 		tok = l.newToken(token.RPAREN, string(l.ch))
-	case rune('"'):
+	case '"':
 		tok = l.newToken(token.STRING, l.readString())
-	case rune(','):
+	case ',':
 		tok = l.newToken(token.COMMA, string(l.ch))
-	case rune('+'):
-		if l.peekChar() == rune('+') {
+	case '+':
+		if l.peekChar() == '+' {
 			ch := l.ch
 			l.readChar()
 			tok = l.newToken(token.PLUS_PLUS, string(ch)+string(l.ch))
-		} else if l.peekChar() == rune('=') {
+		} else if l.peekChar() == '=' {
 			ch := l.ch
 			l.readChar()
 			tok = l.newToken(token.PLUS_EQ, string(ch)+string(l.ch))
 		} else {
 			tok = l.newToken(token.PLUS, string(l.ch))
 		}
-	case rune('{'):
+	case '{':
 		tok = l.newToken(token.LBRACE, string(l.ch))
-	case rune('}'):
+	case '}':
 		tok = l.newToken(token.RBRACE, string(l.ch))
-	case rune('['):
+	case '[':
 		tok = l.newToken(token.LBRACKET, string(l.ch))
-	case rune(']'):
+	case ']':
 		tok = l.newToken(token.RBRACKET, string(l.ch))
-	case rune('-'):
-		if l.peekChar() == rune('-') {
+	case '-':
+		if l.peekChar() == '-' {
 			ch := l.ch
 			l.readChar()
 			tok = l.newToken(token.MINUS_MINUS, string(ch)+string(l.ch))
-		} else if l.peekChar() == rune('=') {
+		} else if l.peekChar() == '=' {
 			ch := l.ch
 			l.readChar()
 			tok = l.newToken(token.MIN_EQ, string(ch)+string(l.ch))
 		} else {
 			tok = l.newToken(token.MINUS, string(l.ch))
 		}
-	case rune('!'):
-		if l.peekChar() == rune('=') {
+	case '!':
+		if l.peekChar() == '=' {
 			ch := l.ch
 			l.readChar()
 			tok = l.newToken(token.NOT_EQ, string(ch)+string(l.ch))
 		} else {
 			tok = l.newToken(token.BANG, string(l.ch))
 		}
-	case rune('*'):
-		if l.peekChar() == rune('*') {
+	case '*':
+		if l.peekChar() == '*' {
 			ch := l.ch
 			l.readChar()
 			tok = l.newToken(token.POW, string(ch)+string(l.ch))
-		} else if l.peekChar() == rune('=') {
+		} else if l.peekChar() == '=' {
 			ch := l.ch
 			l.readChar()
 			tok = l.newToken(token.MUL_EQ, string(ch)+string(l.ch))
 		} else {
 			tok = l.newToken(token.ASTERISK, string(l.ch))
 		}
-	case rune('/'):
-		if l.peekChar() == rune('=') {
+	case '/':
+		if l.peekChar() == '=' {
 			ch := l.ch
 			l.readChar()
 			tok = l.newToken(token.DIV_EQ, string(ch)+string(l.ch))
 		} else {
 			tok = l.newToken(token.SLASH, string(l.ch))
 		}
-	case rune('<'):
-		if l.peekChar() == rune('=') {
+	case '<':
+		if l.peekChar() == '=' {
 			ch := l.ch
 			l.readChar()
 			tok = l.newToken(token.LTE, string(ch)+string(l.ch))
 		} else {
 			tok = l.newToken(token.LT, string(l.ch))
 		}
-	case rune('>'):
-		if l.peekChar() == rune('=') {
+	case '>':
+		if l.peekChar() == '=' {
 			ch := l.ch
 			l.readChar()
 			tok = l.newToken(token.GTE, string(ch)+string(l.ch))
 		} else {
 			tok = l.newToken(token.GT, string(l.ch))
 		}
-	case rune('&'):
-		if l.peekChar() == rune('&') {
+	case '&':
+		if l.peekChar() == '&' {
 			ch := l.ch
 			l.readChar()
 			tok = l.newToken(token.AND, string(ch)+string(l.ch))
 		}
-	case rune('|'):
-		if l.peekChar() == rune('|') {
+	case '|':
+		if l.peekChar() == '|' {
 			ch := l.ch
 			l.readChar()
 			tok = l.newToken(token.OR, string(ch)+string(l.ch))
 		}
-	case rune(':'):
+	case ':':
 		tok = l.newToken(token.COLON, string(l.ch))
 	case 0:
 		tok = l.newToken(token.EOF, "")
@@ -262,19 +262,19 @@ func (l *Lexer) readString() string {
 		}
 		if l.ch == '\\' {
 			l.readChar()
-			if l.ch == rune('n') {
+			if l.ch == 'n' {
 				l.ch = '\n'
 			}
-			if l.ch == rune('r') {
+			if l.ch == 'r' {
 				l.ch = '\r'
 			}
-			if l.ch == rune('t') {
+			if l.ch == 't' {
 				l.ch = '\t'
 			}
-			if l.ch == rune('"') {
+			if l.ch == '"' {
 				l.ch = '"'
 			}
-			if l.ch == rune('\\') {
+			if l.ch == '\\' {
 				l.ch = '\\'
 			}
 		}
@@ -310,7 +310,7 @@ func (l *Lexer) readString() string {
 // Advances the lexer's position until it encounters a non-digit character.
 // This function will increment the current line number if it encounters a isNewLine character.
 func (l *Lexer) skipWhitespace() {
-	for l.ch == rune(' ') || l.ch == rune('\t') || l.ch == rune('\n') || l.ch == rune('\r') {
+	for l.ch == ' ' || l.ch == '\t' || l.ch == '\n' || l.ch == '\r' {
 		if isNewLine(l.ch) {
 			l.registerNewlinePosition()
 		}
@@ -322,7 +322,7 @@ func (l *Lexer) skipWhitespace() {
 // Checks if a given byte (character) is a digit. A digit is defined as 0-9.
 // Returns true if the byte is a digit, false otherwise.
 func isDigit(ch rune) bool {
-	return rune('0') <= ch && ch <= rune('9')
+	return '0' <= ch && ch <= '9'
 }
 
 // Creates a new token with the given type, character, and line number.
@@ -404,5 +404,5 @@ func (l *Lexer) PopErrors() []exception.SharkError {
 
 // isNewLine returns true if the given rune is a newline character.
 func isNewLine(r rune) bool {
-	return r == rune('\n') || r == rune('\r')
+	return r == '\n' || r == '\r'
 }

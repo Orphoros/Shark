@@ -46,7 +46,7 @@ func PrintSharkLineError(err *SharkError, inputContent, inputName *string) {
 				} else if cause.LineTo == i {
 					errorLineMarker = strings.Repeat("^", cause.ColTo-1)
 				} else {
-					errorLineMarker = strings.Repeat("^", utf8.RuneCountInString((curLineContent)))
+					errorLineMarker = strings.Repeat("^", utf8.RuneCountInString(curLineContent))
 				}
 
 				fmt.Printf("%d |\t%s\n", i, curLineContent)

@@ -12,7 +12,7 @@ type Array struct {
 func (a *Array) Inspect() string {
 	var out bytes.Buffer
 
-	elements := []string{}
+	var elements []string
 	for _, e := range a.Elements {
 		elements = append(elements, e.Inspect())
 	}

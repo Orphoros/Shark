@@ -194,7 +194,7 @@ func (vm *VM) Run() *exception.SharkError {
 			if err != nil {
 				return err
 			}
-			vm.sp = vm.sp - numElements
+			vm.sp -= numElements
 			if err = vm.push(hash); err != nil {
 				return err
 			}
@@ -438,9 +438,7 @@ func (vm *VM) executeBangOperator() *exception.SharkError {
 	switch operand {
 	case True:
 		return vm.push(False)
-	case False:
-		return vm.push(True)
-	case Null:
+	case False, Null:
 		return vm.push(True)
 	default:
 		return vm.push(False)
@@ -529,9 +527,9 @@ func (vm *VM) executeIndexExpression(left, index object.Object) *exception.Shark
 func (vm *VM) executeArrayIndex(array, index object.Object) *exception.SharkError {
 	arrayObject := array.(*object.Array)
 	i := index.(*object.Integer).Value
-	max := int64(len(arrayObject.Elements) - 1)
+	m := int64(len(arrayObject.Elements) - 1)
 
-	if i < 0 || i > max {
+	if i < 0 || i > m {
 		return vm.push(Null)
 	}
 

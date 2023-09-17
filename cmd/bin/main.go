@@ -70,7 +70,12 @@ func main() {
 		if err != nil {
 			exception.PrintExitMsgCtx(fmt.Sprintf("Could not open file '%s'", file), err.Error(), 1)
 		}
-		defer gobFile.Close()
+		defer func(gobFile *os.File) {
+			err := gobFile.Close()
+			if err != nil {
+				exception.PrintExitMsgCtx(fmt.Sprintf("Could not close file '%s'", file), err.Error(), 1)
+			}
+		}(gobFile)
 		decoder := gob.NewDecoder(gobFile)
 		var bytecode *compiler.Bytecode
 		err = decoder.Decode(&bytecode)
@@ -99,7 +104,12 @@ func main() {
 			if err != nil {
 				exception.PrintExitMsgCtx(fmt.Sprintf("Could not create file '%s'", file), err.Error(), 1)
 			}
-			defer gobFile.Close()
+			defer func(gobFile *os.File) {
+				err := gobFile.Close()
+				if err != nil {
+					exception.PrintExitMsgCtx(fmt.Sprintf("Could not close file '%s'", file), err.Error(), 1)
+				}
+			}(gobFile)
 			if err = gob.NewEncoder(gobFile).Encode(bytecode); err != nil {
 				exception.PrintExitMsgCtx("Compiler bytecode could not be serialized", err.Error(), 1)
 			}
@@ -120,7 +130,12 @@ func main() {
 		if err != nil {
 			exception.PrintExitMsgCtx(fmt.Sprintf("Could not open file '%s'", file), err.Error(), 1)
 		}
-		defer gobFile.Close()
+		defer func(gobFile *os.File) {
+			err := gobFile.Close()
+			if err != nil {
+				exception.PrintExitMsgCtx(fmt.Sprintf("Could not close file '%s'", file), err.Error(), 1)
+			}
+		}(gobFile)
 		var bytecode *compiler.Bytecode
 		if err = gob.NewDecoder(gobFile).Decode(&bytecode); err != nil {
 			exception.PrintExitMsg("Binary file is not compatible", 1)

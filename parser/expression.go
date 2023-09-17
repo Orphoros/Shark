@@ -87,7 +87,7 @@ func (p *Parser) parseExpression(precedence int) ast.Expression {
 }
 
 func (p *Parser) parseExpressionList(end token.TokenType) []ast.Expression {
-	list := []ast.Expression{}
+	var list []ast.Expression
 
 	if p.peekTokenIs(end) {
 		p.nextToken()

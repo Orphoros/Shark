@@ -104,7 +104,7 @@ func TestInstructionString(t *testing.T) {
 			Make(OpDecrementLocal, 255),
 		}
 
-		expexted := `0000 OpAdd
+		expected := `0000 OpAdd
 0001 OpConstant 2
 0004 OpConstant 65535
 0007 OpSub
@@ -148,8 +148,8 @@ func TestInstructionString(t *testing.T) {
 			concatted = append(concatted, ins...)
 		}
 
-		if concatted.String() != expexted {
-			t.Errorf("instructions wrongly formatted.\nwant=%q\ngot=%q", expexted, concatted.String())
+		if concatted.String() != expected {
+			t.Errorf("instructions wrongly formatted.\nwant=%q\ngot=%q", expected, concatted.String())
 		}
 	})
 }

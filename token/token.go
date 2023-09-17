@@ -60,8 +60,6 @@ const (
 	DIV_EQ      = "/="
 	MUL_EQ      = "*="
 	WHILE       = "WHILE"
-	BREAK       = "BREAK"
-	CONTINUE    = "CONTINUE"
 )
 
 // List of reserved Shark keywords.
