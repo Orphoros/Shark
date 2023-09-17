@@ -29,7 +29,7 @@ ifeq ($(DETECTED_OS),Windows)
 endif
 
 BUILD_NUMBER=$(shell date +%y)$(shell date +%j)
-BIN_FLAGS=-ldflags="-s -w -X 'main.Version=${BUILD_VERSION}' -X 'main.Build=$(BUILD_NUMBER)'" -trimpath -gcflags=all="-l -C"
+BIN_FLAGS=-ldflags="-s -w -X 'main.Version=${BUILD_VERSION}' -X 'main.Build=$(BUILD_NUMBER)'" -trimpath -gcflags=all="-l=10 -C"
 LIB_FLAGS=-ldflags="-s -w" -trimpath -gcflags=all="-l -C" -buildmode=c-shared
 
 all: clean dep test compile
