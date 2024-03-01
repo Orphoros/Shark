@@ -77,7 +77,7 @@ func PrintSharkRuntimeError(err *SharkError) {
 		errType = "runtime"
 	}
 
-	fmt.Printf("<red1>%s_error[%04d]: %s\n", errType, err.ErrCode, err.ErrMsg)
+	fmt.Printf("%s_error[%04d]: %s\n", errType, err.ErrCode, err.ErrMsg)
 
 	if err.ErrHelpMsg != "" {
 		fmt.Printf("\t-->help: %s\n", err.ErrHelpMsg)
