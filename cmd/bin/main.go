@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"runtime"
 	"shark/compiler"
 	"shark/emitter"
 	"shark/exception"
@@ -162,5 +163,6 @@ func formatVersion() string {
 			curVersion += " (" + Build + ")"
 		}
 	}
+	curVersion += "\nCore: " + runtime.Version()
 	return curVersion
 }
