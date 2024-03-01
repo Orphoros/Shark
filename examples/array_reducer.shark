@@ -1,5 +1,5 @@
-let reduce = fn(arr, initial, f) {
-    let iter = fn(arr, result) {
+let reduce = (arr, initial, f) => {
+    let iter = (arr, result) => {
         if (len(arr) == 0) {
             result
         } else {
@@ -8,8 +8,8 @@ let reduce = fn(arr, initial, f) {
     } iter(arr, initial)
 };
 
-let sum = fn(arr) {
-    reduce(arr, 0, fn(initial, el) {
+let sum = (arr) => {
+    reduce(arr, 0, (initial, el) => {
         initial + el
     })
 };

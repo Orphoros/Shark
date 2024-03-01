@@ -748,7 +748,7 @@ func TestWhileStatement(t *testing.T) {
 
 func TestFunctionLiteralParsing(t *testing.T) {
 	t.Run("should parse function literals", func(t *testing.T) {
-		input := `fn(x, y) { x + y; }`
+		input := `(x, y) => { x + y; }`
 
 		l := lexer.New(&input)
 		p := New(l)
@@ -795,7 +795,7 @@ func TestFunctionLiteralParsing(t *testing.T) {
 
 func TestFunctionLiteralWithName(t *testing.T) {
 	t.Run("should parse function literals with name", func(t *testing.T) {
-		input := `let myFunction = fn() { };`
+		input := `let myFunction = () => { };`
 
 		l := lexer.New(&input)
 		p := New(l)
@@ -828,9 +828,9 @@ func TestFunctionParameterParsing(t *testing.T) {
 			input    string
 			expected []string
 		}{
-			{"fn() {};", []string{}},
-			{"fn(x) {};", []string{"x"}},
-			{"fn(x, y, z) {};", []string{"x", "y", "z"}},
+			{"() => {};", []string{}},
+			{"(x) => {};", []string{"x"}},
+			{"(x, y, z) => {};", []string{"x", "y", "z"}},
 		}
 
 		for _, tt := range tests {

@@ -42,7 +42,7 @@ func TestNextToken(t *testing.T) {
 let ten = 10;
 
 
-let add = fn(x, y) {
+let add = (x, y) => {
 	x + y;
 };
 
@@ -106,12 +106,12 @@ while (true) { let a = 1; }
 			{token.LET, "let"},
 			{token.IDENT, "add"},
 			{token.ASSIGN, "="},
-			{token.FUNCTION, "fn"},
 			{token.LPAREN, "("},
 			{token.IDENT, "x"},
 			{token.COMMA, ","},
 			{token.IDENT, "y"},
 			{token.RPAREN, ")"},
+			{token.ARROW, "=>"},
 			{token.LBRACE, "{"},
 			{token.IDENT, "x"},
 			{token.PLUS, "+"},

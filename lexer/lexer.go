@@ -57,6 +57,10 @@ func (l *Lexer) NextToken() token.Token {
 			ch := l.ch
 			l.readChar()
 			tok = l.newToken(token.EQ, string(ch)+string(l.ch))
+		} else if l.peekChar() == '>' {
+			ch := l.ch
+			l.readChar()
+			tok = l.newToken(token.ARROW, string(ch)+string(l.ch))
 		} else {
 			tok = l.newToken(token.ASSIGN, string(l.ch))
 		}

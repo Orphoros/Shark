@@ -60,12 +60,11 @@ const (
 	DIV_EQ      = "/="
 	MUL_EQ      = "*="
 	WHILE       = "WHILE"
+	ARROW       = "=>"
 )
 
 // List of reserved Shark keywords.
 var keywords = map[string]TokenType{
-	// TODO: Remove fn and make it a lambda with the '()=>{}' syntax.
-	"fn":     FUNCTION,
 	"let":    LET,
 	"true":   TRUE,
 	"false":  FALSE,

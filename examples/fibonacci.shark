@@ -1,4 +1,4 @@
-let fibonacci = fn(x) {
+let fibonacci = (x) => {
 	if (x == 0) {
 		0
 	} else {

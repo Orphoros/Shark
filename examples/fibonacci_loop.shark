@@ -1,0 +1,23 @@
+// Fibonacci function using a space optimized approach.
+let fibonacci = (number) => {
+    let a = 0;
+    let b = 1;
+    let c = 1;
+
+    if (number == 0) {
+        return a;
+    }
+
+	let i = 2;
+
+	while(i <= number) {
+        c = a + b
+        a = b
+        b = c
+		i++;
+	}
+
+    return b;
+};
+
+puts(fibonacci(35))

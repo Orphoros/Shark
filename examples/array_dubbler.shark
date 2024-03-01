@@ -1,9 +1,9 @@
 let a = [1, 2, 3, 4];
 
-let double = fn(x) { x * 2 };
+let double = (x) => { x * 2 };
 
-let map = fn(arr, f) {
-    let iter = fn(arr, accumulated) {
+let map = (arr, f) => {
+    let iter = (arr, accumulated) => {
         if (len(arr) == 0) {
             accumulated
         } else {
