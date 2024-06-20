@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
-	"runtime"
+	"shark/cmd/bin"
 	"shark/compiler"
 	"shark/emitter"
 	"shark/exception"
@@ -18,6 +18,7 @@ import (
 
 var Version string
 var Build string
+var Codename string
 
 func main() {
 
@@ -27,15 +28,14 @@ func main() {
 
 	startTime := time.Now()
 
-	flaggy.SetName("Shark")
+	flaggy.SetName("shark")
 	flaggy.SetDescription("The Shark programming language")
-	var curVersion = formatVersion()
-	flaggy.SetVersion(curVersion)
+	flaggy.SetVersion(bin.FormatVersion(Version, Build, Codename))
 	flaggy.Bool(&measureDuration, "d", "duration", "Measure the duration of the execution")
 
 	flaggy.DefaultParser.ShowHelpOnUnexpected = true
 	flaggy.DefaultParser.AdditionalHelpAppend = "A subcommand is required"
-	flaggy.DefaultParser.AdditionalHelpPrepend = "Shark can interpret and execute SharkLang code."
+	flaggy.DefaultParser.AdditionalHelpPrepend = "SDK for the Shark programming language."
 
 	runCommand := flaggy.NewSubcommand("run")
 	runCommand.Description = "Interpret a SharkLang source code file"
@@ -151,18 +151,4 @@ func main() {
 		duration := time.Since(startTime)
 		fmt.Printf("\t~ Execution took %s\n", duration)
 	}
-}
-
-func formatVersion() string {
-	var curVersion string
-	if Version == "" {
-		curVersion = "dev"
-	} else {
-		curVersion = Version
-		if Build != "" {
-			curVersion += " (" + Build + ")"
-		}
-	}
-	curVersion += "\nCore: " + runtime.Version()
-	return curVersion
 }
