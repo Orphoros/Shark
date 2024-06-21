@@ -235,6 +235,50 @@ func TestIndexExpressions(t *testing.T) {
 	})
 }
 
+func TestCallingFunctionsWithDefaultArguments(t *testing.T) {
+	t.Run("should evaluate calling functions with default arguments", func(t *testing.T) {
+		tests := []vmTestCase{
+			{
+				input: `
+			let test = (a = 1) => { a; };
+			test();
+			`,
+				expected: 1,
+			},
+			{
+				input: `
+			let test = (a = 1) => { a; };
+			test(2);
+			`,
+				expected: 2,
+			},
+			{
+				input: `
+			let test = (a = 1, b = 2) => { a + b; };
+			test();
+			`,
+				expected: 3,
+			},
+			{
+				input: `
+			let test = (a = 1, b = 2) => { a + b; };
+			test(2);
+			`,
+				expected: 4,
+			},
+			{
+				input: `
+			let test = (a = 1, b = 2) => { a + b; };
+			test(2, 3);
+			`,
+				expected: 5,
+			},
+		}
+
+		runVmTests(t, tests)
+	})
+}
+
 func TestCallingFunctionsWithoutArguments(t *testing.T) {
 	t.Run("should evaluate calling functions without arguments", func(t *testing.T) {
 		tests := []vmTestCase{

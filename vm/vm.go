@@ -235,6 +235,21 @@ func (vm *VM) Run() *exception.SharkError {
 			vm.currentFrame().ip += 1
 			frame := vm.currentFrame()
 			vm.stack[frame.basePointer+int(localIndex)] = vm.pop()
+		case code.OpSetLocalDefault:
+			if vm.sp == 0 {
+				return &exception.SharkError{
+					ErrMsg:  "no value to set",
+					ErrCode: exception.SharkErrorNoDefaultValue,
+					ErrType: exception.SharkErrorTypeRuntime,
+				}
+			}
+			// only set the local if the local's value is null
+			localIndex := code.ReadUint8(ins[ip+1:])
+			vm.currentFrame().ip += 1
+			frame := vm.currentFrame()
+			if vm.stack[frame.basePointer+int(localIndex)] == nil {
+				vm.stack[frame.basePointer+int(localIndex)] = vm.pop()
+			}
 		case code.OpGetLocal:
 			localIndex := code.ReadUint8(ins[ip+1:])
 			vm.currentFrame().ip += 1
@@ -571,7 +586,7 @@ func (vm *VM) popFrame() *Frame {
 }
 
 func (vm *VM) callClosure(cl *object.Closure, numArgs int) *exception.SharkError {
-	if numArgs != cl.Fn.NumParameters {
+	if numArgs > cl.Fn.NumParameters || numArgs < cl.Fn.NumParameters-cl.Fn.NumDefaults {
 		return &exception.SharkError{
 			ErrMsg:  fmt.Sprintf("expected %d arguments for function call, but got %d", cl.Fn.NumParameters, numArgs),
 			ErrCode: exception.SharkErrorArgumentNumberMismatch,

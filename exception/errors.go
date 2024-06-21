@@ -50,6 +50,8 @@ const (
 	SharkErrorNonHashable
 
 	SharkErrorNonIndexable
+
+	SharkErrorNoDefaultValue
 )
 
 const (

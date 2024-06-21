@@ -852,6 +852,49 @@ func TestFunctionParameterParsing(t *testing.T) {
 			}
 		}
 	})
+
+	t.Run("should parse function parameters with default values", func(t *testing.T) {
+		tests := []struct {
+			input    string
+			expected []struct {
+				identifier string
+				value      interface{}
+			}
+		}{
+			{"(x = 1) => {};", []struct {
+				identifier string
+				value      interface{}
+			}{{"x", 1}}},
+			{"(x = 1, y = 2) => {};", []struct {
+				identifier string
+				value      interface{}
+			}{{"x", 1}, {"y", 2}}},
+			{"(x = 1, y = 2, z = 3) => {};", []struct {
+				identifier string
+				value      interface{}
+			}{{"x", 1}, {"y", 2}, {"z", 3}}},
+		}
+
+		for _, tt := range tests {
+			l := lexer.New(&tt.input)
+			p := New(l)
+			program := p.ParseProgram()
+
+			checkParserErrors(t, p)
+
+			stmt := program.Statements[0].(*ast.ExpressionStatement)
+			function := stmt.Expression.(*ast.FunctionLiteral)
+
+			if len(function.Parameters) != len(tt.expected) {
+				t.Errorf("length parameters wrong. want %d, got=%d", len(tt.expected), len(function.Parameters))
+			}
+
+			for i, param := range tt.expected {
+				testLiteralExpression(t, function.Parameters[i], param.identifier)
+				testLiteralExpression(t, *function.Parameters[i].DefaultValue, param.value)
+			}
+		}
+	})
 }
 
 func TestCallExpressionParsing(t *testing.T) {

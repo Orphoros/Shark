@@ -31,12 +31,27 @@ func (p *Parser) parseFunctionParameters() []*ast.Identifier {
 	}
 
 	ident := &ast.Identifier{Token: p.curToken, Value: p.curToken.Literal}
+
+	if p.peekTokenIs(token.ASSIGN) {
+		p.nextToken()
+		p.nextToken()
+		exp := p.parseExpression(LOWEST)
+		ident.DefaultValue = &exp
+	}
+
 	identifiers = append(identifiers, ident)
 
 	for p.peekTokenIs(token.COMMA) {
 		p.nextToken()
 		p.nextToken()
 		ident := &ast.Identifier{Token: p.curToken, Value: p.curToken.Literal}
+
+		if p.peekTokenIs(token.ASSIGN) {
+			p.nextToken()
+			p.nextToken()
+			exp := p.parseExpression(LOWEST)
+			ident.DefaultValue = &exp
+		}
 		identifiers = append(identifiers, ident)
 	}
 

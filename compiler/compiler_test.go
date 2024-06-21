@@ -1130,6 +1130,99 @@ func TestFunctionCalls(t *testing.T) {
 
 		runCompilerTests(t, tests)
 	})
+
+	t.Run("should compile function calls with default arguments", func(t *testing.T) {
+		tests := []compilerTestCase{
+			{
+				input: "let manyArg = (a = 1) => { a }",
+				expectedConstants: []interface{}{
+					1,
+					[]code.Instructions{
+						code.Make(code.OpConstant, 0),
+						code.Make(code.OpSetLocalDefault, 0),
+						code.Make(code.OpGetLocal, 0),
+						code.Make(code.OpReturnValue),
+					},
+				},
+				expectedInstructions: []code.Instructions{
+					code.Make(code.OpClosure, 1, 0),
+					code.Make(code.OpSetGlobal, 0),
+				},
+			},
+			{
+				input: "let manyArg = (a = 1, b = 2) => { a; b; }; manyArg()",
+				expectedConstants: []interface{}{
+					1,
+					2,
+					[]code.Instructions{
+						code.Make(code.OpConstant, 0),
+						code.Make(code.OpSetLocalDefault, 0),
+						code.Make(code.OpConstant, 1),
+						code.Make(code.OpSetLocalDefault, 1),
+						code.Make(code.OpGetLocal, 0),
+						code.Make(code.OpPop),
+						code.Make(code.OpGetLocal, 1),
+						code.Make(code.OpReturnValue),
+					},
+				},
+				expectedInstructions: []code.Instructions{
+					code.Make(code.OpClosure, 2, 0),
+					code.Make(code.OpSetGlobal, 0),
+					code.Make(code.OpGetGlobal, 0),
+					code.Make(code.OpCall, 0),
+					code.Make(code.OpPop),
+				},
+			},
+			{
+				input: "let manyArg = (a, b = 2) => { a; b; };",
+				expectedConstants: []interface{}{
+					2,
+					[]code.Instructions{
+						code.Make(code.OpConstant, 0),
+						code.Make(code.OpSetLocalDefault, 1),
+						code.Make(code.OpGetLocal, 0),
+						code.Make(code.OpPop),
+						code.Make(code.OpGetLocal, 1),
+						code.Make(code.OpReturnValue),
+					},
+				},
+				expectedInstructions: []code.Instructions{
+					code.Make(code.OpClosure, 1, 0),
+					code.Make(code.OpSetGlobal, 0),
+				},
+			},
+		}
+
+		runCompilerTests(t, tests)
+	})
+
+	t.Run("should compile function calls with default argument overrides", func(t *testing.T) {
+		tests := []compilerTestCase{
+			{
+				input: "let manyArg = (a = 1) => { a }; manyArg(2)",
+				expectedConstants: []interface{}{
+					1,
+					[]code.Instructions{
+						code.Make(code.OpConstant, 0),
+						code.Make(code.OpSetLocalDefault, 0),
+						code.Make(code.OpGetLocal, 0),
+						code.Make(code.OpReturnValue),
+					},
+					2,
+				},
+				expectedInstructions: []code.Instructions{
+					code.Make(code.OpClosure, 1, 0),
+					code.Make(code.OpSetGlobal, 0),
+					code.Make(code.OpGetGlobal, 0),
+					code.Make(code.OpConstant, 2),
+					code.Make(code.OpCall, 1),
+					code.Make(code.OpPop),
+				},
+			},
+		}
+
+		runCompilerTests(t, tests)
+	})
 }
 
 func TestCompilerScopes(t *testing.T) {
@@ -1497,6 +1590,7 @@ func concatInstructions(s []code.Instructions) code.Instructions {
 }
 
 func testConstants(t *testing.T, expected []interface{}, actual []object.Object) error {
+	t.Helper()
 	if len(expected) != len(actual) {
 		return fmt.Errorf("wrong number of constants. got=%d, want=%d", len(actual), len(expected))
 	}

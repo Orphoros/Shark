@@ -3,8 +3,9 @@ package ast
 import "shark/token"
 
 type Identifier struct {
-	Token token.Token
-	Value string
+	Token        token.Token
+	Value        string
+	DefaultValue *Expression
 }
 
 func (i *Identifier) expressionNode() {}

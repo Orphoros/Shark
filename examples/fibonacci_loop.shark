@@ -1,5 +1,5 @@
 // Fibonacci function using a space optimized approach.
-let fibonacci = (number) => {
+let fibonacci = (number = 35) => {
     let a = 0;
     let b = 1;
     let c = 1;
@@ -20,4 +20,4 @@ let fibonacci = (number) => {
     return b;
 };
 
-puts(fibonacci(35))
+puts(fibonacci())

@@ -10,6 +10,7 @@ func (p *Parser) parseGroupedExpression() ast.Expression {
 
 	if (p.curTokenIs(token.IDENT) && p.peekTokenIs(token.COMMA)) ||
 		(p.curTokenIs(token.RPAREN) && p.peekTokenIs(token.ARROW)) ||
+		(p.curTokenIs(token.IDENT) && p.peekTokenIs(token.ASSIGN)) ||
 		(p.curTokenIs(token.IDENT) && p.peekTokenIs(token.RPAREN)) {
 		return p.parseFunctionLiteral()
 	}

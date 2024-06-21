@@ -49,6 +49,7 @@ const (
 	OpIncrementLocal
 	OpDecrementGlobal
 	OpDecrementLocal
+	OpSetLocalDefault
 )
 
 type Definition struct {
@@ -95,6 +96,7 @@ var definitions = map[Opcode]*Definition{
 	OpIncrementLocal:   {"OpIncrementLocal", []int{1}},
 	OpDecrementGlobal:  {"OpDecrementGlobal", []int{2}},
 	OpDecrementLocal:   {"OpDecrementLocal", []int{1}},
+	OpSetLocalDefault:  {"OpSetLocalDefault", []int{1}},
 }
 
 func Lookup(op byte) (*Definition, error) {

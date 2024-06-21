@@ -572,8 +572,16 @@ func (c *Compiler) Compile(node ast.Node) *exception.SharkError {
 		if node.Name != "" {
 			c.symbolTable.DefineFunctionName(node.Name)
 		}
+		numDefaults := 0
 		for _, param := range node.Parameters {
-			c.symbolTable.Define(param.Value)
+			symbol := c.symbolTable.Define(param.Value)
+			if param.DefaultValue != nil {
+				numDefaults++
+				if err := c.Compile(*param.DefaultValue); err != nil {
+					return err
+				}
+				c.emit(code.OpSetLocalDefault, symbol.Index)
+			}
 		}
 		if err := c.Compile(node.Body); err != nil {
 			return err
@@ -592,7 +600,12 @@ func (c *Compiler) Compile(node ast.Node) *exception.SharkError {
 			c.loadSymbol(s)
 		}
 
-		compiledFn := &object.CompiledFunction{Instructions: instructions, NumLocals: NumLocals, NumParameters: len(node.Parameters)}
+		compiledFn := &object.CompiledFunction{
+			Instructions:  instructions,
+			NumLocals:     NumLocals,
+			NumParameters: len(node.Parameters),
+			NumDefaults:   numDefaults,
+		}
 
 		c.emit(code.OpClosure, c.addConstant(compiledFn), len(freeSymbols))
 	case *ast.ReturnStatement:

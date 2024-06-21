@@ -45,6 +45,7 @@ func TestMake(t *testing.T) {
 			{OpIncrementGlobal, []int{65534}, []byte{byte(OpIncrementGlobal), 255, 254}},
 			{OpDecrementGlobal, []int{65534}, []byte{byte(OpDecrementGlobal), 255, 254}},
 			{OpDecrementLocal, []int{255}, []byte{byte(OpDecrementLocal), 255}},
+			{OpSetLocalDefault, []int{255}, []byte{byte(OpSetLocalDefault), 255}},
 		}
 
 		for _, tt := range tests {
@@ -102,6 +103,7 @@ func TestInstructionString(t *testing.T) {
 			Make(OpIncrementLocal, 255),
 			Make(OpDecrementGlobal, 65534),
 			Make(OpDecrementLocal, 255),
+			Make(OpSetLocalDefault, 255),
 		}
 
 		expected := `0000 OpAdd
@@ -140,6 +142,7 @@ func TestInstructionString(t *testing.T) {
 0058 OpIncrementLocal 255
 0060 OpDecrementGlobal 65534
 0063 OpDecrementLocal 255
+0065 OpSetLocalDefault 255
 `
 
 		concatted := Instructions{}
@@ -173,6 +176,11 @@ func TestReadOperands(t *testing.T) {
 			{OpArray, []int{65534}, 2},
 			{OpHash, []int{65534}, 2},
 			{OpClosure, []int{65534, 255}, 3},
+			{OpIncrementGlobal, []int{65534}, 2},
+			{OpIncrementLocal, []int{255}, 1},
+			{OpDecrementGlobal, []int{65534}, 2},
+			{OpDecrementLocal, []int{255}, 1},
+			{OpSetLocalDefault, []int{255}, 1},
 		}
 
 		for _, tt := range tests {
