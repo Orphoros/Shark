@@ -62,6 +62,7 @@ const (
 	WHILE       = "WHILE"
 	ARROW       = "=>"
 	RANGE       = ".."
+	SPREAD      = "..."
 )
 
 // List of reserved Shark keywords.

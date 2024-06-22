@@ -230,6 +230,23 @@ func (vm *VM) Run() *exception.SharkError {
 			if err := vm.push(Null); err != nil {
 				return err
 			}
+		case code.OpSpread:
+			operand := vm.pop()
+			if operand.Type() != object.STRING_OBJ {
+				return &exception.SharkError{
+					ErrMsg:  "spread operator only supports string operands",
+					ErrCode: exception.SharkErrorMismatchedTypes,
+					ErrType: exception.SharkErrorTypeRuntime,
+				}
+			}
+			str := operand.(*object.String).Value
+			elements := make([]object.Object, len(str))
+			for i, c := range str {
+				elements[i] = &object.String{Value: string(c)}
+			}
+			if err := vm.push(&object.Array{Elements: elements}); err != nil {
+				return err
+			}
 		case code.OpRange:
 			end := vm.pop()
 			start := vm.pop()

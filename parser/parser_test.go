@@ -493,6 +493,7 @@ func TestParsingVariablePrefixExpressions(t *testing.T) {
 		}{
 			{"++a", "a", "++"},
 			{"--a", "a", "--"},
+			{"...a", "a", "..."},
 		}
 
 		for _, tt := range postfixTests {
@@ -576,6 +577,9 @@ func TestOperatorPrecedenceParsing(t *testing.T) {
 			{"a++ + b", "((a++) + b)"},
 			{"--a", "(--a)"},
 			{"++a", "(++a)"},
+			{"1+2..5", "((1 + 2) .. 5)"},
+			{"1..5*2", "(1 .. (5 * 2))"},
+			{"let a = ...a", "let a = (...a);"},
 			{"a = 1 + 1", "(a = (1 + 1))"},
 			{"a = b = c = 3 + 4", "(a = (b = (c = (3 + 4))))"},
 			{"let a = b = 1 + 3 * 4", "let a = (b = (1 + (3 * 4)));"},

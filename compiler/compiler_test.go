@@ -714,6 +714,17 @@ func TestVariablePrefix(t *testing.T) {
 				},
 			},
 			{
+				input:             `let t = "hello"; ...t;`,
+				expectedConstants: []interface{}{"hello"},
+				expectedInstructions: []code.Instructions{
+					code.Make(code.OpConstant, 0),
+					code.Make(code.OpSetGlobal, 0),
+					code.Make(code.OpGetGlobal, 0),
+					code.Make(code.OpSpread),
+					code.Make(code.OpPop),
+				},
+			},
+			{
 				input:             "let one = 1; let two = ++one;",
 				expectedConstants: []interface{}{1},
 				expectedInstructions: []code.Instructions{

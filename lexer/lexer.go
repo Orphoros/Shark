@@ -130,7 +130,13 @@ func (l *Lexer) NextToken() token.Token {
 		if l.peekChar() == '.' {
 			ch := l.ch
 			l.readChar()
-			tok = l.newToken(token.RANGE, string(ch)+string(l.ch))
+			// check for spread operator, else it's a range operator
+			if l.peekChar() == '.' {
+				l.readChar()
+				tok = l.newToken(token.SPREAD, string(ch)+string(ch)+string(l.ch))
+			} else {
+				tok = l.newToken(token.RANGE, string(ch)+string(l.ch))
+			}
 		}
 	case '/':
 		if l.peekChar() == '=' {

@@ -393,6 +393,11 @@ func (c *Compiler) Compile(node ast.Node) *exception.SharkError {
 				c.emit(code.OpDecrementLocal, symbol.Index)
 			}
 			c.loadSymbol(symbol)
+		case "...":
+			if err := c.Compile(node.Right); err != nil {
+				return err
+			}
+			c.emit(code.OpSpread)
 		default:
 			return &exception.SharkError{
 				ErrMsg:  "unknown operator",

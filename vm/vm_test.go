@@ -584,6 +584,20 @@ func TestVariablePostfix(t *testing.T) {
 }
 
 func TestVariablePrefix(t *testing.T) {
+	t.Run("should spread string to character array", func(t *testing.T) {
+		tests := []vmTestCase{
+			{
+				input: `
+			let a = "shark";
+			[...a];
+			`,
+				expected: []string{"s", "h", "a", "r", "k"},
+			},
+		}
+
+		runVmTests(t, tests)
+	})
+
 	t.Run("should evaluate global variable decrement prefix", func(t *testing.T) {
 		tests := []vmTestCase{
 			{

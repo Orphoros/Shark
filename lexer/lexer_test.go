@@ -88,6 +88,7 @@ a *= 1;
 a /= 1;
 while (true) { let a = 1; }
 1..10;
+...a;
 `
 
 		tests := []struct {
@@ -244,6 +245,9 @@ while (true) { let a = 1; }
 			{token.INT, "1"},
 			{token.RANGE, ".."},
 			{token.INT, "10"},
+			{token.SEMICOLON, ";"},
+			{token.SPREAD, "..."},
+			{token.IDENT, "a"},
 			{token.SEMICOLON, ";"},
 			{token.EOF, ""},
 		}
