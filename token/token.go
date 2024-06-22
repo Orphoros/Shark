@@ -61,6 +61,7 @@ const (
 	MUL_EQ      = "*="
 	WHILE       = "WHILE"
 	ARROW       = "=>"
+	RANGE       = ".."
 )
 
 // List of reserved Shark keywords.

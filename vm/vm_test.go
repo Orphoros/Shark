@@ -174,6 +174,20 @@ func TestArrayLiterals(t *testing.T) {
 	})
 }
 
+func TestRangeOperator(t *testing.T) {
+	t.Run("should evaluate range operator between numbers", func(t *testing.T) {
+		tests := []vmTestCase{
+			{"1..5", []int{1, 2, 3, 4, 5}},
+			{"1..1", []int{1}},
+			{"1..0", []int{1, 0}},
+			{"0..1", []int{0, 1}},
+			{"0..0", []int{0}},
+			{"2..-2", []int{2, 1, 0, -1, -2}},
+		}
+		runVmTests(t, tests)
+	})
+}
+
 func runVmTests(t *testing.T, tests []vmTestCase) {
 	t.Helper()
 

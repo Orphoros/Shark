@@ -881,6 +881,25 @@ func TestArrayLiterals(t *testing.T) {
 	})
 }
 
+func TestRangeOperator(t *testing.T) {
+	t.Run("should spread incrementing numbers as range", func(t *testing.T) {
+		tests := []compilerTestCase{
+			{
+				input:             "1..10",
+				expectedConstants: []interface{}{1, 10},
+				expectedInstructions: []code.Instructions{
+					code.Make(code.OpConstant, 0),
+					code.Make(code.OpConstant, 1),
+					code.Make(code.OpRange),
+					code.Make(code.OpPop),
+				},
+			},
+		}
+
+		runCompilerTests(t, tests)
+	})
+}
+
 func TestHashLiterals(t *testing.T) {
 	t.Run("should compile hash literals", func(t *testing.T) {
 		tests := []compilerTestCase{

@@ -230,6 +230,35 @@ func (vm *VM) Run() *exception.SharkError {
 			if err := vm.push(Null); err != nil {
 				return err
 			}
+		case code.OpRange:
+			end := vm.pop()
+			start := vm.pop()
+			if start.Type() != object.INTEGER_OBJ || end.Type() != object.INTEGER_OBJ {
+				return &exception.SharkError{
+					ErrMsg:  "range operator only supports integer operands",
+					ErrCode: exception.SharkErrorMismatchedTypes,
+					ErrType: exception.SharkErrorTypeRuntime,
+				}
+			}
+			startVal := start.(*object.Integer).Value
+			endVal := end.(*object.Integer).Value
+			if startVal > endVal {
+				elements := make([]object.Object, startVal-endVal+1)
+				for i := startVal; i >= endVal; i-- {
+					elements[startVal-i] = &object.Integer{Value: i}
+				}
+				if err := vm.push(&object.Array{Elements: elements}); err != nil {
+					return err
+				}
+			} else {
+				elements := make([]object.Object, endVal-startVal+1)
+				for i := startVal; i <= endVal; i++ {
+					elements[i-startVal] = &object.Integer{Value: i}
+				}
+				if err := vm.push(&object.Array{Elements: elements}); err != nil {
+					return err
+				}
+			}
 		case code.OpSetLocal:
 			localIndex := code.ReadUint8(ins[ip+1:])
 			vm.currentFrame().ip += 1

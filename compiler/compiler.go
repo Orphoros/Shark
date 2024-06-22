@@ -188,6 +188,8 @@ func (c *Compiler) Compile(node ast.Node) *exception.SharkError {
 			}
 		}
 		switch node.Operator {
+		case "..":
+			c.emit(code.OpRange)
 		case "+":
 			c.emit(code.OpAdd)
 		case "-":
