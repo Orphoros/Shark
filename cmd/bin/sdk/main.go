@@ -9,9 +9,8 @@ import (
 	"shark/compiler"
 	"shark/emitter"
 	"shark/exception"
+	"shark/internal"
 	"shark/serializer"
-	"shark/util"
-	"time"
 
 	"github.com/integrii/flaggy"
 )
@@ -24,18 +23,17 @@ func main() {
 
 	var file string
 	var outName string
-	measureDuration := false
-
-	startTime := time.Now()
+	var cnf string
 
 	flaggy.SetName("shark")
 	flaggy.SetDescription("The Shark programming language")
 	flaggy.SetVersion(bin.FormatVersion(Version, Build, Codename))
-	flaggy.Bool(&measureDuration, "d", "duration", "Measure the duration of the execution")
 
 	flaggy.DefaultParser.ShowHelpOnUnexpected = true
 	flaggy.DefaultParser.AdditionalHelpAppend = "A subcommand is required"
 	flaggy.DefaultParser.AdditionalHelpPrepend = "SDK for the Shark programming language."
+
+	flaggy.String(&cnf, "c", "config", "The configuration file")
 
 	runCommand := flaggy.NewSubcommand("run")
 	runCommand.Description = "Interpret a SharkLang source code file"
@@ -60,6 +58,26 @@ func main() {
 	flaggy.AttachSubcommand(decompileCommand, 1)
 	flaggy.Parse()
 
+	if cnf == "" {
+		dir, err := os.Getwd()
+		if err != nil {
+			exception.PrintExitMsgCtx("Could not get the current working directory", err.Error(), 1)
+		}
+		if internal.IsFileExists(filepath.Join(dir, "Shark.toml")) {
+			cnf = filepath.Join(dir, "Shark.toml")
+		} else if internal.IsFileExists(filepath.Join(filepath.Dir(file), "Shark.toml")) {
+			cnf = filepath.Join(filepath.Dir(file), "Shark.toml")
+		}
+	}
+
+	var argConfig internal.Config
+
+	if cnf == "" {
+		argConfig = internal.GetDefaultConfig()
+	} else {
+		argConfig = internal.GetConfigFromFile(cnf)
+	}
+
 	serializer.RegisterTypes()
 
 	if execCommand.Used {
@@ -67,10 +85,7 @@ func main() {
 		if err != nil {
 			exception.PrintExitMsgCtx(fmt.Sprintf("Could not locate file '%s'", file), err.Error(), 1)
 		}
-		gobFile, err := os.Open(absPath)
-		if err != nil {
-			exception.PrintExitMsgCtx(fmt.Sprintf("Could not open file '%s'", file), err.Error(), 1)
-		}
+		gobFile := internal.OpenFile(absPath)
 		defer func(gobFile *os.File) {
 			err := gobFile.Close()
 			if err != nil {
@@ -83,21 +98,18 @@ func main() {
 		if err != nil {
 			exception.PrintExitMsg("Binary file is not compatible", 1)
 		}
-		sharkEmitter := emitter.New(&absPath, os.Stdout)
+		sharkEmitter := emitter.New(&absPath, os.Stdout, &argConfig.OrpVM)
 		sharkEmitter.Exec(bytecode)
 	} else if compileCommand.Used {
 		absPath, err := filepath.Abs(file)
 		if err != nil {
 			exception.PrintExitMsgCtx(fmt.Sprintf("Could not locate file '%s'", file), err.Error(), 1)
 		}
-		f, err := os.ReadFile(absPath)
-		if err != nil {
-			exception.PrintExitMsgCtx(fmt.Sprintf("Could not open file '%s'", file), err.Error(), 1)
-		}
-		sharkEmitter := emitter.New(&absPath, os.Stdout)
+		f := internal.ReadFile(absPath)
+		sharkEmitter := emitter.New(&absPath, os.Stdout, &argConfig.OrpVM)
 		file := string(f)
 		if bytecode := sharkEmitter.Compile(&file); bytecode != nil {
-			fileName := util.GetFileName(absPath) + ".egg"
+			fileName := internal.GetFileName(absPath) + ".egg"
 			if outName != "" {
 				fileName = outName
 			}
@@ -120,17 +132,11 @@ func main() {
 		if err != nil {
 			exception.PrintExitMsgCtx(fmt.Sprintf("Could not locate file '%s'", file), err.Error(), 1)
 		}
-		f, err := os.ReadFile(absPath)
-		if err != nil {
-			exception.PrintExitMsgCtx(fmt.Sprintf("Could not open file '%s'", file), err.Error(), 1)
-		}
-		sharkEmitter := emitter.New(&absPath, os.Stdout)
+		f := internal.ReadFile(absPath)
+		sharkEmitter := emitter.New(&absPath, os.Stdout, &argConfig.OrpVM)
 		sharkEmitter.Interpret(string(f))
 	} else if decompileCommand.Used {
-		gobFile, err := os.Open(file)
-		if err != nil {
-			exception.PrintExitMsgCtx(fmt.Sprintf("Could not open file '%s'", file), err.Error(), 1)
-		}
+		gobFile := internal.OpenFile(file)
 		defer func(gobFile *os.File) {
 			err := gobFile.Close()
 			if err != nil {
@@ -138,17 +144,12 @@ func main() {
 			}
 		}(gobFile)
 		var bytecode *compiler.Bytecode
-		if err = gob.NewDecoder(gobFile).Decode(&bytecode); err != nil {
+		if err := gob.NewDecoder(gobFile).Decode(&bytecode); err != nil {
 			exception.PrintExitMsg("Binary file is not compatible", 1)
 		}
 
 		emitter.EmitInstructionsTable(bytecode, os.Stdout)
 	} else {
 		flaggy.ShowHelpAndExit("Error: No subcommand provided")
-	}
-
-	if measureDuration {
-		duration := time.Since(startTime)
-		fmt.Printf("\t~ Execution took %s\n", duration)
 	}
 }

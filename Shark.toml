@@ -1,0 +1,4 @@
+[OrpVM]
+StackSize = 32768
+GlobalsSize = 65536
+MaxFrames = 32768

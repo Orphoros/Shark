@@ -9,13 +9,15 @@ import (
 	"shark/object"
 )
 
-const StackSize = 2048
-const GlobalsSize = 65536
-const MaxFrames = 1024
-
 var True = &object.Boolean{Value: true}
 var False = &object.Boolean{Value: false}
 var Null = &object.Null{}
+
+type VmConf struct {
+	StackSize   int
+	GlobalsSize int
+	MaxFrames   int
+}
 
 type VM struct {
 	constants []object.Object
@@ -27,31 +29,49 @@ type VM struct {
 
 	frames      []*Frame
 	framesIndex int
+
+	conf *VmConf
 }
 
-func New(bytecode *compiler.Bytecode) *VM {
+func NewDefault(bytecode *compiler.Bytecode) *VM {
+	conf := NewDefaultConf()
+
+	return New(bytecode, &conf)
+}
+
+func NewDefaultConf() VmConf {
+	return VmConf{
+		StackSize:   2048,
+		GlobalsSize: 65536,
+		MaxFrames:   1024,
+	}
+}
+
+func New(bytecode *compiler.Bytecode, conf *VmConf) *VM {
 	mainFn := &object.CompiledFunction{Instructions: bytecode.Instructions}
 	mainClosure := &object.Closure{Fn: mainFn}
 	mainFrame := NewFrame(mainClosure, 0)
 
-	frames := make([]*Frame, MaxFrames)
+	frames := make([]*Frame, conf.MaxFrames)
 	frames[0] = mainFrame
 
 	return &VM{
 		constants: bytecode.Constants,
 
-		stack: make([]object.Object, StackSize),
+		stack: make([]object.Object, conf.StackSize),
 		sp:    0,
 
-		globals: make([]object.Object, GlobalsSize),
+		globals: make([]object.Object, conf.GlobalsSize),
 
 		frames:      frames,
 		framesIndex: 1,
+
+		conf: conf,
 	}
 }
 
-func NewWithGlobalsStore(bytecode *compiler.Bytecode, s []object.Object) *VM {
-	vm := New(bytecode)
+func NewWithGlobalsStore(bytecode *compiler.Bytecode, s []object.Object, conf *VmConf) *VM {
+	vm := New(bytecode, conf)
 	vm.globals = s
 	return vm
 }
@@ -359,7 +379,7 @@ func (vm *VM) pushClosure(constIndex, numFree int) *exception.SharkError {
 }
 
 func (vm *VM) push(o object.Object) *exception.SharkError {
-	if vm.sp >= StackSize {
+	if vm.sp >= vm.conf.StackSize {
 		return &exception.SharkError{
 			ErrMsg:  "stack overflow",
 			ErrCode: exception.SharkErrorVMStackOverflow,
@@ -621,9 +641,18 @@ func (vm *VM) currentFrame() *Frame {
 	return vm.frames[vm.framesIndex-1]
 }
 
-func (vm *VM) pushFrame(f *Frame) {
+func (vm *VM) pushFrame(f *Frame) *exception.SharkError {
+	if vm.framesIndex >= vm.conf.MaxFrames {
+		return &exception.SharkError{
+			ErrMsg:  "cannot push more frames to the stack",
+			ErrCode: exception.SharkErrorVMStackOverflow,
+			ErrType: exception.SharkErrorTypeRuntime,
+		}
+	}
 	vm.frames[vm.framesIndex] = f
 	vm.framesIndex++
+
+	return nil
 }
 
 func (vm *VM) popFrame() *Frame {
@@ -641,7 +670,10 @@ func (vm *VM) callClosure(cl *object.Closure, numArgs int) *exception.SharkError
 	}
 
 	frame := NewFrame(cl, vm.sp-numArgs)
-	vm.pushFrame(frame)
+
+	if err := vm.pushFrame(frame); err != nil {
+		return err
+	}
 
 	vm.sp = frame.basePointer + cl.Fn.NumLocals
 

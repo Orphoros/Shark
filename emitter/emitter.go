@@ -18,15 +18,17 @@ type Emitter struct {
 	symbolTable *compiler.SymbolTable
 	output      io.Writer
 	sourceName  *string
+	vmConf      *vm.VmConf
 }
 
-func New(sourceName *string, out io.Writer) *Emitter {
+func New(sourceName *string, out io.Writer, vmConf *vm.VmConf) *Emitter {
 	emitter := &Emitter{
 		constants:   []object.Object{},
-		globals:     make([]object.Object, vm.GlobalsSize),
+		globals:     make([]object.Object, vmConf.GlobalsSize),
 		symbolTable: compiler.NewSymbolTable(),
 		output:      out,
 		sourceName:  sourceName,
+		vmConf:      vmConf,
 	}
 	for i, v := range object.Builtins {
 		emitter.symbolTable.DefineBuiltin(i, v.Name)
@@ -56,7 +58,7 @@ func (i *Emitter) Compile(sharkCode *string) *compiler.Bytecode {
 
 func (i *Emitter) Exec(bytecode *compiler.Bytecode) {
 	i.constants = bytecode.Constants
-	machine := vm.NewWithGlobalsStore(bytecode, i.globals)
+	machine := vm.NewWithGlobalsStore(bytecode, i.globals, i.vmConf)
 
 	if err := machine.Run(); err != nil {
 		i.printCompilerError(err)
@@ -91,7 +93,7 @@ func (i *Emitter) Interpret(in string) {
 	}
 	code := comp.Bytecode()
 	i.constants = code.Constants
-	machine := vm.NewWithGlobalsStore(code, i.globals)
+	machine := vm.NewWithGlobalsStore(code, i.globals, i.vmConf)
 
 	if err := machine.Run(); err != nil {
 		i.printCompilerError(err)

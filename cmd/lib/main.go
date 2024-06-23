@@ -4,11 +4,13 @@ import "C"
 import (
 	"os"
 	"shark/emitter"
+	"shark/vm"
 )
 
 //export execute
 func execute(source, code string) {
-	sharkEmitter := emitter.New(&source, os.Stdout)
+	vmConf := vm.NewDefaultConf()
+	sharkEmitter := emitter.New(&source, os.Stdout, &vmConf)
 	sharkEmitter.Interpret(code)
 }
 

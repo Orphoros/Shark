@@ -9,7 +9,9 @@ import (
 	"shark/compiler"
 	"shark/emitter"
 	"shark/exception"
+	"shark/internal"
 	"shark/serializer"
+	"shark/vm"
 
 	"github.com/integrii/flaggy"
 )
@@ -21,8 +23,8 @@ var Codename string
 func main() {
 	var file string
 
-	flaggy.SetName("svm")
-	flaggy.SetDescription("The Shark Virtual Machine")
+	flaggy.SetName("orpvm")
+	flaggy.SetDescription("The Orphoros Virtual Machine")
 	flaggy.SetVersion(bin.FormatVersion(Version, Build, Codename))
 
 	flaggy.DefaultParser.ShowHelpOnUnexpected = true
@@ -42,10 +44,7 @@ func execute(file string) {
 	if err != nil {
 		exception.PrintExitMsgCtx(fmt.Sprintf("Could not locate file '%s'", file), err.Error(), 1)
 	}
-	gobFile, err := os.Open(absPath)
-	if err != nil {
-		exception.PrintExitMsgCtx(fmt.Sprintf("Could not open file '%s'", file), err.Error(), 1)
-	}
+	gobFile := internal.OpenFile(absPath)
 	defer func(gobFile *os.File) {
 		err := gobFile.Close()
 		if err != nil {
@@ -58,6 +57,7 @@ func execute(file string) {
 	if err != nil {
 		exception.PrintExitMsg("Binary file is not compatible", 1)
 	}
-	sharkEmitter := emitter.New(&absPath, os.Stdout)
+	vmConf := vm.NewDefaultConf()
+	sharkEmitter := emitter.New(&absPath, os.Stdout, &vmConf)
 	sharkEmitter.Exec(bytecode)
 }

@@ -8,8 +8,9 @@ import (
 	"shark/cmd/bin"
 	"shark/emitter"
 	"shark/exception"
+	"shark/internal"
 	"shark/serializer"
-	"shark/util"
+	"shark/vm"
 
 	"github.com/integrii/flaggy"
 )
@@ -47,16 +48,14 @@ func compile(file, outName string, emitInstructionSet bool) {
 	if err != nil {
 		exception.PrintExitMsgCtx(fmt.Sprintf("Could not locate file '%s'", file), err.Error(), 1)
 	}
-	f, err := os.ReadFile(absPath)
-	if err != nil {
-		exception.PrintExitMsgCtx(fmt.Sprintf("Could not open file '%s'", file), err.Error(), 1)
-	}
-	sharkEmitter := emitter.New(&absPath, os.Stdout)
+	f := internal.ReadFile(absPath)
+	vmConf := vm.NewDefaultConf()
+	sharkEmitter := emitter.New(&absPath, os.Stdout, &vmConf)
 	fileContents := string(f)
 	if bytecode := sharkEmitter.Compile(&fileContents); bytecode != nil {
-		fileName := util.GetFileName(absPath) + ".egg"
+		fileName := internal.GetFileName(absPath) + ".egg"
 		if outName != "" {
-			fileName = util.GetFileName(outName) + ".egg"
+			fileName = internal.GetFileName(outName) + ".egg"
 		}
 		gobFile, err := os.Create(fileName)
 		if err != nil {
@@ -74,9 +73,9 @@ func compile(file, outName string, emitInstructionSet bool) {
 
 		if emitInstructionSet {
 			// emit instruction set to file
-			instructionSetFileName := util.GetFileName(absPath) + ".scc"
+			instructionSetFileName := internal.GetFileName(absPath) + ".scc"
 			if outName != "" {
-				instructionSetFileName = util.GetFileName(outName) + ".scc"
+				instructionSetFileName = internal.GetFileName(outName) + ".scc"
 			}
 
 			instructionSetFile, err := os.Create(instructionSetFileName)

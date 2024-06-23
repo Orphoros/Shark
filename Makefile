@@ -59,13 +59,13 @@ compile:
 	@echo "[DONE]: Darwin ARM64"
 
 	@echo "Compiling the Shark Virtual Machine..."
-	@GOARCH=amd64 GOOS=darwin go build ${BIN_FLAGS} -o ${BUILD_DIR}/bin/Darwin/amd64/svm ./cmd/bin/vm
+	@GOARCH=amd64 GOOS=darwin go build ${BIN_FLAGS} -o ${BUILD_DIR}/bin/Darwin/amd64/orpvm ./cmd/bin/vm
 	@echo "[DONE]: Darwin AMD64"
-	@GOARCH=amd64 GOOS=linux go build ${BIN_FLAGS} -o ${BUILD_DIR}/bin/Linux/amd64/svm ./cmd/bin/vm
+	@GOARCH=amd64 GOOS=linux go build ${BIN_FLAGS} -o ${BUILD_DIR}/bin/Linux/amd64/orpvm ./cmd/bin/vm
 	@echo "[DONE]: Linux AMD64"
-	@GOARCH=amd64 GOOS=windows go build ${BIN_FLAGS} -o ${BUILD_DIR}/bin/Windows/amd64/svm.exe ./cmd/bin/vm
+	@GOARCH=amd64 GOOS=windows go build ${BIN_FLAGS} -o ${BUILD_DIR}/bin/Windows/amd64/orpvm.exe ./cmd/bin/vm
 	@echo "[DONE]: Windows AMD64"
-	@GOARCH=arm64 GOOS=darwin go build ${BIN_FLAGS} -o ${BUILD_DIR}/bin/Darwin/arm64/svm ./cmd/bin/vm
+	@GOARCH=arm64 GOOS=darwin go build ${BIN_FLAGS} -o ${BUILD_DIR}/bin/Darwin/arm64/orpvm ./cmd/bin/vm
 	@echo "[DONE]: Darwin ARM64"
 
 	@echo "Compiling Shark C bindings for current OS and Platform.."
