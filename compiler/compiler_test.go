@@ -377,7 +377,7 @@ func TestWhileStatement(t *testing.T) {
 				},
 			},
 			{
-				input:             "let a = 1; while (a < 10) { a++; }",
+				input:             "let mut a = 1; while (a < 10) { a++; }",
 				expectedConstants: []interface{}{1, 10},
 				expectedInstructions: []code.Instructions{
 					// 0000
@@ -449,7 +449,7 @@ func TestGlobalLetStatements(t *testing.T) {
 	t.Run("should compile global let statements with reassign", func(t *testing.T) {
 		tests := []compilerTestCase{
 			{
-				input:             "let points = 1; points = 2;",
+				input:             "let mut points = 1; points = 2;",
 				expectedConstants: []interface{}{1, 2},
 				expectedInstructions: []code.Instructions{
 					code.Make(code.OpConstant, 0),
@@ -461,7 +461,7 @@ func TestGlobalLetStatements(t *testing.T) {
 				},
 			},
 			{
-				input:             "let a = 1; let b = 2; let x = a = b = 3;",
+				input:             "let mut a = 1; let mut b = 2; let x = a = b = 3;",
 				expectedConstants: []interface{}{1, 2, 3},
 				expectedInstructions: []code.Instructions{
 					code.Make(code.OpConstant, 0),
@@ -477,7 +477,7 @@ func TestGlobalLetStatements(t *testing.T) {
 				},
 			},
 			{
-				input:             "let a = 1; a += 2;",
+				input:             "let mut a = 1; a += 2;",
 				expectedConstants: []interface{}{1, 2},
 				expectedInstructions: []code.Instructions{
 					code.Make(code.OpConstant, 0),
@@ -491,7 +491,7 @@ func TestGlobalLetStatements(t *testing.T) {
 				},
 			},
 			{
-				input:             "let a = 1; a -= 2;",
+				input:             "let mut a = 1; a -= 2;",
 				expectedConstants: []interface{}{1, 2},
 				expectedInstructions: []code.Instructions{
 					code.Make(code.OpConstant, 0),
@@ -505,7 +505,7 @@ func TestGlobalLetStatements(t *testing.T) {
 				},
 			},
 			{
-				input:             "let a = 1; a *= 2;",
+				input:             "let mut a = 1; a *= 2;",
 				expectedConstants: []interface{}{1, 2},
 				expectedInstructions: []code.Instructions{
 					code.Make(code.OpConstant, 0),
@@ -519,7 +519,7 @@ func TestGlobalLetStatements(t *testing.T) {
 				},
 			},
 			{
-				input:             "let a = 1; a /= 2;",
+				input:             "let mut a = 1; a /= 2;",
 				expectedConstants: []interface{}{1, 2},
 				expectedInstructions: []code.Instructions{
 					code.Make(code.OpConstant, 0),
@@ -616,7 +616,7 @@ func TestVariablePostfix(t *testing.T) {
 	t.Run("should compile variable postfix expressions", func(t *testing.T) {
 		tests := []compilerTestCase{
 			{
-				input:             "let one = 1; one++;",
+				input:             "let mut one = 1; one++;",
 				expectedConstants: []interface{}{1},
 				expectedInstructions: []code.Instructions{
 					code.Make(code.OpConstant, 0),
@@ -627,7 +627,7 @@ func TestVariablePostfix(t *testing.T) {
 				},
 			},
 			{
-				input:             "let one = 1; one--;",
+				input:             "let mut one = 1; one--;",
 				expectedConstants: []interface{}{1},
 				expectedInstructions: []code.Instructions{
 					code.Make(code.OpConstant, 0),
@@ -638,7 +638,7 @@ func TestVariablePostfix(t *testing.T) {
 				},
 			},
 			{
-				input:             "let one = 1; let two = one++;",
+				input:             "let mut one = 1; let two = one++;",
 				expectedConstants: []interface{}{1},
 				expectedInstructions: []code.Instructions{
 					code.Make(code.OpConstant, 0),
@@ -649,7 +649,7 @@ func TestVariablePostfix(t *testing.T) {
 				},
 			},
 			{
-				input: "let a = () => { let b = 1; b++; };",
+				input: "let a = () => { let mut b = 1; b++; };",
 				expectedConstants: []interface{}{
 					1,
 					[]code.Instructions{
@@ -666,7 +666,7 @@ func TestVariablePostfix(t *testing.T) {
 				},
 			},
 			{
-				input: "let a = 1; let b = () => { a++; };",
+				input: "let mut a = 1; let b = () => { a++; };",
 				expectedConstants: []interface{}{
 					1,
 					[]code.Instructions{
@@ -692,7 +692,7 @@ func TestVariablePrefix(t *testing.T) {
 	t.Run("should compile variable prefix expressions", func(t *testing.T) {
 		tests := []compilerTestCase{
 			{
-				input:             "let one = 1; ++one;",
+				input:             "let mut one = 1; ++one;",
 				expectedConstants: []interface{}{1},
 				expectedInstructions: []code.Instructions{
 					code.Make(code.OpConstant, 0),
@@ -703,7 +703,7 @@ func TestVariablePrefix(t *testing.T) {
 				},
 			},
 			{
-				input:             "let one = 1; --one;",
+				input:             "let mut one = 1; --one;",
 				expectedConstants: []interface{}{1},
 				expectedInstructions: []code.Instructions{
 					code.Make(code.OpConstant, 0),
@@ -725,7 +725,7 @@ func TestVariablePrefix(t *testing.T) {
 				},
 			},
 			{
-				input:             "let one = 1; let two = ++one;",
+				input:             "let mut one = 1; let two = ++one;",
 				expectedConstants: []interface{}{1},
 				expectedInstructions: []code.Instructions{
 					code.Make(code.OpConstant, 0),
@@ -736,7 +736,7 @@ func TestVariablePrefix(t *testing.T) {
 				},
 			},
 			{
-				input:             "let one = 1; let two = --one;",
+				input:             "let mut one = 1; let two = --one;",
 				expectedConstants: []interface{}{1},
 				expectedInstructions: []code.Instructions{
 					code.Make(code.OpConstant, 0),
@@ -747,7 +747,7 @@ func TestVariablePrefix(t *testing.T) {
 				},
 			},
 			{
-				input: "let a = () => { let b = 1; ++b; };",
+				input: "let a = () => { let mut b = 1; ++b; };",
 				expectedConstants: []interface{}{
 					1,
 					[]code.Instructions{
@@ -764,7 +764,7 @@ func TestVariablePrefix(t *testing.T) {
 				},
 			},
 			{
-				input: "let a = () => { let b = 1; --b; };",
+				input: "let a = () => { let mut b = 1; --b; };",
 				expectedConstants: []interface{}{
 					1,
 					[]code.Instructions{
@@ -781,7 +781,7 @@ func TestVariablePrefix(t *testing.T) {
 				},
 			},
 			{
-				input: "let a = 1; let b = () => { ++a; };",
+				input: "let mut a = 1; let b = () => { ++a; };",
 				expectedConstants: []interface{}{
 					1,
 					[]code.Instructions{
@@ -798,7 +798,7 @@ func TestVariablePrefix(t *testing.T) {
 				},
 			},
 			{
-				input: "let a = 1; let b = () => { --a; };",
+				input: "let mut a = 1; let b = () => { --a; };",
 				expectedConstants: []interface{}{
 					1,
 					[]code.Instructions{

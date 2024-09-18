@@ -6,6 +6,7 @@ type Identifier struct {
 	Token        token.Token
 	Value        string
 	DefaultValue *Expression
+	Mutable      bool
 }
 
 func (i *Identifier) expressionNode() {}

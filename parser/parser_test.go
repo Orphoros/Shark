@@ -13,6 +13,7 @@ func TestLetStatements(t *testing.T) {
 		let x = 5;
 		let y = 10;
 		let foobar = 838383;
+		let mut z = 27;
 		`
 
 		l := lexer.New(&input)
@@ -26,22 +27,24 @@ func TestLetStatements(t *testing.T) {
 			t.Fatalf("ParseProgram() returned nil")
 		}
 
-		if len(program.Statements) != 3 {
+		if len(program.Statements) != 4 {
 			t.Fatalf("program.Statements does not contain 3 statements. got=%d", len(program.Statements))
 		}
 
 		tests := []struct {
 			expectedIdentifier string
+			mutable            bool
 		}{
-			{"x"},
-			{"y"},
-			{"foobar"},
+			{"x", false},
+			{"y", false},
+			{"foobar", false},
+			{"z", true},
 		}
 
 		for i, tt := range tests {
 			stmt := program.Statements[i]
 
-			if !testLetStatement(t, stmt, tt.expectedIdentifier) {
+			if !testLetStatement(t, stmt, tt.expectedIdentifier, tt.mutable) {
 				return
 			}
 		}
@@ -336,7 +339,7 @@ func testInfixExpression(t *testing.T, exp ast.Expression, left interface{}, ope
 	return true
 }
 
-func testLetStatement(t *testing.T, s ast.Statement, name string) bool {
+func testLetStatement(t *testing.T, s ast.Statement, name string, mutable bool) bool {
 	if s.TokenLiteral() != "let" {
 		t.Errorf("s.TokenLiteral not 'let'. got=%q", s.TokenLiteral())
 		return false
@@ -356,6 +359,11 @@ func testLetStatement(t *testing.T, s ast.Statement, name string) bool {
 
 	if letStmt.Name.TokenLiteral() != name {
 		t.Errorf("s.Name not '%s'. got=%s", name, letStmt.Name)
+		return false
+	}
+
+	if letStmt.Name.Mutable != mutable {
+		t.Errorf("letStmt.Name.Mutable not '%t'. got=%t", mutable, letStmt.Name.Mutable)
 		return false
 	}
 

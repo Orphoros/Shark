@@ -48,11 +48,19 @@ func (p *Parser) parseReturnStatement() *ast.ReturnStatement {
 func (p *Parser) parseLetStatement() *ast.LetStatement {
 	stmt := &ast.LetStatement{Token: p.curToken}
 
+	mutable := false
+
+	// check if mutable
+	if p.peekTokenIs(token.MUTABLE) {
+		mutable = true
+		p.nextToken()
+	}
+
 	if !p.expectPeek(token.IDENT) {
 		return nil
 	}
 
-	stmt.Name = &ast.Identifier{Token: p.curToken, Value: p.curToken.Literal}
+	stmt.Name = &ast.Identifier{Token: p.curToken, Value: p.curToken.Literal, Mutable: mutable}
 
 	if !p.expectPeek(token.ASSIGN) {
 		return nil

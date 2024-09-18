@@ -30,7 +30,13 @@ func (p *Parser) parseFunctionParameters() []*ast.Identifier {
 		return identifiers
 	}
 
-	ident := &ast.Identifier{Token: p.curToken, Value: p.curToken.Literal}
+	mutable := false
+	if p.curTokenIs(token.MUTABLE) {
+		mutable = true
+		p.nextToken()
+	}
+
+	ident := &ast.Identifier{Token: p.curToken, Value: p.curToken.Literal, Mutable: mutable}
 
 	if p.peekTokenIs(token.ASSIGN) {
 		p.nextToken()

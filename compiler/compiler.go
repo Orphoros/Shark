@@ -140,6 +140,22 @@ func (c *Compiler) Compile(node ast.Node) *exception.SharkError {
 				},
 			}
 		}
+		if !symbol.Mutable {
+			return &exception.SharkError{
+				ErrMsg:  "cannot reassign value to a constant",
+				ErrCode: exception.SharkErrorImmutableValue,
+				ErrType: exception.SharkErrorTypeCompiler,
+				ErrCause: []exception.SharkErrorCause{
+					{
+						CauseMsg: "Cannot reassign value to a constant",
+						Line:     node.Token.Line,
+						LineTo:   node.Token.LineTo,
+						Col:      node.Token.ColFrom,
+						ColTo:    node.Token.ColTo,
+					},
+				},
+			}
+		}
 		c.loadSymbol(symbol)
 		switch node.Operator {
 		case "++":
@@ -229,6 +245,22 @@ func (c *Compiler) Compile(node ast.Node) *exception.SharkError {
 					ErrCause: []exception.SharkErrorCause{
 						{
 							CauseMsg: "Variable not found for reassignment",
+							Line:     node.Token.Line,
+							LineTo:   node.Token.LineTo,
+							Col:      node.Token.ColFrom,
+							ColTo:    node.Token.ColTo,
+						},
+					},
+				}
+			}
+			if !symbol.Mutable {
+				return &exception.SharkError{
+					ErrMsg:  "cannot reassign value to a constant",
+					ErrCode: exception.SharkErrorImmutableValue,
+					ErrType: exception.SharkErrorTypeCompiler,
+					ErrCause: []exception.SharkErrorCause{
+						{
+							CauseMsg: "Cannot reassign value to a constant",
 							Line:     node.Token.Line,
 							LineTo:   node.Token.LineTo,
 							Col:      node.Token.ColFrom,
@@ -347,6 +379,22 @@ func (c *Compiler) Compile(node ast.Node) *exception.SharkError {
 					},
 				}
 			}
+			if !symbol.Mutable {
+				return &exception.SharkError{
+					ErrMsg:  "cannot reassign value to a constant",
+					ErrCode: exception.SharkErrorImmutableValue,
+					ErrType: exception.SharkErrorTypeCompiler,
+					ErrCause: []exception.SharkErrorCause{
+						{
+							CauseMsg: "Cannot reassign value to a constant",
+							Line:     node.Token.Line,
+							LineTo:   node.Token.LineTo,
+							Col:      node.Token.ColFrom,
+							ColTo:    node.Token.ColTo,
+						},
+					},
+				}
+			}
 			if symbol.Scope == GlobalScope {
 				c.emit(code.OpIncrementGlobal, symbol.Index)
 			} else {
@@ -379,6 +427,22 @@ func (c *Compiler) Compile(node ast.Node) *exception.SharkError {
 					ErrCause: []exception.SharkErrorCause{
 						{
 							CauseMsg: "Variable not found",
+							Line:     node.Token.Line,
+							LineTo:   node.Token.LineTo,
+							Col:      node.Token.ColFrom,
+							ColTo:    node.Token.ColTo,
+						},
+					},
+				}
+			}
+			if !symbol.Mutable {
+				return &exception.SharkError{
+					ErrMsg:  "cannot reassign value to a constant",
+					ErrCode: exception.SharkErrorImmutableValue,
+					ErrType: exception.SharkErrorTypeCompiler,
+					ErrCause: []exception.SharkErrorCause{
+						{
+							CauseMsg: "Cannot reassign value to a constant",
 							Line:     node.Token.Line,
 							LineTo:   node.Token.LineTo,
 							Col:      node.Token.ColFrom,
@@ -507,7 +571,7 @@ func (c *Compiler) Compile(node ast.Node) *exception.SharkError {
 				},
 			}
 		}
-		symbol = c.symbolTable.Define(node.Name.Value)
+		symbol = c.symbolTable.Define(node.Name.Value, node.Name.Mutable)
 		if err := c.Compile(node.Value); err != nil {
 			return err
 		}
@@ -581,7 +645,7 @@ func (c *Compiler) Compile(node ast.Node) *exception.SharkError {
 		}
 		numDefaults := 0
 		for _, param := range node.Parameters {
-			symbol := c.symbolTable.Define(param.Value)
+			symbol := c.symbolTable.Define(param.Value, param.Mutable)
 			if param.DefaultValue != nil {
 				numDefaults++
 				if err := c.Compile(*param.DefaultValue); err != nil {

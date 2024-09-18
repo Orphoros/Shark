@@ -52,6 +52,8 @@ const (
 	SharkErrorNonIndexable
 
 	SharkErrorNoDefaultValue
+
+	SharkErrorImmutableValue
 )
 
 const (

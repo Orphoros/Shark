@@ -39,7 +39,7 @@ func TestNextToken(t *testing.T) {
 
 	t.Run("should tokenize identifiers", func(t *testing.T) {
 		input := `let five = 5;
-let ten = 10;
+let mut ten = 10;
 
 
 let add = (x, y) => {
@@ -101,6 +101,7 @@ while (true) { let a = 1; }
 			{token.INT, "5"},
 			{token.SEMICOLON, ";"},
 			{token.LET, "let"},
+			{token.MUTABLE, "mut"},
 			{token.IDENT, "ten"},
 			{token.ASSIGN, "="},
 			{token.INT, "10"},

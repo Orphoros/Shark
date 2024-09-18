@@ -106,11 +106,11 @@ func TestConditionals(t *testing.T) {
 func TestWhileStatement(t *testing.T) {
 	t.Run("should evaluate while statements", func(t *testing.T) {
 		tests := []vmTestCase{
-			{"let a = 0; while (a < 10) { a = a + 1; }; a", 10},
-			{"let a = 5; while (a > 0) { a = a - 1; }; a", 0},
-			{"let a = 10; while (a >= 5) { a--; }; a", 4},
-			{"let a = 10; while (a <= 20) { a += 1; }; a", 21},
-			{"let sum = 2; let i = 1; while (i <= 5) { sum *= 2; i++; }; sum", 64},
+			{"let mut a = 0; while (a < 10) { a = a + 1; }; a", 10},
+			{"let mut a = 5; while (a > 0) { a = a - 1; }; a", 0},
+			{"let mut a = 10; while (a >= 5) { a--; }; a", 4},
+			{"let mut a = 10; while (a <= 20) { a += 1; }; a", 21},
+			{"let mut sum = 2; let mut i = 1; while (i <= 5) { sum *= 2; i++; }; sum", 64},
 		}
 
 		runVmTests(t, tests)
@@ -130,9 +130,9 @@ func TestGlobalLetStatements(t *testing.T) {
 
 	t.Run("should evaluate global let reassign expressions", func(t *testing.T) {
 		tests := []vmTestCase{
-			{"let one = 1; one = 3", 3},
-			{"let x = 1; let y = 2; x = y", 2},
-			{"let one = 1; let two = 2; let three = one = two = 3; three", 3},
+			{"let mut one = 1; one = 3", 3},
+			{"let mut x = 1; let y = 2; x = y", 2},
+			{"let mut one = 1; let mut two = 2; let three = one = two = 3; three", 3},
 		}
 
 		runVmTests(t, tests)
@@ -140,10 +140,10 @@ func TestGlobalLetStatements(t *testing.T) {
 
 	t.Run("should evaluate global let reassign expressions with value change", func(t *testing.T) {
 		tests := []vmTestCase{
-			{"let one = 1; one += 3", 4},
-			{"let x = 5; let y = 2; x -= y", 3},
-			{"let z = 2; z *= 3", 6},
-			{"let y = 10; y /= 2", 5},
+			{"let mut one = 1; one += 3", 4},
+			{"let mut x = 5; let y = 2; x -= y", 3},
+			{"let mut z = 2; z *= 3", 6},
+			{"let mut y = 10; y /= 2", 5},
 		}
 
 		runVmTests(t, tests)
@@ -483,7 +483,7 @@ func TestVariablePostfix(t *testing.T) {
 		tests := []vmTestCase{
 			{
 				input: `
-			let a = 5;
+			let mut a = 5;
 			let b = a++;
 			a;
 			`,
@@ -491,7 +491,7 @@ func TestVariablePostfix(t *testing.T) {
 			},
 			{
 				input: `
-			let a = 5;
+			let mut a = 5;
 			let b = a++;
 			b;
 			`,
@@ -507,7 +507,7 @@ func TestVariablePostfix(t *testing.T) {
 			{
 				input: `
 			let test = () => {
-				let b = 5;
+				let mut b = 5;
 				b++;
 			};
 			test();
@@ -517,7 +517,7 @@ func TestVariablePostfix(t *testing.T) {
 			{
 				input: `
 			let test = () => {
-				let b = 5;
+				let mut b = 5;
 				b++;
 				b;
 			};
@@ -534,7 +534,7 @@ func TestVariablePostfix(t *testing.T) {
 		tests := []vmTestCase{
 			{
 				input: `
-			let a = 5;
+			let mut a = 5;
 			let b = a--;
 			a;
 			`,
@@ -542,7 +542,7 @@ func TestVariablePostfix(t *testing.T) {
 			},
 			{
 				input: `
-			let a = 5;
+			let mut a = 5;
 			let b = a--;
 			b;
 			`,
@@ -558,7 +558,7 @@ func TestVariablePostfix(t *testing.T) {
 			{
 				input: `
 			let test = () => {
-				let b = 5;
+				let mut b = 5;
 				b--;
 			};
 			test();
@@ -568,7 +568,7 @@ func TestVariablePostfix(t *testing.T) {
 			{
 				input: `
 			let test = () => {
-				let b = 5;
+				let mut b = 5;
 				b--;
 				b;
 			};
@@ -602,7 +602,7 @@ func TestVariablePrefix(t *testing.T) {
 		tests := []vmTestCase{
 			{
 				input: `
-			let a = 5;
+			let mut a = 5;
 			let b = --a;
 			a;
 			`,
@@ -610,7 +610,7 @@ func TestVariablePrefix(t *testing.T) {
 			},
 			{
 				input: `
-			let a = 5;
+			let mut a = 5;
 			let b = --a;
 			b;
 			`,
@@ -625,7 +625,7 @@ func TestVariablePrefix(t *testing.T) {
 		tests := []vmTestCase{
 			{
 				input: `
-			let a = 5;
+			let mut a = 5;
 			let b = ++a;
 			a;
 			`,
@@ -633,7 +633,7 @@ func TestVariablePrefix(t *testing.T) {
 			},
 			{
 				input: `
-			let a = 5;
+			let mut a = 5;
 			let b = ++a;
 			b;
 			`,
@@ -649,7 +649,7 @@ func TestVariablePrefix(t *testing.T) {
 			{
 				input: `
 			let test = () => {
-				let b = 5;
+				let mut b = 5;
 				--b;
 			};
 			test();
@@ -659,7 +659,7 @@ func TestVariablePrefix(t *testing.T) {
 			{
 				input: `
 			let test = () => {
-				let b = 5;
+				let mut b = 5;
 				--b;
 				b;
 			};
@@ -677,7 +677,7 @@ func TestVariablePrefix(t *testing.T) {
 			{
 				input: `
 			let test = () => {
-				let b = 5;
+				let mut b = 5;
 				++b;
 			};
 			test();
@@ -687,7 +687,7 @@ func TestVariablePrefix(t *testing.T) {
 			{
 				input: `
 			let test = () => {
-				let b = 5;
+				let mut b = 5;
 				++b;
 				b;
 			};
