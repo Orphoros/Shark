@@ -1,0 +1,66 @@
+{
+    "While Loop": {
+        "prefix": [
+            "while"
+        ],
+        "body": [
+            "while (${1:condition}) {",
+            "\t$0",
+            "}"
+        ],
+        "description": "A while loop."
+    },
+    "If Expression": {
+        "prefix": [
+            "if"
+        ],
+        "body": [
+            "if (${1:condition}) {",
+            "\t$0",
+            "}"
+        ],
+        "description": "An if expression."
+    },
+    "Else If Expression": {
+        "prefix": [
+            "ifelse"
+        ],
+        "body": [
+            "if (${1:condition}) {",
+            "\t$2",
+            "} else {",
+            "\t$0",
+            "}"
+        ],
+        "description": "An else if expression."
+    },
+    "Function": {
+        "prefix": [
+            "function"
+        ],
+        "body": [
+            "(${1:arguments}) => {",
+            "\t$0",
+            "}"
+        ],
+        "description": "A function."
+    },
+    "Variable": {
+        "prefix": [
+            "let"
+        ],
+        "body": [
+            "let ${1:name} = ${2:value};"
+        ],
+        "description": "A variable."
+    },
+    "Mutable Variable": {
+        "prefix": [
+            "let-mut"
+        ],
+        "body": [
+            "let mut ${1:name} = ${2:value};"
+        ],
+        "description": "A mutable variable."
+    }
+}

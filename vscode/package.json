@@ -13,29 +13,48 @@
   "contributes": {
     "languages": [
       {
-      "id": "shark",
-      "aliases": ["Shark", "shark"],
-      "extensions": [".shark",".srk"],
-      "configuration": "./language-configuration.json",
-      "icon": {
-        "light": "./images/shark_file_icon.svg",
-        "dark": "./images/shark_file_icon.svg"
+        "id": "shark",
+        "aliases": [
+          "Shark",
+          "shark"
+        ],
+        "extensions": [
+          ".shark",
+          ".srk"
+        ],
+        "configuration": "./language-configuration.json",
+        "icon": {
+          "light": "./images/shark_file_icon.svg",
+          "dark": "./images/shark_file_icon.svg"
+        }
+      },
+      {
+        "id": "egg",
+        "aliases": [
+          "Egg",
+          "egg"
+        ],
+        "extensions": [
+          ".egg"
+        ],
+        "icon": {
+          "light": "./images/egg_file_icon.svg",
+          "dark": "./images/egg_file_icon.svg"
+        }
       }
-    },
-    {
-      "id": "egg",
-      "aliases": ["Egg", "egg"],
-      "extensions": [".egg"],
-      "icon": {
-        "light": "./images/egg_file_icon.svg",
-        "dark": "./images/egg_file_icon.svg"
+    ],
+    "grammars": [
+      {
+        "language": "shark",
+        "scopeName": "source.shark",
+        "path": "./syntaxes/shark.tmLanguage.json"
       }
-    }
-  ],
-    "grammars": [{
-      "language": "shark",
-      "scopeName": "source.shark",
-      "path": "./syntaxes/shark.tmLanguage.json"
-    }]
+    ],
+    "snippets": [
+      {
+        "language": "shark",
+        "path": "./snippets/shark.json"
+      }
+    ]
   }
 }
