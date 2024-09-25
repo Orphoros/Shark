@@ -224,6 +224,13 @@ func (vm *VM) Run() *exception.SharkError {
 			if err := vm.executeIndexExpression(left, index); err != nil {
 				return err
 			}
+		case code.OpIndexAssign:
+			index := vm.pop()
+			left := vm.pop()
+			value := vm.pop()
+			if err := vm.executeIndexAssign(left, index, value); err != nil {
+				return err
+			}
 		case code.OpCall:
 			numArgs := code.ReadUint8(ins[ip+1:])
 			vm.currentFrame().ip += 1
@@ -635,6 +642,52 @@ func (vm *VM) executeHashIndex(hash, index object.Object) *exception.SharkError 
 	}
 
 	return vm.push(pair.Value)
+}
+
+func (vm *VM) executeIndexAssign(left, index, value object.Object) *exception.SharkError {
+	switch {
+	case left.Type() == object.ARRAY_OBJ && index.Type() == object.INTEGER_OBJ:
+		return vm.executeArrayIndexAssign(left, index, value)
+	case left.Type() == object.HASH_OBJ:
+		return vm.executeHashIndexAssign(left, index, value)
+	default:
+		return &exception.SharkError{
+			ErrMsg:  fmt.Sprintf("cannot assign to index %s", index.Type()),
+			ErrCode: exception.SharkErrorNonIndexable,
+			ErrType: exception.SharkErrorTypeRuntime,
+		}
+	}
+}
+
+func (vm *VM) executeArrayIndexAssign(array, index, value object.Object) *exception.SharkError {
+	arrayObject := array.(*object.Array)
+	i := index.(*object.Integer).Value
+	m := int64(len(arrayObject.Elements) - 1)
+	if i < 0 || i > m {
+		return &exception.SharkError{
+			ErrMsg:  fmt.Sprintf("index out of bounds: %d", i),
+			ErrCode: exception.SharkErrorIndexOutOfBounds,
+			ErrType: exception.SharkErrorTypeRuntime,
+		}
+	}
+	arrayObject.Elements[i] = value
+	vm.push(arrayObject)
+	return nil
+}
+
+func (vm *VM) executeHashIndexAssign(hash, index, value object.Object) *exception.SharkError {
+	hashObject := hash.(*object.Hash)
+	key, ok := index.(object.Hashable)
+	if !ok {
+		return &exception.SharkError{
+			ErrMsg:  fmt.Sprintf("cannot hash %s for indexing", index.Type()),
+			ErrCode: exception.SharkErrorNonHashable,
+			ErrType: exception.SharkErrorTypeRuntime,
+		}
+	}
+	hashObject.Pairs[key.HashKey()] = object.HashPair{Key: index, Value: value}
+	vm.push(hashObject)
+	return nil
 }
 
 func (vm *VM) currentFrame() *Frame {

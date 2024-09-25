@@ -638,6 +638,57 @@ func (c *Compiler) Compile(node ast.Node) *exception.SharkError {
 		}
 
 		c.emit(code.OpIndex)
+	case *ast.IndexAssignExpression:
+		if err := c.Compile(node.Value); err != nil {
+			return err
+		}
+
+		if err := c.Compile(node.Left); err != nil {
+			return err
+		}
+
+		// if value is an identifier, check if it is mutable
+		ident, ok := node.Left.(*ast.Identifier)
+		if ok {
+			symbol, ok := c.symbolTable.Resolve(ident.Value)
+			if !ok {
+				return &exception.SharkError{
+					ErrMsg:  "identifier not found",
+					ErrCode: exception.SharkErrorIdentifierNotFound,
+					ErrType: exception.SharkErrorTypeCompiler,
+					ErrCause: []exception.SharkErrorCause{
+						{
+							CauseMsg: "Variable not found for index assignment",
+							Line:     node.Token.Line,
+							LineTo:   node.Token.Line,
+							Col:      node.Token.ColFrom,
+							ColTo:    node.Token.ColTo,
+						},
+					},
+				}
+			}
+			if !symbol.Mutable {
+				return &exception.SharkError{
+					ErrMsg:  "cannot reassign value to a constant",
+					ErrCode: exception.SharkErrorImmutableValue,
+					ErrType: exception.SharkErrorTypeCompiler,
+					ErrCause: []exception.SharkErrorCause{
+						{
+							CauseMsg: "Cannot reassign value to a constant",
+							Line:     node.Token.Line,
+							LineTo:   node.Token.Line,
+							Col:      node.Token.ColFrom,
+							ColTo:    node.Token.ColTo,
+						},
+					},
+				}
+			}
+		}
+
+		if err := c.Compile(node.Index); err != nil {
+			return err
+		}
+		c.emit(code.OpIndexAssign)
 	case *ast.FunctionLiteral:
 		c.enterScope()
 		if node.Name != "" {

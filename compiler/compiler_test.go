@@ -994,6 +994,40 @@ func TestIndexExpressions(t *testing.T) {
 
 		runCompilerTests(t, tests)
 	})
+
+	t.Run("should compile index reassign expressions", func(t *testing.T) {
+		tests := []compilerTestCase{
+			{
+				input:             "[1, 2, 3][1] = 10",
+				expectedConstants: []interface{}{10, 1, 2, 3},
+				expectedInstructions: []code.Instructions{
+					code.Make(code.OpConstant, 0),
+					code.Make(code.OpConstant, 1),
+					code.Make(code.OpConstant, 2),
+					code.Make(code.OpConstant, 3),
+					code.Make(code.OpArray, 3),
+					code.Make(code.OpConstant, 1),
+					code.Make(code.OpIndexAssign),
+					code.Make(code.OpPop),
+				},
+			},
+			{
+				input:             "{1: 2}[1] = 10",
+				expectedConstants: []interface{}{10, 1, 2},
+				expectedInstructions: []code.Instructions{
+					code.Make(code.OpConstant, 0),
+					code.Make(code.OpConstant, 1),
+					code.Make(code.OpConstant, 2),
+					code.Make(code.OpHash, 2),
+					code.Make(code.OpConstant, 1),
+					code.Make(code.OpIndexAssign),
+					code.Make(code.OpPop),
+				},
+			},
+		}
+
+		runCompilerTests(t, tests)
+	})
 }
 
 func TestFunction(t *testing.T) {

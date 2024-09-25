@@ -54,6 +54,8 @@ const (
 	SharkErrorNoDefaultValue
 
 	SharkErrorImmutableValue
+
+	SharkErrorIndexOutOfBounds
 )
 
 const (

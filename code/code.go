@@ -52,6 +52,7 @@ const (
 	OpSetLocalDefault
 	OpRange
 	OpSpread
+	OpIndexAssign
 )
 
 type Definition struct {
@@ -101,6 +102,7 @@ var definitions = map[Opcode]*Definition{
 	OpSetLocalDefault:  {"OpSetLocalDefault", []int{1}},
 	OpRange:            {"OpRange", []int{}},
 	OpSpread:           {"OpSpread", []int{}},
+	OpIndexAssign:      {"OpIndexAssign", []int{}},
 }
 
 func Lookup(op byte) (*Definition, error) {

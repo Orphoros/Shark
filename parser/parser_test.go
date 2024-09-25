@@ -382,7 +382,7 @@ func checkParserErrors(t *testing.T, p *Parser) {
 	t.Errorf("parser has %d errors", len(errors))
 
 	for _, msg := range errors {
-		t.Errorf("parser error: %q", msg)
+		t.Errorf("parser error: %q", msg.ErrMsg)
 	}
 
 	t.FailNow()
@@ -1106,7 +1106,11 @@ func TestParsingIndexExpressions(t *testing.T) {
 		checkParserErrors(t, p)
 
 		stmt := program.Statements[0].(*ast.ExpressionStatement)
-		indexExp := stmt.Expression.(*ast.IndexExpression)
+		indexExp, ok := stmt.Expression.(*ast.IndexExpression)
+
+		if !ok {
+			t.Fatalf("exp not *ast.IndexExpression. got=%T", stmt.Expression)
+		}
 
 		if !testIdentifier(t, indexExp.Left, "myArray") {
 			return
@@ -1115,6 +1119,36 @@ func TestParsingIndexExpressions(t *testing.T) {
 		if !testInfixExpression(t, indexExp.Index, 1, "+", 1) {
 			return
 		}
+	})
+
+	t.Run("should parse index reassign", func(t *testing.T) {
+		input := "myArray[1] = true;"
+
+		l := lexer.New(&input)
+		p := New(l)
+		program := p.ParseProgram()
+
+		checkParserErrors(t, p)
+
+		stmt := program.Statements[0].(*ast.ExpressionStatement)
+		indexExp, ok := stmt.Expression.(*ast.IndexAssignExpression)
+
+		if !ok {
+			t.Fatalf("exp not *ast.IndexAssignExpression. got=%T", stmt.Expression)
+		}
+
+		if !testIdentifier(t, indexExp.Left, "myArray") {
+			t.Fatalf("exp.Left not *ast.Identifier. got=%T", indexExp.Left)
+		}
+
+		if !testLiteralExpression(t, indexExp.Index, 1) {
+			t.Fatalf("exp.Index not *ast.IntegerLiteral. got=%T", indexExp.Index)
+		}
+
+		if !testLiteralExpression(t, indexExp.Value, true) {
+			t.Fatalf("exp.Value not *ast.Boolean. got=%T", indexExp.Value)
+		}
+
 	})
 }
 

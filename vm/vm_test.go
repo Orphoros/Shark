@@ -247,6 +247,15 @@ func TestIndexExpressions(t *testing.T) {
 
 		runVmTests(t, tests)
 	})
+
+	t.Run("should evaluate index reassign expressions", func(t *testing.T) {
+		tests := []vmTestCase{
+			{"let mut x = [1, 2, 3]; x[1] = 10; x[1]", 10},
+			{"let mut x = {1: 1, 2: 2}; x[1] = 10; x[1]", 10},
+		}
+
+		runVmTests(t, tests)
+	})
 }
 
 func TestCallingFunctionsWithDefaultArguments(t *testing.T) {
