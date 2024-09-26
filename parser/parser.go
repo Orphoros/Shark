@@ -191,7 +191,6 @@ func (p *Parser) expectPeek(t token.TokenType) bool {
 }
 
 func (p *Parser) peekError(t token.TokenType) {
-	errorMsg := "Could not parse the code due to an unexpected character."
 	causeMsg := fmt.Sprintf("expected '%s', but got '%s' instead", t, p.peekToken.Type)
 	var suggestionMsg string
 	switch t {
@@ -207,21 +206,10 @@ func (p *Parser) peekError(t token.TokenType) {
 		suggestionMsg = "Try terminated the statement."
 	}
 
-	p.errors = append(p.errors, exception.SharkError{
-		ErrCause: []exception.SharkErrorCause{
-			{
-				CauseMsg: causeMsg,
-				Col:      p.peekToken.ColFrom,
-				ColTo:    p.peekToken.ColTo,
-				Line:     p.peekToken.Line,
-				LineTo:   p.peekToken.LineTo,
-			},
-		},
-		ErrMsg:     errorMsg,
-		ErrHelpMsg: suggestionMsg,
-		ErrCode:    exception.SharkErrorUnexpectedToken,
-		ErrType:    exception.SharkErrorTypeParser,
-	})
+	p.errors = append(p.errors, newSharkError(exception.SharkErrorUnexpectedToken, p.peekToken.Type,
+		suggestionMsg,
+		exception.NewSharkErrorCause(causeMsg, p.peekToken.ColFrom, p.peekToken.ColTo, p.peekToken.Line, p.peekToken.LineTo),
+	))
 }
 
 func (p *Parser) parseIntegerLiteral() ast.Expression {
@@ -229,21 +217,10 @@ func (p *Parser) parseIntegerLiteral() ast.Expression {
 
 	value, err := strconv.ParseInt(p.curToken.Literal, 0, 64)
 	if err != nil {
-		p.errors = append(p.errors, exception.SharkError{
-			ErrCause: []exception.SharkErrorCause{
-				{
-					Line:     p.curToken.Line,
-					LineTo:   p.curToken.LineTo,
-					Col:      p.curToken.ColFrom,
-					ColTo:    p.curToken.ColTo,
-					CauseMsg: err.Error(),
-				},
-			},
-			ErrMsg:     "Could not parse the code due to an invalid integer literal.",
-			ErrHelpMsg: "Try to use a smaller decimal number instead",
-			ErrCode:    exception.SharkErrorInteger,
-			ErrType:    exception.SharkErrorTypeParser,
-		})
+		p.errors = append(p.errors, newSharkError(exception.SharkErrorInteger, p.curToken.Literal,
+			"Try to use a smaller decimal number instead",
+			exception.NewSharkErrorCause(err.Error(), p.curToken.Line, p.curToken.LineTo, p.curToken.ColFrom, p.curToken.ColTo),
+		))
 		return nil
 	}
 
@@ -271,4 +248,23 @@ func (p *Parser) curPrecedence() int {
 // Parse a boolean expression. It returns an AST representation of the boolean expression.
 func (p *Parser) parseBoolean() ast.Expression {
 	return &ast.Boolean{Token: p.curToken, Value: p.curTokenIs(token.TRUE)}
+}
+
+func newSharkError(code exception.SharkErrorCode, param interface{}, helpMsg string, cause ...exception.SharkErrorCause) exception.SharkError {
+	var err exception.SharkError
+	if param == nil {
+		err = *exception.NewSharkError(exception.SharkErrorTypeParser, code)
+	} else {
+		err = *exception.NewSharkError(exception.SharkErrorTypeParser, code, param)
+	}
+
+	if helpMsg != "" {
+		err.SetHelpMsg(helpMsg)
+	}
+
+	for _, c := range cause {
+		err.AddCause(c)
+	}
+
+	return err
 }

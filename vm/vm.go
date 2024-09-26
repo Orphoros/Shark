@@ -130,11 +130,7 @@ func (vm *VM) Run() *exception.SharkError {
 			vm.currentFrame().ip += 2
 			intVal, ok := vm.globals[globalIndex].(*object.Integer)
 			if !ok {
-				return &exception.SharkError{
-					ErrMsg:  "cannot increment a global non-integer value",
-					ErrCode: exception.SharkErrorNonNumberIncrement,
-					ErrType: exception.SharkErrorTypeRuntime,
-				}
+				return newSharkError(exception.SharkErrorNonNumberIncrement, vm.globals[globalIndex].Type())
 			}
 			vm.globals[globalIndex] = &object.Integer{Value: intVal.Value + 1}
 		case code.OpIncrementLocal:
@@ -143,11 +139,7 @@ func (vm *VM) Run() *exception.SharkError {
 			frame := vm.currentFrame()
 			intVal, ok := vm.stack[frame.basePointer+int(localIndex)].(*object.Integer)
 			if !ok {
-				return &exception.SharkError{
-					ErrMsg:  "cannot increment a local non-integer value",
-					ErrCode: exception.SharkErrorNonNumberIncrement,
-					ErrType: exception.SharkErrorTypeRuntime,
-				}
+				return newSharkError(exception.SharkErrorNonNumberIncrement, vm.stack[frame.basePointer+int(localIndex)].Type())
 			}
 			vm.stack[frame.basePointer+int(localIndex)] = &object.Integer{Value: intVal.Value + 1}
 		case code.OpDecrementGlobal:
@@ -155,11 +147,7 @@ func (vm *VM) Run() *exception.SharkError {
 			vm.currentFrame().ip += 2
 			intVal, ok := vm.globals[globalIndex].(*object.Integer)
 			if !ok {
-				return &exception.SharkError{
-					ErrMsg:  "cannot decrement a global non-integer value",
-					ErrCode: exception.SharkErrorNonNumberIncrement,
-					ErrType: exception.SharkErrorTypeRuntime,
-				}
+				return newSharkError(exception.SharkErrorNonNumberDecrement, vm.globals[globalIndex].Type())
 			}
 			vm.globals[globalIndex] = &object.Integer{Value: intVal.Value - 1}
 		case code.OpDecrementLocal:
@@ -168,11 +156,7 @@ func (vm *VM) Run() *exception.SharkError {
 			frame := vm.currentFrame()
 			intVal, ok := vm.stack[frame.basePointer+int(localIndex)].(*object.Integer)
 			if !ok {
-				return &exception.SharkError{
-					ErrMsg:  "cannot decrement a local non-integer value",
-					ErrCode: exception.SharkErrorNonNumberIncrement,
-					ErrType: exception.SharkErrorTypeRuntime,
-				}
+				return newSharkError(exception.SharkErrorNonNumberIncrement, vm.stack[frame.basePointer+int(localIndex)].Type())
 			}
 			vm.stack[frame.basePointer+int(localIndex)] = &object.Integer{Value: intVal.Value - 1}
 		case code.OpJump:
@@ -239,11 +223,7 @@ func (vm *VM) Run() *exception.SharkError {
 			}
 		case code.OpReturnValue:
 			if vm.currentFrame().basePointer == 0 {
-				return &exception.SharkError{
-					ErrMsg:  "return statement outside of function is not allowed",
-					ErrCode: exception.SharkErrorTopLeverReturn,
-					ErrType: exception.SharkErrorTypeRuntime,
-				}
+				return newSharkError(exception.SharkErrorTopLeverReturn, nil)
 			}
 			returnValue := vm.pop()
 			frame := vm.popFrame()
@@ -260,11 +240,7 @@ func (vm *VM) Run() *exception.SharkError {
 		case code.OpSpread:
 			operand := vm.pop()
 			if operand.Type() != object.STRING_OBJ {
-				return &exception.SharkError{
-					ErrMsg:  "spread operator only supports string operands",
-					ErrCode: exception.SharkErrorMismatchedTypes,
-					ErrType: exception.SharkErrorTypeRuntime,
-				}
+				return newSharkError(exception.SharkErrorMismatchedTypes, operand.Type(), object.STRING_OBJ)
 			}
 			str := operand.(*object.String).Value
 			elements := make([]object.Object, len(str))
@@ -277,12 +253,10 @@ func (vm *VM) Run() *exception.SharkError {
 		case code.OpRange:
 			end := vm.pop()
 			start := vm.pop()
-			if start.Type() != object.INTEGER_OBJ || end.Type() != object.INTEGER_OBJ {
-				return &exception.SharkError{
-					ErrMsg:  "range operator only supports integer operands",
-					ErrCode: exception.SharkErrorMismatchedTypes,
-					ErrType: exception.SharkErrorTypeRuntime,
-				}
+			if start.Type() != object.INTEGER_OBJ {
+				return newSharkError(exception.SharkErrorMismatchedTypes, start.Type(), object.INTEGER_OBJ)
+			} else if end.Type() != object.INTEGER_OBJ {
+				return newSharkError(exception.SharkErrorMismatchedTypes, end.Type(), object.INTEGER_OBJ)
 			}
 			startVal := start.(*object.Integer).Value
 			endVal := end.(*object.Integer).Value
@@ -310,11 +284,7 @@ func (vm *VM) Run() *exception.SharkError {
 			vm.stack[frame.basePointer+int(localIndex)] = vm.pop()
 		case code.OpSetLocalDefault:
 			if vm.sp == 0 {
-				return &exception.SharkError{
-					ErrMsg:  "no value to set",
-					ErrCode: exception.SharkErrorNoDefaultValue,
-					ErrType: exception.SharkErrorTypeRuntime,
-				}
+				return newSharkError(exception.SharkErrorNoDefaultValue)
 			}
 			// only set the local if the local's value is null
 			localIndex := code.ReadUint8(ins[ip+1:])
@@ -366,11 +336,7 @@ func (vm *VM) pushClosure(constIndex, numFree int) *exception.SharkError {
 	constant := vm.constants[constIndex]
 	function, ok := constant.(*object.CompiledFunction)
 	if !ok {
-		return &exception.SharkError{
-			ErrMsg:  fmt.Sprintf("not a function: %+v", constant),
-			ErrCode: exception.SharkErrorNonFunction,
-			ErrType: exception.SharkErrorTypeRuntime,
-		}
+		return newSharkError(exception.SharkErrorNonFunction, constant.Type())
 	}
 
 	free := make([]object.Object, numFree)
@@ -387,11 +353,7 @@ func (vm *VM) pushClosure(constIndex, numFree int) *exception.SharkError {
 
 func (vm *VM) push(o object.Object) *exception.SharkError {
 	if vm.sp >= vm.conf.StackSize {
-		return &exception.SharkError{
-			ErrMsg:  "stack overflow",
-			ErrCode: exception.SharkErrorVMStackOverflow,
-			ErrType: exception.SharkErrorTypeRuntime,
-		}
+		return newSharkError(exception.SharkErrorVMStackOverflow)
 	}
 
 	vm.stack[vm.sp] = o
@@ -419,12 +381,7 @@ func (vm *VM) executeBinaryOperation(op code.Opcode) *exception.SharkError {
 	case leftType == object.STRING_OBJ && rightType == object.STRING_OBJ:
 		return vm.executeBinaryStringOperation(op, left, right)
 	default:
-		return &exception.SharkError{
-			ErrMsg:     fmt.Sprintf("cannot execute binary operation between %s and %s", leftType, rightType),
-			ErrHelpMsg: "Types must be the same",
-			ErrCode:    exception.SharkErrorNonNumberIncrement,
-			ErrType:    exception.SharkErrorTypeRuntime,
-		}
+		return newSharkError(exception.SharkErrorMismatchedTypes, leftType, rightType)
 	}
 }
 
@@ -446,11 +403,7 @@ func (vm *VM) executeBinaryIntegerOperation(op code.Opcode, left, right object.O
 	case code.OpPower:
 		result = int64(math.Pow(float64(leftValue), float64(rightValue)))
 	default:
-		return &exception.SharkError{
-			ErrMsg:  fmt.Sprintf("unknown integer operator: %d", op),
-			ErrCode: exception.SharkErrorUnknownOperator,
-			ErrType: exception.SharkErrorTypeRuntime,
-		}
+		return newSharkError(exception.SharkErrorUnknownOperator, op)
 	}
 
 	return vm.push(&object.Integer{Value: result})
@@ -468,12 +421,7 @@ func (vm *VM) executeComparison(op code.Opcode) *exception.SharkError {
 		return vm.executeBooleanComparison(op, left, right)
 	}
 
-	return &exception.SharkError{
-		ErrMsg:  fmt.Sprintf("unknown operator: %d (%s %s)", op, left.Type(), right.Type()),
-		ErrCode: exception.SharkErrorUnknownOperator,
-		ErrType: exception.SharkErrorTypeRuntime,
-	}
-
+	return newSharkError(exception.SharkErrorMismatchedTypes, left.Type(), right.Type())
 }
 
 func (vm *VM) executeBooleanComparison(op code.Opcode, left, right object.Object) *exception.SharkError {
@@ -490,11 +438,7 @@ func (vm *VM) executeBooleanComparison(op code.Opcode, left, right object.Object
 	case code.OpOr:
 		return vm.push(nativeBoolToBooleanObject(leftValue || rightValue))
 	default:
-		return &exception.SharkError{
-			ErrMsg:  fmt.Sprintf("unknown boolean operator integers: %d", op),
-			ErrCode: exception.SharkErrorUnknownBoolOperator,
-			ErrType: exception.SharkErrorTypeRuntime,
-		}
+		return newSharkError(exception.SharkErrorUnknownBoolOperator, op)
 	}
 }
 
@@ -512,11 +456,7 @@ func (vm *VM) executeIntegerComparison(op code.Opcode, left, right object.Object
 	case code.OpGreaterThanEqual:
 		return vm.push(nativeBoolToBooleanObject(leftValue >= rightValue))
 	default:
-		return &exception.SharkError{
-			ErrMsg:  fmt.Sprintf("unknown boolean operator between integers: %d", op),
-			ErrCode: exception.SharkErrorUnknownBoolOperator,
-			ErrType: exception.SharkErrorTypeRuntime,
-		}
+		return newSharkError(exception.SharkErrorUnknownOperator, op)
 	}
 }
 
@@ -537,11 +477,7 @@ func (vm *VM) executeMinusOperator() *exception.SharkError {
 	operand := vm.pop()
 
 	if operand.Type() != object.INTEGER_OBJ {
-		return &exception.SharkError{
-			ErrMsg:  fmt.Sprintf("Type %s is unsupported for negation", operand.Type()),
-			ErrCode: exception.SharkErrorMismatchedTypes,
-			ErrType: exception.SharkErrorTypeRuntime,
-		}
+		return newSharkError(exception.SharkErrorMismatchedTypes, operand.Type())
 	}
 
 	value := operand.(*object.Integer).Value
@@ -550,11 +486,7 @@ func (vm *VM) executeMinusOperator() *exception.SharkError {
 
 func (vm *VM) executeBinaryStringOperation(op code.Opcode, left, right object.Object) *exception.SharkError {
 	if op != code.OpAdd {
-		return &exception.SharkError{
-			ErrMsg:  fmt.Sprintf("unknown string operator: %d", op),
-			ErrCode: exception.SharkErrorUnknownStringOperator,
-			ErrType: exception.SharkErrorTypeRuntime,
-		}
+		return newSharkError(exception.SharkErrorUnknownStringOperator, op)
 	}
 
 	leftValue := left.(*object.String).Value
@@ -604,11 +536,7 @@ func (vm *VM) executeIndexExpression(left, index object.Object) *exception.Shark
 	case left.Type() == object.HASH_OBJ:
 		return vm.executeHashIndex(left, index)
 	default:
-		return &exception.SharkError{
-			ErrMsg:  fmt.Sprintf("cannot index %s", index.Type()),
-			ErrCode: exception.SharkErrorNonIndexable,
-			ErrType: exception.SharkErrorTypeRuntime,
-		}
+		return newSharkError(exception.SharkErrorNonIndexable, left.Type(), index.Type())
 	}
 }
 
@@ -629,11 +557,7 @@ func (vm *VM) executeHashIndex(hash, index object.Object) *exception.SharkError 
 
 	key, ok := index.(object.Hashable)
 	if !ok {
-		return &exception.SharkError{
-			ErrMsg:  fmt.Sprintf("cannot hash %s for indexing", index.Type()),
-			ErrCode: exception.SharkErrorNonHashable,
-			ErrType: exception.SharkErrorTypeRuntime,
-		}
+		return newSharkError(exception.SharkErrorNonHashable, index.Type())
 	}
 
 	pair, ok := hashObject.Pairs[key.HashKey()]
@@ -651,11 +575,7 @@ func (vm *VM) executeIndexAssign(left, index, value object.Object) *exception.Sh
 	case left.Type() == object.HASH_OBJ:
 		return vm.executeHashIndexAssign(left, index, value)
 	default:
-		return &exception.SharkError{
-			ErrMsg:  fmt.Sprintf("cannot assign to index %s", index.Type()),
-			ErrCode: exception.SharkErrorNonIndexable,
-			ErrType: exception.SharkErrorTypeRuntime,
-		}
+		return newSharkError(exception.SharkErrorNonIndexable, index.Type())
 	}
 }
 
@@ -664,11 +584,7 @@ func (vm *VM) executeArrayIndexAssign(array, index, value object.Object) *except
 	i := index.(*object.Integer).Value
 	m := int64(len(arrayObject.Elements) - 1)
 	if i < 0 || i > m {
-		return &exception.SharkError{
-			ErrMsg:  fmt.Sprintf("index out of bounds: %d", i),
-			ErrCode: exception.SharkErrorIndexOutOfBounds,
-			ErrType: exception.SharkErrorTypeRuntime,
-		}
+		return newSharkError(exception.SharkErrorIndexOutOfBounds, i)
 	}
 	arrayObject.Elements[i] = value
 	vm.push(arrayObject)
@@ -679,11 +595,7 @@ func (vm *VM) executeHashIndexAssign(hash, index, value object.Object) *exceptio
 	hashObject := hash.(*object.Hash)
 	key, ok := index.(object.Hashable)
 	if !ok {
-		return &exception.SharkError{
-			ErrMsg:  fmt.Sprintf("cannot hash %s for indexing", index.Type()),
-			ErrCode: exception.SharkErrorNonHashable,
-			ErrType: exception.SharkErrorTypeRuntime,
-		}
+		return newSharkError(exception.SharkErrorNonHashable, index.Type())
 	}
 	hashObject.Pairs[key.HashKey()] = object.HashPair{Key: index, Value: value}
 	vm.push(hashObject)
@@ -696,11 +608,7 @@ func (vm *VM) currentFrame() *Frame {
 
 func (vm *VM) pushFrame(f *Frame) *exception.SharkError {
 	if vm.framesIndex >= vm.conf.MaxFrames {
-		return &exception.SharkError{
-			ErrMsg:  "cannot push more frames to the stack",
-			ErrCode: exception.SharkErrorVMStackOverflow,
-			ErrType: exception.SharkErrorTypeRuntime,
-		}
+		return newSharkError(exception.SharkErrorVMFrameStackOverflow)
 	}
 	vm.frames[vm.framesIndex] = f
 	vm.framesIndex++
@@ -715,11 +623,7 @@ func (vm *VM) popFrame() *Frame {
 
 func (vm *VM) callClosure(cl *object.Closure, numArgs int) *exception.SharkError {
 	if numArgs > cl.Fn.NumParameters || numArgs < cl.Fn.NumParameters-cl.Fn.NumDefaults {
-		return &exception.SharkError{
-			ErrMsg:  fmt.Sprintf("expected %d arguments for function call, but got %d", cl.Fn.NumParameters, numArgs),
-			ErrCode: exception.SharkErrorArgumentNumberMismatch,
-			ErrType: exception.SharkErrorTypeRuntime,
-		}
+		return newSharkError(exception.SharkErrorArgumentNumberMismatch, cl.Fn.NumParameters, numArgs)
 	}
 
 	frame := NewFrame(cl, vm.sp-numArgs)
@@ -731,6 +635,10 @@ func (vm *VM) callClosure(cl *object.Closure, numArgs int) *exception.SharkError
 	vm.sp = frame.basePointer + cl.Fn.NumLocals
 
 	return nil
+}
+
+func newSharkError(code exception.SharkErrorCode, param ...interface{}) *exception.SharkError {
+	return exception.NewSharkError(exception.SharkErrorTypeRuntime, code, param)
 }
 
 func nativeBoolToBooleanObject(input bool) *object.Boolean {
@@ -783,10 +691,6 @@ func (vm *VM) executeCall(numArgs int) *exception.SharkError {
 	case *object.Builtin:
 		return vm.callBuiltin(callee, numArgs)
 	default:
-		return &exception.SharkError{
-			ErrMsg:  "cannot call a non-builtin or closure function",
-			ErrCode: exception.SharkErrorNonFunctionCall,
-			ErrType: exception.SharkErrorTypeRuntime,
-		}
+		return newSharkError(exception.SharkErrorNonFunctionCall, callee.Type())
 	}
 }

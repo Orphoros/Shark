@@ -49,7 +49,7 @@ func (i *Emitter) Compile(sharkCode *string) *compiler.Bytecode {
 
 	comp := compiler.NewWithState(i.symbolTable, i.constants)
 	if err := comp.Compile(program); err != nil {
-		i.printCompilerError(err)
+		i.printCompilerError(err, i.sourceName, sharkCode)
 		return nil
 	}
 
@@ -61,7 +61,7 @@ func (i *Emitter) Exec(bytecode *compiler.Bytecode) {
 	machine := vm.NewWithGlobalsStore(bytecode, i.globals, i.vmConf)
 
 	if err := machine.Run(); err != nil {
-		i.printCompilerError(err)
+		i.printCompilerError(err, i.sourceName, nil)
 		return
 	}
 
@@ -88,7 +88,7 @@ func (i *Emitter) Interpret(in string) {
 	comp := compiler.NewWithState(i.symbolTable, i.constants)
 	err := comp.Compile(program)
 	if err != nil {
-		i.printCompilerError(err)
+		i.printCompilerError(err, i.sourceName, &in)
 		return
 	}
 	code := comp.Bytecode()
@@ -96,7 +96,7 @@ func (i *Emitter) Interpret(in string) {
 	machine := vm.NewWithGlobalsStore(code, i.globals, i.vmConf)
 
 	if err := machine.Run(); err != nil {
-		i.printCompilerError(err)
+		i.printCompilerError(err, i.sourceName, nil)
 		return
 	}
 
@@ -112,12 +112,18 @@ func (i *Emitter) Interpret(in string) {
 
 func (i *Emitter) printParserErrors(errors []exception.SharkError, filename, content *string) {
 	for _, err := range errors {
-		exception.PrintSharkLineError(&err, content, filename)
+		err.SetInputName(*filename)
+		err.SetInputContent(content)
+		io.WriteString(i.output, err.String())
+		io.WriteString(i.output, "\n")
 	}
 }
 
-func (i *Emitter) printCompilerError(err *exception.SharkError) {
-	exception.PrintSharkRuntimeError(err)
+func (i *Emitter) printCompilerError(err *exception.SharkError, filename *string, content *string) {
+	err.SetInputName(*filename)
+	err.SetInputContent(content)
+	io.WriteString(i.output, err.String())
+	io.WriteString(i.output, "\n")
 }
 
 func EmitInstructionsTable(bytecode *compiler.Bytecode, out io.Writer) {

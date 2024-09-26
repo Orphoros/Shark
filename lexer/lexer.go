@@ -256,21 +256,10 @@ func (l *Lexer) readString() string {
 			multilineMode = true
 		}
 		if l.ch == 0 {
-			l.errors = append(l.errors, exception.SharkError{
-				ErrMsg: "String is not terminated",
-				ErrCause: []exception.SharkErrorCause{
-					{
-						Line:     l.prevLine,
-						LineTo:   l.curLine,
-						Col:      l.prevCol,
-						ColTo:    l.curCol,
-						CauseMsg: "There is no closing double quote before the end of the file",
-					},
-				},
-				ErrCode:    exception.SharkErrorEOF,
-				ErrHelpMsg: "Add a closing double quote to the end of the string",
-				ErrType:    exception.SharkErrorTypeLexer,
-			})
+			l.errors = append(l.errors, newSharkError(exception.SharkErrorUnterminatedString, nil,
+				"Add a closing double quote to the end of the string",
+				exception.NewSharkErrorCause("There is no closing double quote before the end of the file", l.prevLine, l.curLine, l.prevCol, l.curCol),
+			))
 			break
 		}
 		if l.ch == '"' {
@@ -297,28 +286,11 @@ func (l *Lexer) readString() string {
 		out = out + string(l.ch)
 	}
 	if multilineMode {
-		l.errors = append(l.errors, exception.SharkError{
-			ErrMsg: "Double quoted string is multiline",
-			ErrCause: []exception.SharkErrorCause{
-				{
-					Line:     l.prevLine,
-					LineTo:   l.prevLine,
-					Col:      l.prevCol,
-					ColTo:    l.prevCol + 1,
-					CauseMsg: "String is started here",
-				},
-				{
-					Line:     l.curLine,
-					LineTo:   l.curLine,
-					Col:      l.curCol - 1,
-					ColTo:    l.curCol,
-					CauseMsg: "String ends here",
-				},
-			},
-			ErrHelpMsg: "Use a \\n instead to create multiline strings in double quoted strings",
-			ErrCode:    exception.SharkErrorEOF,
-			ErrType:    exception.SharkErrorTypeLexer,
-		})
+		l.errors = append(l.errors, newSharkError(exception.SharkErrorUnterminatedString, nil,
+			"Use a \\n instead to create multiline strings in double quoted strings",
+			exception.NewSharkErrorCause("String is started here", l.prevLine, l.prevLine, l.prevCol, l.prevCol+1),
+			exception.NewSharkErrorCause("String ends here", l.curLine, l.curLine, l.curCol-1, l.curCol),
+		))
 	}
 	return out
 }
@@ -333,12 +305,6 @@ func (l *Lexer) skipWhitespace() {
 		l.registerPosition()
 		l.readChar()
 	}
-}
-
-// Checks if a given byte (character) is a digit. A digit is defined as 0-9.
-// Returns true if the byte is a digit, false otherwise.
-func isDigit(ch rune) bool {
-	return '0' <= ch && ch <= '9'
 }
 
 // Creates a new token with the given type, character, and line number.
@@ -421,4 +387,30 @@ func (l *Lexer) PopErrors() []exception.SharkError {
 // isNewLine returns true if the given rune is a newline character.
 func isNewLine(r rune) bool {
 	return r == '\n' || r == '\r'
+}
+
+// Checks if a given byte (character) is a digit. A digit is defined as 0-9.
+// Returns true if the byte is a digit, false otherwise.
+func isDigit(ch rune) bool {
+	return '0' <= ch && ch <= '9'
+}
+
+func newSharkError(code exception.SharkErrorCode, param interface{}, helpMsg string, cause ...exception.SharkErrorCause) exception.SharkError {
+	var err exception.SharkError
+
+	if param == nil {
+		err = *exception.NewSharkError(exception.SharkErrorTypeLexer, code)
+	} else {
+		err = *exception.NewSharkError(exception.SharkErrorTypeLexer, code, param)
+	}
+
+	if helpMsg != "" {
+		err.SetHelpMsg(helpMsg)
+	}
+
+	for _, c := range cause {
+		err.AddCause(c)
+	}
+
+	return err
 }

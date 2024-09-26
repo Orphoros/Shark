@@ -11,38 +11,16 @@ func (p *Parser) parseExpression(precedence int) ast.Expression {
 	if prefix == nil {
 		// TODO: add support to assign new value to variable
 		if p.curToken.Type == token.EOF {
-			p.errors = append(p.errors, exception.SharkError{
-				ErrCause: []exception.SharkErrorCause{
-					{
-						Line:     p.curToken.Line,
-						LineTo:   p.curToken.LineTo,
-						ColTo:    p.curToken.ColTo,
-						Col:      p.curToken.ColFrom,
-						CauseMsg: "expected expression here",
-					},
-				},
-				ErrMsg:     "expected to receive an expression, but got EOF instead",
-				ErrHelpMsg: "Try removing the invalid syntax.",
-				ErrCode:    exception.SharkErrorEOF,
-				ErrType:    exception.SharkErrorTypeParser,
-			})
+			p.errors = append(p.errors, newSharkError(exception.SharkErrorEOF, nil,
+				"Try removing the invalid syntax.",
+				exception.NewSharkErrorCause("expected expression here", p.curToken.Line, p.curToken.LineTo, p.curToken.ColTo, p.curToken.ColFrom),
+			))
 			return nil
 		}
-		p.errors = append(p.errors, exception.SharkError{
-			ErrCause: []exception.SharkErrorCause{
-				{
-					Line:     p.curToken.Line,
-					LineTo:   p.curToken.LineTo,
-					ColTo:    p.curToken.ColTo,
-					Col:      p.curToken.ColFrom,
-					CauseMsg: "this is not an expression",
-				},
-			},
-			ErrHelpMsg: "Try removing the invalid syntax.",
-			ErrMsg:     "expected to receive an expression that evaluates to a value, but got '" + p.curToken.Literal + "' instead, which has no value",
-			ErrType:    exception.SharkErrorTypeParser,
-			ErrCode:    exception.SharkErrorExpectedExpression,
-		})
+		p.errors = append(p.errors, newSharkError(exception.SharkErrorExpectedExpression, p.curToken.Literal,
+			"Try removing the invalid syntax.",
+			exception.NewSharkErrorCause("this is not an expression", p.curToken.Line, p.curToken.LineTo, p.curToken.ColTo, p.curToken.ColFrom),
+		))
 		return nil
 	}
 
@@ -53,21 +31,10 @@ func (p *Parser) parseExpression(precedence int) ast.Expression {
 		if postfix != nil {
 			ident, ok := leftExp.(*ast.Identifier)
 			if !ok {
-				p.errors = append(p.errors, exception.SharkError{
-					ErrCause: []exception.SharkErrorCause{
-						{
-							Line:     p.curToken.Line,
-							LineTo:   p.curToken.LineTo,
-							ColTo:    p.curToken.ColTo,
-							Col:      p.curToken.ColFrom,
-							CauseMsg: "this is not an identifier",
-						},
-					},
-					ErrMsg:     "expected to receive an identifier, but got '" + p.curToken.Literal + "' instead",
-					ErrHelpMsg: "Try removing the invalid syntax.",
-					ErrCode:    exception.SharkErrorExpectedIdentifier,
-					ErrType:    exception.SharkErrorTypeParser,
-				})
+				p.errors = append(p.errors, newSharkError(exception.SharkErrorExpectedIdentifier, p.curToken.Literal,
+					"Try removing the invalid syntax.",
+					exception.NewSharkErrorCause("this is not an identifier", p.curToken.Line, p.curToken.LineTo, p.curToken.ColTo, p.curToken.ColFrom),
+				))
 				return nil
 			}
 			p.nextToken()
