@@ -638,7 +638,7 @@ func (vm *VM) callClosure(cl *object.Closure, numArgs int) *exception.SharkError
 }
 
 func newSharkError(code exception.SharkErrorCode, param ...interface{}) *exception.SharkError {
-	return exception.NewSharkError(exception.SharkErrorTypeRuntime, code, param)
+	return exception.NewSharkError(exception.SharkErrorTypeRuntime, code, param...)
 }
 
 func nativeBoolToBooleanObject(input bool) *object.Boolean {
