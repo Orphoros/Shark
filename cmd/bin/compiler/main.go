@@ -1,10 +1,10 @@
 package main
 
 import (
-	"encoding/gob"
 	"fmt"
 	"os"
 	"path/filepath"
+	"shark/bytecode"
 	"shark/cmd/bin"
 	"shark/emitter"
 	"shark/exception"
@@ -22,6 +22,7 @@ var Codename string
 func main() {
 	var file string
 	var outName string
+	var compression string
 	emitInstructionSet := false
 
 	flaggy.SetName("sharkc")
@@ -33,6 +34,7 @@ func main() {
 	// flaggy.DefaultParser.AdditionalHelpPrepend = "Shark can interpret and execute SharkLang code."
 
 	flaggy.String(&outName, "o", "out", "The output file name")
+	flaggy.String(&compression, "z", "compression", "The compression algorithm to use (brotli, none)")
 	flaggy.Bool(&emitInstructionSet, "e", "emit", "Emit the instruction set")
 
 	flaggy.AddPositionalValue(&file, "file", 1, true, "The Shark file to compile")
@@ -40,56 +42,41 @@ func main() {
 
 	serializer.RegisterTypes()
 
-	compile(file, outName, emitInstructionSet)
+	compile(file, outName, emitInstructionSet, compression)
 }
 
-func compile(file, outName string, emitInstructionSet bool) {
+func compile(file, outName string, emitInstructionSet bool, compression string) {
 	absPath, err := filepath.Abs(file)
 	if err != nil {
 		exception.PrintExitMsgCtx(fmt.Sprintf("Could not locate file '%s'", file), err.Error(), 1)
 	}
 	f := internal.ReadFile(absPath)
+	//TODO: accept cnf from file
 	vmConf := vm.NewDefaultConf()
 	sharkEmitter := emitter.New(&absPath, os.Stdout, &vmConf)
 	fileContents := string(f)
-	if bytecode := sharkEmitter.Compile(&fileContents); bytecode != nil {
+	if bc := sharkEmitter.Compile(&fileContents); bc != nil {
 		fileName := internal.GetFileName(absPath) + ".egg"
 		if outName != "" {
 			fileName = internal.GetFileName(outName) + ".egg"
 		}
-		gobFile, err := os.Create(fileName)
+		var bcType bytecode.BytecodeType
+		switch compression {
+		case "brotli":
+			bcType = bytecode.BcTypeCompressedBrotli
+		case "none":
+			bcType = bytecode.BcTypeNormal
+		default:
+			bcType = bytecode.BcTypeNormal
+		}
+		bytes, err := bc.ToBytes(bcType, bytecode.BcVersionOnos1)
 		if err != nil {
-			exception.PrintExitMsgCtx(fmt.Sprintf("Could not create file '%s'", file), err.Error(), 1)
+			exception.PrintExitMsgCtx("Could not convert bytecode to bytes", err.Error(), 1)
 		}
-		defer func(gobFile *os.File) {
-			err := gobFile.Close()
-			if err != nil {
-				exception.PrintExitMsgCtx(fmt.Sprintf("Could not close file '%s'", file), err.Error(), 1)
-			}
-		}(gobFile)
-		if err = gob.NewEncoder(gobFile).Encode(bytecode); err != nil {
-			exception.PrintExitMsgCtx("Compiler bytecode could not be serialized", err.Error(), 1)
-		}
+		internal.WriteFile(fileName, bytes)
 
 		if emitInstructionSet {
-			// emit instruction set to file
-			instructionSetFileName := internal.GetFileName(absPath) + ".scc"
-			if outName != "" {
-				instructionSetFileName = internal.GetFileName(outName) + ".scc"
-			}
-
-			instructionSetFile, err := os.Create(instructionSetFileName)
-			if err != nil {
-				exception.PrintExitMsgCtx(fmt.Sprintf("Could not create file '%s'", file), err.Error(), 1)
-			}
-			defer func(instructionSetFile *os.File) {
-				err := instructionSetFile.Close()
-				if err != nil {
-					exception.PrintExitMsgCtx(fmt.Sprintf("Could not close file '%s'", file), err.Error(), 1)
-				}
-			}(instructionSetFile)
-
-			emitter.EmitInstructionsTable(bytecode, instructionSetFile)
+			fmt.Println(bc.Instructions.String())
 		}
 	}
 }

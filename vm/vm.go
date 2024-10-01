@@ -3,8 +3,8 @@ package vm
 import (
 	"fmt"
 	"math"
+	"shark/bytecode"
 	"shark/code"
-	"shark/compiler"
 	"shark/exception"
 	"shark/object"
 )
@@ -33,7 +33,7 @@ type VM struct {
 	conf *VmConf
 }
 
-func NewDefault(bytecode *compiler.Bytecode) *VM {
+func NewDefault(bytecode *bytecode.Bytecode) *VM {
 	conf := NewDefaultConf()
 
 	return New(bytecode, &conf)
@@ -47,7 +47,7 @@ func NewDefaultConf() VmConf {
 	}
 }
 
-func New(bytecode *compiler.Bytecode, conf *VmConf) *VM {
+func New(bytecode *bytecode.Bytecode, conf *VmConf) *VM {
 	mainFn := &object.CompiledFunction{Instructions: bytecode.Instructions}
 	mainClosure := &object.Closure{Fn: mainFn}
 	mainFrame := NewFrame(mainClosure, 0)
@@ -70,7 +70,7 @@ func New(bytecode *compiler.Bytecode, conf *VmConf) *VM {
 	}
 }
 
-func NewWithGlobalsStore(bytecode *compiler.Bytecode, s []object.Object, conf *VmConf) *VM {
+func NewWithGlobalsStore(bytecode *bytecode.Bytecode, s []object.Object, conf *VmConf) *VM {
 	vm := New(bytecode, conf)
 	vm.globals = s
 	return vm

@@ -21,20 +21,28 @@ func IsFileEndsWith(fileName string, ext string) bool {
 	return filepath.Ext(fileName) == ext
 }
 
-func ReadFile(file string) []byte {
-	f, err := os.ReadFile(file)
+func ReadFile(fileName string) []byte {
+	f, err := os.ReadFile(fileName)
 	if err != nil {
-		exception.PrintExitMsgCtx(fmt.Sprintf("Could not read contents of file '%s'", file), err.Error(), 1)
+		exception.PrintExitMsgCtx(fmt.Sprintf("Could not read contents of file '%s'", fileName), err.Error(), 1)
 	}
 	return f
 }
 
-func OpenFile(file string) *os.File {
-	f, err := os.Open(file)
+func WriteFile(fileName string, data []byte) {
+	gobFile, err := os.Create(fileName)
 	if err != nil {
-		exception.PrintExitMsgCtx(fmt.Sprintf("Could not open file '%s'", file), err.Error(), 1)
+		exception.PrintExitMsgCtx(fmt.Sprintf("Could not create file '%s'", fileName), err.Error(), 1)
 	}
-	return f
+	defer func(gobFile *os.File) {
+		err := gobFile.Close()
+		if err != nil {
+			exception.PrintExitMsgCtx(fmt.Sprintf("Could not close file '%s'", fileName), err.Error(), 1)
+		}
+	}(gobFile)
+	if _, err := gobFile.Write(data); err != nil {
+		exception.PrintExitMsgCtx("Could not write data to file", err.Error(), 1)
+	}
 }
 
 func IsFileExists(file string) bool {

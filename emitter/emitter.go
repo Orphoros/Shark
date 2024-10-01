@@ -1,9 +1,8 @@
 package emitter
 
 import (
-	"bytes"
-	"fmt"
 	"io"
+	"shark/bytecode"
 	"shark/compiler"
 	"shark/exception"
 	"shark/lexer"
@@ -37,7 +36,7 @@ func New(sourceName *string, out io.Writer, vmConf *vm.VmConf) *Emitter {
 	return emitter
 }
 
-func (i *Emitter) Compile(sharkCode *string) *compiler.Bytecode {
+func (i *Emitter) Compile(sharkCode *string) *bytecode.Bytecode {
 	l := lexer.New(sharkCode)
 	p := parser.New(l)
 	program := p.ParseProgram()
@@ -56,7 +55,7 @@ func (i *Emitter) Compile(sharkCode *string) *compiler.Bytecode {
 	return comp.Bytecode()
 }
 
-func (i *Emitter) Exec(bytecode *compiler.Bytecode) {
+func (i *Emitter) Exec(bytecode *bytecode.Bytecode) {
 	i.constants = bytecode.Constants
 	machine := vm.NewWithGlobalsStore(bytecode, i.globals, i.vmConf)
 
@@ -126,45 +125,6 @@ func (i *Emitter) printCompilerError(err *exception.SharkError, filename *string
 	io.WriteString(i.output, "\n")
 }
 
-func EmitInstructionsTable(bytecode *compiler.Bytecode, out io.Writer) {
-	var buf bytes.Buffer
-	fmt.Fprintf(&buf, "@instructions:\n")
-
-	ins := bytecode.Instructions
-
-	txt := ins.String()
-
-	lines := bytes.Split([]byte(txt), []byte("\n"))
-
-	for i, line := range lines {
-		if i == len(lines)-1 {
-			break
-		}
-		fmt.Fprintf(&buf, "| %s\n", line)
-	}
-
-	fmt.Fprintf(&buf, "\n@constants:\n")
-
-	for i, constant := range bytecode.Constants {
-		switch constant.Type() {
-		case object.COMPILED_FUNCTION_OBJ:
-			fmt.Fprintf(&buf, "| %04d FUNC {\n", i)
-			cf := constant.(*object.CompiledFunction)
-			txt := cf.Instructions.String()
-			lines := bytes.Split([]byte(txt), []byte("\n"))
-			for i, line := range lines {
-				if i == len(lines)-1 {
-					break
-				}
-				fmt.Fprintf(&buf, "| \t%s\n", line)
-			}
-			fmt.Fprintf(&buf, "| }\n")
-		case object.STRING_OBJ:
-			fmt.Fprintf(&buf, "| %04d %s: \"%s\"\n", i, constant.Type(), constant.Inspect())
-		default:
-			fmt.Fprintf(&buf, "| %04d %s: %s\n", i, constant.Type(), constant.Inspect())
-		}
-	}
-
-	out.Write(buf.Bytes())
-}
+// func EmitInstructionsTable(bytecode *bytecode.Bytecode, out io.Writer) {
+// 	io.WriteString(out, bytecode.String())
+// }

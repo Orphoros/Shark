@@ -3,6 +3,7 @@ package serializer
 import (
 	"encoding/gob"
 	"fmt"
+	"shark/bytecode"
 	"shark/code"
 	"shark/compiler"
 	"shark/object"
@@ -39,7 +40,7 @@ func RegisterTypes() {
 	gob.RegisterName(fmt.Sprintf("%c", TBuiltin), &object.Builtin{})
 	gob.RegisterName(fmt.Sprintf("%c", TCompiledFunction), &object.CompiledFunction{})
 	gob.RegisterName(fmt.Sprintf("%c", TClosure), &object.Closure{})
-	gob.RegisterName(fmt.Sprintf("%c", TBytecode), &compiler.Bytecode{})
+	gob.RegisterName(fmt.Sprintf("%c", TBytecode), &bytecode.Bytecode{})
 	gob.RegisterName(fmt.Sprintf("%c", TInstructions), code.Instructions{})
 	gob.RegisterName(fmt.Sprintf("%c", TCompilationScope), &compiler.CompilationScope{})
 	gob.RegisterName(fmt.Sprintf("%c", TEmittedInstruction), &compiler.EmittedInstruction{})

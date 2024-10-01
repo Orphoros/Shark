@@ -1,12 +1,11 @@
 package main
 
 import (
-	"encoding/gob"
 	"fmt"
 	"os"
 	"path/filepath"
+	"shark/bytecode"
 	"shark/cmd/bin"
-	"shark/compiler"
 	"shark/emitter"
 	"shark/exception"
 	"shark/internal"
@@ -44,20 +43,13 @@ func execute(file string) {
 	if err != nil {
 		exception.PrintExitMsgCtx(fmt.Sprintf("Could not locate file '%s'", file), err.Error(), 1)
 	}
-	gobFile := internal.OpenFile(absPath)
-	defer func(gobFile *os.File) {
-		err := gobFile.Close()
-		if err != nil {
-			exception.PrintExitMsgCtx(fmt.Sprintf("Could not close file '%s'", file), err.Error(), 1)
-		}
-	}(gobFile)
-	decoder := gob.NewDecoder(gobFile)
-	var bytecode *compiler.Bytecode
-	err = decoder.Decode(&bytecode)
+	gobFile := internal.ReadFile(absPath)
+	bc, err := bytecode.FromBytes(gobFile)
 	if err != nil {
-		exception.PrintExitMsg("Binary file is not compatible", 1)
+		exception.PrintExitMsgCtx(fmt.Sprintf("Could not read bytecode file '%s'", file), err.Error(), 1)
 	}
+	//TODO: accept cnf from file
 	vmConf := vm.NewDefaultConf()
 	sharkEmitter := emitter.New(&absPath, os.Stdout, &vmConf)
-	sharkEmitter.Exec(bytecode)
+	sharkEmitter.Exec(bc)
 }

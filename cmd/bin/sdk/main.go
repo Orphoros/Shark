@@ -1,12 +1,12 @@
 package main
 
 import (
-	"encoding/gob"
 	"fmt"
+	"io"
 	"os"
 	"path/filepath"
+	"shark/bytecode"
 	"shark/cmd/bin"
-	"shark/compiler"
 	"shark/emitter"
 	"shark/exception"
 	"shark/internal"
@@ -23,6 +23,7 @@ func main() {
 
 	var file string
 	var outName string
+	var compression string
 	var cnf string
 
 	flaggy.SetName("shark")
@@ -43,6 +44,7 @@ func main() {
 	compileCommand.Description = "Compile a SharkLang source code file into bytecode"
 	compileCommand.AddPositionalValue(&file, "file", 1, true, "The file to compile")
 	compileCommand.String(&outName, "o", "out", "The output file name")
+	compileCommand.String(&compression, "z", "compression", "The compression algorithm to use (brotli, none)")
 
 	execCommand := flaggy.NewSubcommand("exec")
 	execCommand.Description = "Execute a SharkLang bytecode file"
@@ -85,21 +87,13 @@ func main() {
 		if err != nil {
 			exception.PrintExitMsgCtx(fmt.Sprintf("Could not locate file '%s'", file), err.Error(), 1)
 		}
-		gobFile := internal.OpenFile(absPath)
-		defer func(gobFile *os.File) {
-			err := gobFile.Close()
-			if err != nil {
-				exception.PrintExitMsgCtx(fmt.Sprintf("Could not close file '%s'", file), err.Error(), 1)
-			}
-		}(gobFile)
-		decoder := gob.NewDecoder(gobFile)
-		var bytecode *compiler.Bytecode
-		err = decoder.Decode(&bytecode)
+		gobFile := internal.ReadFile(absPath)
+		bc, err := bytecode.FromBytes(gobFile)
 		if err != nil {
-			exception.PrintExitMsg("Binary file is not compatible", 1)
+			exception.PrintExitMsgCtx("Could not decompile bytecode", err.Error(), 1)
 		}
 		sharkEmitter := emitter.New(&absPath, os.Stdout, &argConfig.OrpVM)
-		sharkEmitter.Exec(bytecode)
+		sharkEmitter.Exec(bc)
 	} else if compileCommand.Used {
 		absPath, err := filepath.Abs(file)
 		if err != nil {
@@ -108,24 +102,25 @@ func main() {
 		f := internal.ReadFile(absPath)
 		sharkEmitter := emitter.New(&absPath, os.Stdout, &argConfig.OrpVM)
 		file := string(f)
-		if bytecode := sharkEmitter.Compile(&file); bytecode != nil {
+		if bc := sharkEmitter.Compile(&file); bc != nil {
 			fileName := internal.GetFileName(absPath) + ".egg"
 			if outName != "" {
 				fileName = outName
 			}
-			gobFile, err := os.Create(fileName)
+			var bcType bytecode.BytecodeType
+			switch compression {
+			case "brotli":
+				bcType = bytecode.BcTypeCompressedBrotli
+			case "none":
+				bcType = bytecode.BcTypeNormal
+			default:
+				bcType = bytecode.BcTypeNormal
+			}
+			bytes, err := bc.ToBytes(bcType, bytecode.BcVersionOnos1)
 			if err != nil {
-				exception.PrintExitMsgCtx(fmt.Sprintf("Could not create file '%s'", file), err.Error(), 1)
+				exception.PrintExitMsgCtx("Could not convert bytecode to bytes", err.Error(), 1)
 			}
-			defer func(gobFile *os.File) {
-				err := gobFile.Close()
-				if err != nil {
-					exception.PrintExitMsgCtx(fmt.Sprintf("Could not close file '%s'", file), err.Error(), 1)
-				}
-			}(gobFile)
-			if err = gob.NewEncoder(gobFile).Encode(bytecode); err != nil {
-				exception.PrintExitMsgCtx("Compiler bytecode could not be serialized", err.Error(), 1)
-			}
+			internal.WriteFile(fileName, bytes)
 		}
 	} else if runCommand.Used {
 		absPath, err := filepath.Abs(file)
@@ -136,19 +131,13 @@ func main() {
 		sharkEmitter := emitter.New(&absPath, os.Stdout, &argConfig.OrpVM)
 		sharkEmitter.Interpret(string(f))
 	} else if decompileCommand.Used {
-		gobFile := internal.OpenFile(file)
-		defer func(gobFile *os.File) {
-			err := gobFile.Close()
-			if err != nil {
-				exception.PrintExitMsgCtx(fmt.Sprintf("Could not close file '%s'", file), err.Error(), 1)
-			}
-		}(gobFile)
-		var bytecode *compiler.Bytecode
-		if err := gob.NewDecoder(gobFile).Decode(&bytecode); err != nil {
-			exception.PrintExitMsg("Binary file is not compatible", 1)
+		gobFile := internal.ReadFile(file)
+		bc, err := bytecode.FromBytes(gobFile)
+		if err != nil {
+			exception.PrintExitMsgCtx("Could not decompile bytecode", err.Error(), 1)
 		}
 
-		emitter.EmitInstructionsTable(bytecode, os.Stdout)
+		io.WriteString(os.Stdout, bc.ToString())
 	} else {
 		flaggy.ShowHelpAndExit("Error: No subcommand provided")
 	}

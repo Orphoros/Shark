@@ -1,10 +1,9 @@
 package compiler
 
 import (
-	"bytes"
-	"encoding/gob"
 	"fmt"
 	"shark/ast"
+	"shark/bytecode"
 	"shark/code"
 	"shark/exception"
 	"shark/object"
@@ -16,35 +15,6 @@ type Compiler struct {
 	scopeIndex  int
 	constants   []object.Object
 	symbolTable *SymbolTable
-}
-
-type Bytecode struct {
-	Instructions code.Instructions
-	Constants    []object.Object
-}
-
-func (b *Bytecode) GobEncode() ([]byte, error) {
-	w := new(bytes.Buffer)
-	encoder := gob.NewEncoder(w)
-	if err := encoder.Encode(b.Instructions); err != nil {
-		return nil, err
-	}
-	if err := encoder.Encode(b.Constants); err != nil {
-		return nil, err
-	}
-	return w.Bytes(), nil
-}
-
-func (b *Bytecode) GobDecode(buf []byte) error {
-	r := bytes.NewBuffer(buf)
-	decoder := gob.NewDecoder(r)
-	if err := decoder.Decode(&b.Instructions); err != nil {
-		return err
-	}
-	if err := decoder.Decode(&b.Constants); err != nil {
-		return err
-	}
-	return nil
 }
 
 type EmittedInstruction struct {
@@ -586,8 +556,8 @@ func (c *Compiler) replaceLastPopWithReturn() {
 	c.scopes[c.scopeIndex].lastInstruction.Opcode = code.OpReturnValue
 }
 
-func (c *Compiler) Bytecode() *Bytecode {
-	return &Bytecode{
+func (c *Compiler) Bytecode() *bytecode.Bytecode {
+	return &bytecode.Bytecode{
 		Instructions: c.currentInstructions(),
 		Constants:    c.constants,
 	}
