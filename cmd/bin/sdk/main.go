@@ -1,15 +1,8 @@
 package main
 
 import (
-	"fmt"
-	"io"
-	"os"
-	"path/filepath"
-	"shark/bytecode"
+	"shark/cmd"
 	"shark/cmd/bin"
-	"shark/emitter"
-	"shark/exception"
-	"shark/internal"
 	"shark/serializer"
 
 	"github.com/integrii/flaggy"
@@ -25,6 +18,7 @@ func main() {
 	var outName string
 	var compression string
 	var cnf string
+	var emitInstructionSet bool
 
 	flaggy.SetName("shark")
 	flaggy.SetDescription("The Shark programming language")
@@ -45,6 +39,7 @@ func main() {
 	compileCommand.AddPositionalValue(&file, "file", 1, true, "The file to compile")
 	compileCommand.String(&outName, "o", "out", "The output file name")
 	compileCommand.String(&compression, "z", "compression", "The compression algorithm to use (brotli, none)")
+	compileCommand.Bool(&emitInstructionSet, "e", "emit", "Emit the instruction set")
 
 	execCommand := flaggy.NewSubcommand("exec")
 	execCommand.Description = "Execute a SharkLang bytecode file"
@@ -60,84 +55,18 @@ func main() {
 	flaggy.AttachSubcommand(decompileCommand, 1)
 	flaggy.Parse()
 
-	if cnf == "" {
-		dir, err := os.Getwd()
-		if err != nil {
-			exception.PrintExitMsgCtx("Could not get the current working directory", err.Error(), 1)
-		}
-		if internal.IsFileExists(filepath.Join(dir, "Shark.toml")) {
-			cnf = filepath.Join(dir, "Shark.toml")
-		} else if internal.IsFileExists(filepath.Join(filepath.Dir(file), "Shark.toml")) {
-			cnf = filepath.Join(filepath.Dir(file), "Shark.toml")
-		}
-	}
-
-	var argConfig internal.Config
-
-	if cnf == "" {
-		argConfig = internal.GetDefaultConfig()
-	} else {
-		argConfig = internal.GetConfigFromFile(cnf)
-	}
+	argConfig := bin.LocateConfigFile(cnf, file)
 
 	serializer.RegisterTypes()
 
 	if execCommand.Used {
-		absPath, err := filepath.Abs(file)
-		if err != nil {
-			exception.PrintExitMsgCtx(fmt.Sprintf("Could not locate file '%s'", file), err.Error(), 1)
-		}
-		gobFile := internal.ReadFile(absPath)
-		bc, err := bytecode.FromBytes(gobFile)
-		if err != nil {
-			exception.PrintExitMsgCtx("Could not decompile bytecode", err.Error(), 1)
-		}
-		sharkEmitter := emitter.New(&absPath, os.Stdout, &argConfig.OrpVM)
-		sharkEmitter.Exec(bc)
+		cmd.ExecuteSharkBinaryFile(file, &argConfig)
 	} else if compileCommand.Used {
-		absPath, err := filepath.Abs(file)
-		if err != nil {
-			exception.PrintExitMsgCtx(fmt.Sprintf("Could not locate file '%s'", file), err.Error(), 1)
-		}
-		f := internal.ReadFile(absPath)
-		sharkEmitter := emitter.New(&absPath, os.Stdout, &argConfig.OrpVM)
-		file := string(f)
-		if bc := sharkEmitter.Compile(&file); bc != nil {
-			fileName := internal.GetFileName(absPath) + ".egg"
-			if outName != "" {
-				fileName = outName
-			}
-			var bcType bytecode.BytecodeType
-			switch compression {
-			case "brotli":
-				bcType = bytecode.BcTypeCompressedBrotli
-			case "none":
-				bcType = bytecode.BcTypeNormal
-			default:
-				bcType = bytecode.BcTypeNormal
-			}
-			bytes, err := bc.ToBytes(bcType, bytecode.BcVersionOnos1)
-			if err != nil {
-				exception.PrintExitMsgCtx("Could not convert bytecode to bytes", err.Error(), 1)
-			}
-			internal.WriteFile(fileName, bytes)
-		}
+		cmd.CompileSharkCodeFile(file, outName, compression, emitInstructionSet, &argConfig)
 	} else if runCommand.Used {
-		absPath, err := filepath.Abs(file)
-		if err != nil {
-			exception.PrintExitMsgCtx(fmt.Sprintf("Could not locate file '%s'", file), err.Error(), 1)
-		}
-		f := internal.ReadFile(absPath)
-		sharkEmitter := emitter.New(&absPath, os.Stdout, &argConfig.OrpVM)
-		sharkEmitter.Interpret(string(f))
+		cmd.ExecuteSharkCodeFile(file, &argConfig)
 	} else if decompileCommand.Used {
-		gobFile := internal.ReadFile(file)
-		bc, err := bytecode.FromBytes(gobFile)
-		if err != nil {
-			exception.PrintExitMsgCtx("Could not decompile bytecode", err.Error(), 1)
-		}
-
-		io.WriteString(os.Stdout, bc.ToString())
+		cmd.DecompileSharkBinaryFile(file)
 	} else {
 		flaggy.ShowHelpAndExit("Error: No subcommand provided")
 	}

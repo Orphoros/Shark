@@ -55,6 +55,12 @@
         "language": "shark",
         "path": "./snippets/shark.json"
       }
+    ],
+    "jsonValidation": [
+      {
+        "fileMatch": "shark.json",
+        "url": "./schemas/shark-schema.json"
+      }
     ]
   }
 }

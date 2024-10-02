@@ -23,7 +23,7 @@ const (
 	BcTypeCompressedBrotli
 )
 
-var magicNumber []byte = []byte{0x6F, 0x6E, 0x62, 0x63} // "onbc"
+var magicNumber []byte = []byte{0x6F, 0x62, 0x63} // "onbc"
 
 const (
 	BcVersionOnos1 BytecodeVersion = iota
@@ -56,7 +56,7 @@ func (b *Bytecode) GobDecode(buf []byte) error {
 func FromBytes(data []byte) (*Bytecode, error) {
 	r := bytes.NewReader(data)
 
-	mn := make([]byte, 4)
+	mn := make([]byte, len(magicNumber))
 	if err := binary.Read(r, binary.LittleEndian, &mn); err != nil {
 		return nil, err
 	}

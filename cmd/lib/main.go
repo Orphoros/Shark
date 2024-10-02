@@ -3,13 +3,13 @@ package main
 import "C"
 import (
 	"os"
+	"shark/config"
 	"shark/emitter"
-	"shark/vm"
 )
 
 //export execute
 func execute(source, code string) {
-	vmConf := vm.NewDefaultConf()
+	vmConf := config.NewDefaultVmConf()
 	sharkEmitter := emitter.New(&source, os.Stdout, &vmConf)
 	sharkEmitter.Interpret(code)
 }

@@ -1,0 +1,34 @@
+{
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "title": "Yaml Schema for the Shark language toolchain configuration file",
+    "description": "Yaml Schema for the Shark language toolchain configuration file",
+    "type": "object",
+    "additionalProperties": false,
+    "properties": {
+        "orpVm": {
+            "type": "object",
+            "additionalProperties": false,
+            "description": "The configuration for the Orphoros VM",
+            "properties": {
+                "stackSize": {
+                    "type": "integer",
+                    "description": "The size of the stack in bytes",
+                    "maximum": 2147483647,
+                    "minimum": 1
+                },
+                "globalsSize": {
+                    "type": "integer",
+                    "description": "The size of the globals in bytes",
+                    "maximum": 2147483647,
+                    "minimum": 1
+                },
+                "maxFrames": {
+                    "type": "integer",
+                    "description": "The maximum number of frames",
+                    "maximum": 2147483647,
+                    "minimum": 1
+                }
+            }
+        }
+    }
+}

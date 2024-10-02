@@ -5,6 +5,7 @@ import (
 	"math"
 	"shark/bytecode"
 	"shark/code"
+	"shark/config"
 	"shark/exception"
 	"shark/object"
 )
@@ -12,12 +13,6 @@ import (
 var True = &object.Boolean{Value: true}
 var False = &object.Boolean{Value: false}
 var Null = &object.Null{}
-
-type VmConf struct {
-	StackSize   int
-	GlobalsSize int
-	MaxFrames   int
-}
 
 type VM struct {
 	constants []object.Object
@@ -30,24 +25,16 @@ type VM struct {
 	frames      []*Frame
 	framesIndex int
 
-	conf *VmConf
+	conf *config.VmConf
 }
 
 func NewDefault(bytecode *bytecode.Bytecode) *VM {
-	conf := NewDefaultConf()
+	conf := config.NewDefaultVmConf()
 
 	return New(bytecode, &conf)
 }
 
-func NewDefaultConf() VmConf {
-	return VmConf{
-		StackSize:   2048,
-		GlobalsSize: 65536,
-		MaxFrames:   1024,
-	}
-}
-
-func New(bytecode *bytecode.Bytecode, conf *VmConf) *VM {
+func New(bytecode *bytecode.Bytecode, conf *config.VmConf) *VM {
 	mainFn := &object.CompiledFunction{Instructions: bytecode.Instructions}
 	mainClosure := &object.Closure{Fn: mainFn}
 	mainFrame := NewFrame(mainClosure, 0)
@@ -70,7 +57,7 @@ func New(bytecode *bytecode.Bytecode, conf *VmConf) *VM {
 	}
 }
 
-func NewWithGlobalsStore(bytecode *bytecode.Bytecode, s []object.Object, conf *VmConf) *VM {
+func NewWithGlobalsStore(bytecode *bytecode.Bytecode, s []object.Object, conf *config.VmConf) *VM {
 	vm := New(bytecode, conf)
 	vm.globals = s
 	return vm

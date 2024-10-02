@@ -4,6 +4,7 @@ import (
 	"io"
 	"shark/bytecode"
 	"shark/compiler"
+	"shark/config"
 	"shark/exception"
 	"shark/lexer"
 	"shark/object"
@@ -17,10 +18,10 @@ type Emitter struct {
 	symbolTable *compiler.SymbolTable
 	output      io.Writer
 	sourceName  *string
-	vmConf      *vm.VmConf
+	vmConf      *config.VmConf
 }
 
-func New(sourceName *string, out io.Writer, vmConf *vm.VmConf) *Emitter {
+func New(sourceName *string, out io.Writer, vmConf *config.VmConf) *Emitter {
 	emitter := &Emitter{
 		constants:   []object.Object{},
 		globals:     make([]object.Object, vmConf.GlobalsSize),
@@ -124,7 +125,3 @@ func (i *Emitter) printCompilerError(err *exception.SharkError, filename *string
 	io.WriteString(i.output, err.String())
 	io.WriteString(i.output, "\n")
 }
-
-// func EmitInstructionsTable(bytecode *bytecode.Bytecode, out io.Writer) {
-// 	io.WriteString(out, bytecode.String())
-// }
