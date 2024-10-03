@@ -14,19 +14,19 @@ type Bytecode struct {
 	Constants    []object.Object
 }
 
-type BytecodeType byte
+type Type byte
 
-type BytecodeVersion byte
+type Version byte
 
 const (
-	BcTypeNormal BytecodeType = iota
+	BcTypeNormal Type = iota
 	BcTypeCompressedBrotli
 )
 
 var magicNumber []byte = []byte{0x6F, 0x62, 0x63} // "onbc"
 
 const (
-	BcVersionOnos1 BytecodeVersion = iota
+	BcVersionOnos1 Version = iota
 )
 
 func (b *Bytecode) GobEncode() ([]byte, error) {
@@ -65,12 +65,12 @@ func FromBytes(data []byte) (*Bytecode, error) {
 		return nil, fmt.Errorf("magic number mismatch")
 	}
 
-	var version BytecodeVersion
+	var version Version
 	if err := binary.Read(r, binary.BigEndian, &version); err != nil {
 		return nil, err
 	}
 
-	var bytecodeType BytecodeType
+	var bytecodeType Type
 	if err := binary.Read(r, binary.BigEndian, &bytecodeType); err != nil {
 		return nil, err
 	}
@@ -107,7 +107,7 @@ func FromBytes(data []byte) (*Bytecode, error) {
 	return b, nil
 }
 
-func (b *Bytecode) ToBytes(bytecodeType BytecodeType, version BytecodeVersion) ([]byte, error) {
+func (b *Bytecode) ToBytes(bytecodeType Type, version Version) ([]byte, error) {
 	buf := new(bytes.Buffer)
 
 	// Write magic number

@@ -29,7 +29,9 @@ func DecompileSharkBinaryFile(path string) {
 		exception.PrintExitMsgCtx("Could not decompile bytecode", err.Error(), 1)
 	}
 
-	io.WriteString(os.Stdout, bc.ToString())
+	if _, err := io.WriteString(os.Stdout, bc.ToString()); err != nil {
+		return
+	}
 }
 
 func CompileSharkCodeFile(path, outName, compression string, emitInstructionSet bool, argConfig *config.Config) {
@@ -45,7 +47,7 @@ func CompileSharkCodeFile(path, outName, compression string, emitInstructionSet 
 		if outName != "" {
 			fileName = outName
 		}
-		var bcType bytecode.BytecodeType
+		var bcType bytecode.Type
 		switch compression {
 		case "brotli":
 			bcType = bytecode.BcTypeCompressedBrotli

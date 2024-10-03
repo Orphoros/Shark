@@ -422,7 +422,7 @@ func (c *Compiler) Compile(node ast.Node) *exception.SharkError {
 		}
 		c.emit(code.OpArray, len(node.Elements))
 	case *ast.HashLiteral:
-		keys := []ast.Expression{}
+		var keys []ast.Expression
 		for key := range node.Pairs {
 			keys = append(keys, key)
 		}
@@ -634,9 +634,9 @@ func (c *Compiler) lastInstructionIs(op code.Opcode) bool {
 func (c *Compiler) removeLastPop() {
 	last := c.scopes[c.scopeIndex].lastInstruction
 	previous := c.scopes[c.scopeIndex].previousInstruction
-	old := c.currentInstructions()
-	new := old[:last.Position]
-	c.scopes[c.scopeIndex].instructions = new
+	oldInstructions := c.currentInstructions()
+	newInstructions := oldInstructions[:last.Position]
+	c.scopes[c.scopeIndex].instructions = newInstructions
 	c.scopes[c.scopeIndex].lastInstruction = previous
 }
 

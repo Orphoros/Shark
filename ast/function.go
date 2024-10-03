@@ -21,7 +21,7 @@ func (fl *FunctionLiteral) TokenLiteral() string { return fl.Token.Literal }
 func (fl *FunctionLiteral) String() string {
 	var out bytes.Buffer
 
-	params := []string{}
+	var params []string
 	for _, p := range fl.Parameters {
 		params = append(params, p.String())
 	}

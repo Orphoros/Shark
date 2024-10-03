@@ -1,13 +1,13 @@
 package token
 
 // TokenType is a string that represents the type of a Shark token.
-type TokenType string
+type Type string
 
 // Token is a struct that represents a Shark token. It has a type, a line number and a literal.
 // The literal is the actual text that was matched for this token. The line number is used for
 // error reporting. The type defines the kind of token.
 type Token struct {
-	Type    TokenType
+	Type    Type
 	Literal string
 	Line    int
 	LineTo  int
@@ -67,7 +67,7 @@ const (
 )
 
 // List of reserved Shark keywords.
-var keywords = map[string]TokenType{
+var keywords = map[string]Type{
 	"let":    LET,
 	"true":   TRUE,
 	"false":  FALSE,
@@ -79,7 +79,7 @@ var keywords = map[string]TokenType{
 }
 
 // Checks if an identifier is a reserved Shark keyword. If it is, it returns the token type.
-func LookupIdent(ident string) TokenType {
+func LookupIdent(ident string) Type {
 	if tok, ok := keywords[ident]; ok {
 		return tok
 	}

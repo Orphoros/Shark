@@ -69,12 +69,12 @@ func (e *SharkError) SetInputContent(inputContent *string) {
 	e.InputContent = inputContent
 }
 
-func (err *SharkError) String() string {
+func (e *SharkError) String() string {
 	var str bytes.Buffer
 
 	var errType string
 
-	switch err.ErrType {
+	switch e.ErrType {
 	case SharkErrorTypeParser:
 		errType = "parser"
 	case SharkErrorTypeLexer:
@@ -85,31 +85,31 @@ func (err *SharkError) String() string {
 		errType = "runtime"
 	}
 
-	str.WriteString(fmt.Sprintf("%s_error[%04d]: %s\n", errType, err.ErrCode, err.ErrMsg))
+	str.WriteString(fmt.Sprintf("%s_error[%04d]: %s\n", errType, e.ErrCode, e.ErrMsg))
 
 	str.WriteString("  --> ")
 
-	if err.InputName != nil {
-		str.WriteString(*err.InputName)
+	if e.InputName != nil {
+		str.WriteString(*e.InputName)
 	} else {
 		str.WriteString("std")
 	}
 
-	if len(err.ErrCause) == 0 {
+	if len(e.ErrCause) == 0 {
 		return str.String()
 	}
 
-	emptySpace := strings.Repeat(" ", len(strconv.Itoa(err.ErrCause[len(err.ErrCause)-1].Line))+1)
+	emptySpace := strings.Repeat(" ", len(strconv.Itoa(e.ErrCause[len(e.ErrCause)-1].Line))+1)
 
-	str.WriteString(fmt.Sprintf(":%d:%d\n%s|\n", err.ErrCause[0].Line, err.ErrCause[0].Col, emptySpace))
+	str.WriteString(fmt.Sprintf(":%d:%d\n%s|\n", e.ErrCause[0].Line, e.ErrCause[0].Col, emptySpace))
 
-	if err.InputContent == nil {
+	if e.InputContent == nil {
 		return str.String()
 	}
 
-	if len(err.ErrCause) > 0 {
-		lines := strings.Split(*err.InputContent, "\n")
-		for _, cause := range err.ErrCause {
+	if len(e.ErrCause) > 0 {
+		lines := strings.Split(*e.InputContent, "\n")
+		for _, cause := range e.ErrCause {
 			for i := cause.Line; i <= cause.LineTo; i++ {
 				curLineContent := strings.ReplaceAll(lines[i-1], "\t", " ")
 				msg := cause.CauseMsg
@@ -135,8 +135,8 @@ func (err *SharkError) String() string {
 		}
 	}
 
-	if err.ErrHelpMsg != nil {
-		str.WriteString(fmt.Sprintf("%shelp: %s\n", emptySpace, *err.ErrHelpMsg))
+	if e.ErrHelpMsg != nil {
+		str.WriteString(fmt.Sprintf("%shelp: %s\n", emptySpace, *e.ErrHelpMsg))
 	}
 
 	return str.String()

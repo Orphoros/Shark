@@ -308,7 +308,7 @@ func (l *Lexer) skipWhitespace() {
 }
 
 // Creates a new token with the given type, character, and line number.
-func (l *Lexer) newToken(tokenType token.TokenType, literal string) token.Token {
+func (l *Lexer) newToken(tokenType token.Type, literal string) token.Token {
 	colTo := l.curCol
 	lineTo := l.curLine
 	colFrom := l.prevCol

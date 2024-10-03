@@ -26,7 +26,7 @@ const (
 )
 
 // Precedence table for Shark operators. The higher the value, the higher the precedence.
-var precedence = map[token.TokenType]int{
+var precedence = map[token.Type]int{
 	token.ASSIGN:      ASSIGN,
 	token.PLUS_EQ:     ASSIGN,
 	token.MIN_EQ:      ASSIGN,
@@ -68,9 +68,9 @@ type Parser struct {
 	curToken        token.Token
 	peekToken       token.Token
 	errors          []exception.SharkError
-	prefixParseFns  map[token.TokenType]prefixParseFn
-	infixParseFns   map[token.TokenType]infixParseFn
-	postfixParseFns map[token.TokenType]postfixParseFn
+	prefixParseFns  map[token.Type]prefixParseFn
+	infixParseFns   map[token.Type]infixParseFn
+	postfixParseFns map[token.Type]postfixParseFn
 }
 
 // Creates a new Shark parser. It takes a lexer as input.
@@ -83,9 +83,9 @@ func New(l *lexer.Lexer) *Parser {
 	p.nextToken()
 	p.nextToken()
 
-	p.prefixParseFns = make(map[token.TokenType]prefixParseFn)
-	p.infixParseFns = make(map[token.TokenType]infixParseFn)
-	p.postfixParseFns = make(map[token.TokenType]postfixParseFn)
+	p.prefixParseFns = make(map[token.Type]prefixParseFn)
+	p.infixParseFns = make(map[token.Type]infixParseFn)
+	p.postfixParseFns = make(map[token.Type]postfixParseFn)
 
 	p.registerPrefix(token.IDENT, p.parseIdentifier)
 	p.registerPrefix(token.INT, p.parseIntegerLiteral)
@@ -141,17 +141,17 @@ func (p *Parser) ParseProgram() *ast.Program {
 }
 
 // Registers a shark prefix function for a token. It takes a token type and a prefix parse function as input.
-func (p *Parser) registerPrefix(tokenType token.TokenType, fn prefixParseFn) {
+func (p *Parser) registerPrefix(tokenType token.Type, fn prefixParseFn) {
 	p.prefixParseFns[tokenType] = fn
 }
 
 // Registers a shark infix function for a token. It takes a token type and an infix parse function as input.
-func (p *Parser) registerInfix(tokenType token.TokenType, fn infixParseFn) {
+func (p *Parser) registerInfix(tokenType token.Type, fn infixParseFn) {
 	p.infixParseFns[tokenType] = fn
 }
 
 // Registers a shark postfix function for a token. It takes a token type and a postfix parse function as input.
-func (p *Parser) registerPostfix(tokenType token.TokenType, fn postfixParseFn) {
+func (p *Parser) registerPostfix(tokenType token.Type, fn postfixParseFn) {
 	p.postfixParseFns[tokenType] = fn
 }
 
@@ -172,15 +172,15 @@ func (p *Parser) nextToken() {
 	}
 }
 
-func (p *Parser) curTokenIs(t token.TokenType) bool {
+func (p *Parser) curTokenIs(t token.Type) bool {
 	return p.curToken.Type == t
 }
 
-func (p *Parser) peekTokenIs(t token.TokenType) bool {
+func (p *Parser) peekTokenIs(t token.Type) bool {
 	return p.peekToken.Type == t
 }
 
-func (p *Parser) expectPeek(t token.TokenType) bool {
+func (p *Parser) expectPeek(t token.Type) bool {
 	if p.peekTokenIs(t) {
 		p.nextToken()
 		return true
@@ -190,7 +190,7 @@ func (p *Parser) expectPeek(t token.TokenType) bool {
 	}
 }
 
-func (p *Parser) peekError(t token.TokenType) {
+func (p *Parser) peekError(t token.Type) {
 	causeMsg := fmt.Sprintf("expected '%s', but got '%s' instead", t, p.peekToken.Type)
 	var suggestionMsg string
 	switch t {

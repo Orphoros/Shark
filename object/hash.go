@@ -11,7 +11,7 @@ type Hash struct {
 }
 
 type HashKey struct {
-	Type  ObjectType
+	Type  Type
 	Value uint64
 }
 
@@ -25,7 +25,7 @@ type Hashable interface {
 	HashKey() HashKey
 }
 
-func (h *Hash) Type() ObjectType { return HASH_OBJ }
+func (h *Hash) Type() Type { return HASH_OBJ }
 
 func (h *Hash) Inspect() string {
 	var out bytes.Buffer

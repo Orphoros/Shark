@@ -12,12 +12,14 @@ type String struct {
 
 func (s *String) Inspect() string { return s.Value }
 
-func (s *String) Type() ObjectType { return STRING_OBJ }
+func (s *String) Type() Type { return STRING_OBJ }
 
 func (s *String) HashKey() HashKey {
 	// TODO: Implement separate chaining to handle collisions
 	h := fnv.New64a()
-	h.Write([]byte(s.Value))
+	if write, err := h.Write([]byte(s.Value)); write != len(s.Value) || err != nil {
+		return HashKey{}
+	}
 	return HashKey{Type: s.Type(), Value: h.Sum64()}
 }
 

@@ -157,12 +157,16 @@ func (ins Instructions) String() string {
 		def, err := Lookup(ins[i])
 
 		if err != nil {
-			fmt.Fprintf(&out, "ERROR: %s\n", err)
+			if _, err := fmt.Fprintf(&out, "ERROR: %s\n", err); err != nil {
+				return ""
+			}
 			continue
 		}
 
 		operands, read := ReadOperands(def, ins[i+1:])
-		fmt.Fprintf(&out, "%04d %s\n", i, ins.formatInstruction(def, operands))
+		if _, err := fmt.Fprintf(&out, "%04d %s\n", i, ins.formatInstruction(def, operands)); err != nil {
+			return ""
+		}
 
 		i += 1 + read
 	}

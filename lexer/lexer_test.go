@@ -9,7 +9,7 @@ func TestNextToken(t *testing.T) {
 	t.Run("should tokenize individual tokens", func(t *testing.T) {
 		input := `=+(){},;`
 		tests := []struct {
-			expectedType    token.TokenType
+			expectedType    token.Type
 			expectedLiteral string
 		}{
 			{token.ASSIGN, "="},
@@ -92,7 +92,7 @@ while (true) { let a = 1; }
 `
 
 		tests := []struct {
-			expectedType    token.TokenType
+			expectedType    token.Type
 			expectedLiteral string
 		}{
 			{token.LET, "let"},
@@ -278,7 +278,7 @@ func TestComments(t *testing.T) {
 		 `
 
 		tests := []struct {
-			expectedType    token.TokenType
+			expectedType    token.Type
 			expectedLiteral string
 		}{
 			{token.LET, "let"},
@@ -315,7 +315,7 @@ func TestComments(t *testing.T) {
 		 `
 
 		tests := []struct {
-			expectedType    token.TokenType
+			expectedType    token.Type
 			expectedLiteral string
 		}{
 			{token.LET, "let"},
@@ -376,7 +376,7 @@ func TestTokenDebugLocators(t *testing.T) {
 		let c = 3;`
 
 		tests := []struct {
-			expectedType    token.TokenType
+			expectedType    token.Type
 			expectedLiteral string
 			line            int
 		}{
@@ -417,7 +417,7 @@ func TestTokenDebugLocators(t *testing.T) {
 		let b = a++;`
 
 		tests := []struct {
-			expectedType    token.TokenType
+			expectedType    token.Type
 			expectedLiteral string
 			fromCol         int
 			toCol           int
@@ -463,7 +463,7 @@ func TestTokenDebugLocators(t *testing.T) {
 		world";`
 
 		tests := []struct {
-			expectedType    token.TokenType
+			expectedType    token.Type
 			expectedLiteral string
 			fromCol         int
 			toCol           int
@@ -498,7 +498,7 @@ func TestTokenDebugLocators(t *testing.T) {
 		world";`
 
 		tests := []struct {
-			expectedType    token.TokenType
+			expectedType    token.Type
 			expectedLiteral string
 			fromLine        int
 			toLine          int
@@ -533,7 +533,7 @@ func TestSlashString(t *testing.T) {
 		input := `let a = "Hello\n\tWorld\\r";`
 
 		tests := []struct {
-			expectedType    token.TokenType
+			expectedType    token.Type
 			expectedLiteral string
 		}{
 			{token.LET, "let"},
@@ -563,7 +563,7 @@ func TestSpecialNumbers(t *testing.T) {
 		let c = 0xF4A06;`
 
 		tests := []struct {
-			expectedType    token.TokenType
+			expectedType    token.Type
 			expectedLiteral string
 		}{
 			{token.LET, "let"},
@@ -601,7 +601,7 @@ func TestUnicodeCharacters(t *testing.T) {
 		input := `let ᚠᚢᚦᚨᚱᚲ = "Γειά σου Κόσμε";`
 
 		tests := []struct {
-			expectedType    token.TokenType
+			expectedType    token.Type
 			expectedLiteral string
 		}{
 			{token.LET, "let"},

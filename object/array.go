@@ -24,4 +24,4 @@ func (a *Array) Inspect() string {
 	return out.String()
 }
 
-func (a *Array) Type() ObjectType { return ARRAY_OBJ }
+func (a *Array) Type() Type { return ARRAY_OBJ }

@@ -69,7 +69,9 @@ func (i *Emitter) Exec(bytecode *bytecode.Bytecode) {
 
 	if lastPopped != nil {
 		if lastPopped.Type() == object.ERROR_OBJ {
-			io.WriteString(i.output, "\tERROR: "+lastPopped.Inspect()+"\n")
+			if _, err := io.WriteString(i.output, "\tERROR: "+lastPopped.Inspect()+"\n"); err != nil {
+				return
+			}
 
 		}
 	}
@@ -104,7 +106,9 @@ func (i *Emitter) Interpret(in string) {
 
 	if lastPopped != nil {
 		if lastPopped.Type() == object.ERROR_OBJ {
-			io.WriteString(i.output, "\tERROR: "+lastPopped.Inspect()+"\n")
+			if _, err := io.WriteString(i.output, "\tERROR: "+lastPopped.Inspect()+"\n"); err != nil {
+				return
+			}
 
 		}
 	}
@@ -114,14 +118,22 @@ func (i *Emitter) printParserErrors(errors []exception.SharkError, filename, con
 	for _, err := range errors {
 		err.SetInputName(*filename)
 		err.SetInputContent(content)
-		io.WriteString(i.output, err.String())
-		io.WriteString(i.output, "\n")
+		if _, err := io.WriteString(i.output, err.String()); err != nil {
+			return
+		}
+		if _, err := io.WriteString(i.output, "\n"); err != nil {
+			return
+		}
 	}
 }
 
 func (i *Emitter) printCompilerError(err *exception.SharkError, filename *string, content *string) {
 	err.SetInputName(*filename)
 	err.SetInputContent(content)
-	io.WriteString(i.output, err.String())
-	io.WriteString(i.output, "\n")
+	if _, err := io.WriteString(i.output, err.String()); err != nil {
+		return
+	}
+	if _, err := io.WriteString(i.output, "\n"); err != nil {
+		return
+	}
 }

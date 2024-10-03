@@ -574,8 +574,7 @@ func (vm *VM) executeArrayIndexAssign(array, index, value object.Object) *except
 		return newSharkError(exception.SharkErrorIndexOutOfBounds, i)
 	}
 	arrayObject.Elements[i] = value
-	vm.push(arrayObject)
-	return nil
+	return vm.push(arrayObject)
 }
 
 func (vm *VM) executeHashIndexAssign(hash, index, value object.Object) *exception.SharkError {
@@ -585,8 +584,7 @@ func (vm *VM) executeHashIndexAssign(hash, index, value object.Object) *exceptio
 		return newSharkError(exception.SharkErrorNonHashable, index.Type())
 	}
 	hashObject.Pairs[key.HashKey()] = object.HashPair{Key: index, Value: value}
-	vm.push(hashObject)
-	return nil
+	return vm.push(hashObject)
 }
 
 func (vm *VM) currentFrame() *Frame {

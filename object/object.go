@@ -1,9 +1,9 @@
 package object
 
-type ObjectType string
+type Type string
 
 type Object interface {
-	Type() ObjectType
+	Type() Type
 	Inspect() string
 }
 
@@ -36,12 +36,12 @@ type BuiltinFunction func(args ...Object) Object
 
 func (n *Null) Inspect() string { return "null" }
 
-func (n *Null) Type() ObjectType { return NULL_OBJ }
+func (n *Null) Type() Type { return NULL_OBJ }
 
 func (rv *ReturnValue) Inspect() string { return rv.Value.Inspect() }
 
-func (rv *ReturnValue) Type() ObjectType { return RETURN_VALUE_OBJ }
+func (rv *ReturnValue) Type() Type { return RETURN_VALUE_OBJ }
 
 func (b *Builtin) Inspect() string { return "builtin function" }
 
-func (b *Builtin) Type() ObjectType { return BUILTIN_OBJ }
+func (b *Builtin) Type() Type { return BUILTIN_OBJ }
