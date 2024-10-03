@@ -57,7 +57,7 @@ func FromBytes(data []byte) (*Bytecode, error) {
 	r := bytes.NewReader(data)
 
 	mn := make([]byte, len(magicNumber))
-	if err := binary.Read(r, binary.LittleEndian, &mn); err != nil {
+	if err := binary.Read(r, binary.BigEndian, &mn); err != nil {
 		return nil, err
 	}
 
@@ -66,17 +66,17 @@ func FromBytes(data []byte) (*Bytecode, error) {
 	}
 
 	var version BytecodeVersion
-	if err := binary.Read(r, binary.LittleEndian, &version); err != nil {
+	if err := binary.Read(r, binary.BigEndian, &version); err != nil {
 		return nil, err
 	}
 
 	var bytecodeType BytecodeType
-	if err := binary.Read(r, binary.LittleEndian, &bytecodeType); err != nil {
+	if err := binary.Read(r, binary.BigEndian, &bytecodeType); err != nil {
 		return nil, err
 	}
 
 	var bytecodeLength int64
-	if err := binary.Read(r, binary.LittleEndian, &bytecodeLength); err != nil {
+	if err := binary.Read(r, binary.BigEndian, &bytecodeLength); err != nil {
 		return nil, err
 	}
 
@@ -111,17 +111,17 @@ func (b *Bytecode) ToBytes(bytecodeType BytecodeType, version BytecodeVersion) (
 	buf := new(bytes.Buffer)
 
 	// Write magic number
-	if err := binary.Write(buf, binary.LittleEndian, magicNumber); err != nil {
+	if err := binary.Write(buf, binary.BigEndian, magicNumber); err != nil {
 		return nil, err
 	}
 
 	// Write bytecode version
-	if err := binary.Write(buf, binary.LittleEndian, version); err != nil {
+	if err := binary.Write(buf, binary.BigEndian, version); err != nil {
 		return nil, err
 	}
 
 	// Write bytecode type
-	if err := binary.Write(buf, binary.LittleEndian, bytecodeType); err != nil {
+	if err := binary.Write(buf, binary.BigEndian, bytecodeType); err != nil {
 		return nil, err
 	}
 
@@ -148,7 +148,7 @@ func (b *Bytecode) ToBytes(bytecodeType BytecodeType, version BytecodeVersion) (
 	}
 
 	// Write bytecode length
-	if err := binary.Write(buf, binary.LittleEndian, int64(gobEncoded.Len())); err != nil {
+	if err := binary.Write(buf, binary.BigEndian, int64(gobEncoded.Len())); err != nil {
 		return nil, err
 	}
 
