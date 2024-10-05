@@ -13,13 +13,13 @@ func (p *Parser) parseExpression(precedence int) ast.Expression {
 		if p.curToken.Type == token.EOF {
 			p.errors = append(p.errors, newSharkError(exception.SharkErrorEOF, nil,
 				"Try removing the invalid syntax.",
-				exception.NewSharkErrorCause("expected expression here", p.curToken.Line, p.curToken.LineTo, p.curToken.ColTo, p.curToken.ColFrom),
+				exception.NewSharkErrorCause("expected expression here", p.curToken.Pos),
 			))
 			return nil
 		}
 		p.errors = append(p.errors, newSharkError(exception.SharkErrorExpectedExpression, p.curToken.Literal,
 			"Try removing the invalid syntax.",
-			exception.NewSharkErrorCause("this is not an expression", p.curToken.Line, p.curToken.LineTo, p.curToken.ColTo, p.curToken.ColFrom),
+			exception.NewSharkErrorCause("this is not an expression", p.curToken.Pos),
 		))
 		return nil
 	}
@@ -33,7 +33,7 @@ func (p *Parser) parseExpression(precedence int) ast.Expression {
 			if !ok {
 				p.errors = append(p.errors, newSharkError(exception.SharkErrorExpectedIdentifier, p.curToken.Literal,
 					"Try removing the invalid syntax.",
-					exception.NewSharkErrorCause("this is not an identifier", p.curToken.Line, p.curToken.LineTo, p.curToken.ColTo, p.curToken.ColFrom),
+					exception.NewSharkErrorCause("this is not an identifier", p.curToken.Pos),
 				))
 				return nil
 			}

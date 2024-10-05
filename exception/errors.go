@@ -3,6 +3,7 @@ package exception
 import (
 	"bytes"
 	"fmt"
+	"shark/token"
 	"strconv"
 	"strings"
 	"unicode/utf8"
@@ -10,19 +11,13 @@ import (
 
 type SharkErrorCause struct {
 	CauseMsg string
-	Line     int
-	LineTo   int
-	Col      int
-	ColTo    int
+	Pos      token.Position
 }
 
-func NewSharkErrorCause(causeMsg string, line, lineTo, col, colTo int) SharkErrorCause {
+func NewSharkErrorCause(causeMsg string, pos token.Position) SharkErrorCause {
 	return SharkErrorCause{
 		CauseMsg: causeMsg,
-		Line:     line,
-		LineTo:   lineTo,
-		Col:      col,
-		ColTo:    colTo,
+		Pos:      pos,
 	}
 }
 
@@ -99,9 +94,9 @@ func (e *SharkError) String() string {
 		return str.String()
 	}
 
-	emptySpace := strings.Repeat(" ", len(strconv.Itoa(e.ErrCause[len(e.ErrCause)-1].Line))+1)
+	emptySpace := strings.Repeat(" ", len(strconv.Itoa(e.ErrCause[len(e.ErrCause)-1].Pos.Line))+1)
 
-	str.WriteString(fmt.Sprintf(":%d:%d\n%s|\n", e.ErrCause[0].Line, e.ErrCause[0].Col, emptySpace))
+	str.WriteString(fmt.Sprintf(":%d:%d\n%s|\n", e.ErrCause[0].Pos.Line, e.ErrCause[0].Pos.ColFrom, emptySpace))
 
 	if e.InputContent == nil {
 		return str.String()
@@ -110,19 +105,19 @@ func (e *SharkError) String() string {
 	if len(e.ErrCause) > 0 {
 		lines := strings.Split(*e.InputContent, "\n")
 		for _, cause := range e.ErrCause {
-			for i := cause.Line; i <= cause.LineTo; i++ {
+			for i := cause.Pos.Line; i <= cause.Pos.LineTo; i++ {
 				curLineContent := strings.ReplaceAll(lines[i-1], "\t", " ")
 				msg := cause.CauseMsg
-				if i != cause.LineTo {
+				if i != cause.Pos.LineTo {
 					msg = ""
 				}
 				var errorLineMarker string
-				if cause.Line == cause.LineTo {
-					errorLineMarker = strings.Repeat(" ", cause.Col-1) + strings.Repeat("^", cause.ColTo-cause.Col)
-				} else if cause.Line == i {
-					errorLineMarker = strings.Repeat(" ", cause.Col-1) + strings.Repeat("^", utf8.RuneCountInString(curLineContent)-cause.Col+1)
-				} else if cause.LineTo == i {
-					errorLineMarker = strings.Repeat("^", cause.ColTo-1)
+				if cause.Pos.Line == cause.Pos.LineTo {
+					errorLineMarker = strings.Repeat(" ", cause.Pos.ColFrom-1) + strings.Repeat("^", cause.Pos.ColTo-cause.Pos.ColFrom)
+				} else if cause.Pos.Line == i {
+					errorLineMarker = strings.Repeat(" ", cause.Pos.ColFrom-1) + strings.Repeat("^", utf8.RuneCountInString(curLineContent)-cause.Pos.ColFrom+1)
+				} else if cause.Pos.LineTo == i {
+					errorLineMarker = strings.Repeat("^", cause.Pos.ColTo-1)
 				} else {
 					errorLineMarker = strings.Repeat("^", utf8.RuneCountInString(curLineContent))
 				}

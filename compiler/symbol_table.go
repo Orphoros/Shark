@@ -1,5 +1,9 @@
 package compiler
 
+import (
+	"shark/token"
+)
+
 type SymbolScope string
 
 const (
@@ -15,6 +19,7 @@ type Symbol struct {
 	Mutable bool
 	Scope   SymbolScope
 	Index   int
+	Pos     *token.Position
 }
 
 type SymbolTable struct {
@@ -38,8 +43,8 @@ func NewEnclosedSymbolTable(outer *SymbolTable) *SymbolTable {
 	return st
 }
 
-func (s *SymbolTable) Define(name string, mutable bool) Symbol {
-	symbol := Symbol{Name: name, Index: s.numDefinitions, Mutable: mutable}
+func (s *SymbolTable) Define(name string, mutable bool, pos *token.Position) Symbol {
+	symbol := Symbol{Name: name, Index: s.numDefinitions, Mutable: mutable, Pos: pos}
 
 	if s.Outer == nil {
 		symbol.Scope = GlobalScope
@@ -67,7 +72,7 @@ func (s *SymbolTable) Resolve(name string) (Symbol, bool) {
 			return obj, ok
 		}
 
-		return s.DefineFree(obj, obj.Mutable), true
+		return s.DefineFree(obj, obj.Mutable, obj.Pos), true
 	}
 
 	return obj, ok
@@ -81,18 +86,18 @@ func (s *SymbolTable) DefineBuiltin(index int, name string) Symbol {
 	return symbol
 }
 
-func (s *SymbolTable) DefineFree(original Symbol, mutable bool) Symbol {
+func (s *SymbolTable) DefineFree(original Symbol, mutable bool, pos *token.Position) Symbol {
 	s.FreeSymbols = append(s.FreeSymbols, original)
 
-	symbol := Symbol{Name: original.Name, Scope: FreeScope, Index: len(s.FreeSymbols) - 1, Mutable: mutable}
+	symbol := Symbol{Name: original.Name, Scope: FreeScope, Index: len(s.FreeSymbols) - 1, Mutable: mutable, Pos: pos}
 
 	s.store[original.Name] = symbol
 
 	return symbol
 }
 
-func (s *SymbolTable) DefineFunctionName(name string) Symbol {
-	symbol := Symbol{Name: name, Scope: FunctionScope, Index: 0}
+func (s *SymbolTable) DefineFunctionName(name string, pos *token.Position) Symbol {
+	symbol := Symbol{Name: name, Scope: FunctionScope, Index: 0, Pos: pos}
 
 	s.store[name] = symbol
 

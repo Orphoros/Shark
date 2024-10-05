@@ -208,7 +208,7 @@ func (p *Parser) peekError(t token.Type) {
 
 	p.errors = append(p.errors, newSharkError(exception.SharkErrorUnexpectedToken, p.peekToken.Type,
 		suggestionMsg,
-		exception.NewSharkErrorCause(causeMsg, p.peekToken.ColFrom, p.peekToken.ColTo, p.peekToken.Line, p.peekToken.LineTo),
+		exception.NewSharkErrorCause(causeMsg, p.peekToken.Pos),
 	))
 }
 
@@ -219,7 +219,7 @@ func (p *Parser) parseIntegerLiteral() ast.Expression {
 	if err != nil {
 		p.errors = append(p.errors, newSharkError(exception.SharkErrorInteger, p.curToken.Literal,
 			"Try to use a smaller decimal number instead",
-			exception.NewSharkErrorCause(err.Error(), p.curToken.Line, p.curToken.LineTo, p.curToken.ColFrom, p.curToken.ColTo),
+			exception.NewSharkErrorCause(err.Error(), p.curToken.Pos),
 		))
 		return nil
 	}

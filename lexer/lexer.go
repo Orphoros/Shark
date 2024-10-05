@@ -182,20 +182,14 @@ func (l *Lexer) NextToken() token.Token {
 		if unicode.IsLetter(l.ch) {
 			tok.Literal = l.readIdentifier()
 			tok.Type = token.LookupIdent(tok.Literal)
-			tok.LineTo = l.curLine
-			tok.ColTo = l.curCol
-			tok.ColFrom = l.prevCol
-			tok.Line = l.prevLine
+			tok.Pos = token.Position{Line: l.prevLine, ColFrom: l.prevCol, LineTo: l.curLine, ColTo: l.curCol}
 			l.registerPosition()
 			l.readChar()
 			return tok
 		} else if isDigit(l.ch) {
 			tok.Literal = l.readNumber()
 			tok.Type = token.INT
-			tok.LineTo = l.curLine
-			tok.ColTo = l.curCol
-			tok.ColFrom = l.prevCol
-			tok.Line = l.prevLine
+			tok.Pos = token.Position{Line: l.prevLine, ColFrom: l.prevCol, LineTo: l.curLine, ColTo: l.curCol}
 			l.registerPosition()
 			l.readChar()
 			return tok
@@ -258,7 +252,7 @@ func (l *Lexer) readString() string {
 		if l.ch == 0 {
 			l.errors = append(l.errors, newSharkError(exception.SharkErrorUnterminatedString, nil,
 				"Add a closing double quote to the end of the string",
-				exception.NewSharkErrorCause("There is no closing double quote before the end of the file", l.prevLine, l.curLine, l.prevCol, l.curCol),
+				exception.NewSharkErrorCause("There is no closing double quote before the end of the file", token.Position{Line: l.prevLine, ColFrom: l.prevCol, LineTo: l.curLine, ColTo: l.curCol}),
 			))
 			break
 		}
@@ -288,8 +282,8 @@ func (l *Lexer) readString() string {
 	if multilineMode {
 		l.errors = append(l.errors, newSharkError(exception.SharkErrorUnterminatedString, nil,
 			"Use a \\n instead to create multiline strings in double quoted strings",
-			exception.NewSharkErrorCause("String is started here", l.prevLine, l.prevLine, l.prevCol, l.prevCol+1),
-			exception.NewSharkErrorCause("String ends here", l.curLine, l.curLine, l.curCol-1, l.curCol),
+			exception.NewSharkErrorCause("String is started here", token.Position{Line: l.prevLine, ColFrom: l.prevCol, LineTo: l.prevLine, ColTo: l.prevCol + 1}),
+			exception.NewSharkErrorCause("String ends here", token.Position{Line: l.curLine, ColFrom: l.curCol - 1, LineTo: l.curLine, ColTo: l.curCol}),
 		))
 	}
 	return out
@@ -314,7 +308,16 @@ func (l *Lexer) newToken(tokenType token.Type, literal string) token.Token {
 	colFrom := l.prevCol
 	lineFrom := l.prevLine
 	l.registerPosition()
-	return token.Token{Type: tokenType, Literal: literal, Line: lineFrom, ColFrom: colFrom, LineTo: lineTo, ColTo: colTo}
+	return token.Token{
+		Type:    tokenType,
+		Literal: literal,
+		Pos: token.Position{
+			Line:    lineFrom,
+			ColFrom: colFrom,
+			LineTo:  lineTo,
+			ColTo:   colTo,
+		},
+	}
 }
 
 // Peeks at the next character in the input without incrementing the current position.

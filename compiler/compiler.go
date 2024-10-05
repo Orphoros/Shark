@@ -80,7 +80,7 @@ func (c *Compiler) Compile(node ast.Node) *exception.SharkError {
 			return newSharkError(
 				exception.SharkErrorIdentifierExpected, node.Token.Literal,
 				"Identifier expected for postfix expression",
-				exception.NewSharkErrorCause(fmt.Sprintf("cannot use type %T", node.Left), node.Token.Line, node.Token.Line, node.Token.ColFrom, node.Token.ColTo),
+				exception.NewSharkErrorCause(fmt.Sprintf("cannot use type %T", node.Left), node.Token.Pos),
 			)
 		}
 		symbol, ok := c.symbolTable.Resolve(ident.Value)
@@ -88,13 +88,13 @@ func (c *Compiler) Compile(node ast.Node) *exception.SharkError {
 			return newSharkError(
 				exception.SharkErrorIdentifierNotFound, ident.Value,
 				"Variable not found for postfix expression",
-				exception.NewSharkErrorCause("Variable not found for postfix expression", node.Token.Line, node.Token.LineTo, node.Token.ColFrom, node.Token.ColTo),
+				exception.NewSharkErrorCause("Variable not found for postfix expression", node.Token.Pos),
 			)
 		}
 		if !symbol.Mutable {
 			return newSharkError(exception.SharkErrorImmutableValue, ident.Value,
 				"Add the 'mut' keyword before the variable name to make it mutable",
-				exception.NewSharkErrorCause("Cannot reassign value to a constant", node.Token.Line, node.Token.LineTo, node.Token.ColFrom, node.Token.ColTo),
+				exception.NewSharkErrorCause("Cannot reassign value to a constant", node.Token.Pos),
 			)
 		}
 		c.loadSymbol(symbol)
@@ -165,7 +165,7 @@ func (c *Compiler) Compile(node ast.Node) *exception.SharkError {
 				return newSharkError(
 					exception.SharkErrorIdentifierExpected, node.Token.Literal,
 					"Make sure to use a variable for reassignment",
-					exception.NewSharkErrorCause("left value must be an identifier, but is not", node.Token.Line, node.Token.LineTo, node.Token.ColFrom, node.Token.ColTo),
+					exception.NewSharkErrorCause("left value must be an identifier, but is not", node.Token.Pos),
 				)
 			}
 			symbol, ok := c.symbolTable.Resolve(ident.Value)
@@ -173,13 +173,13 @@ func (c *Compiler) Compile(node ast.Node) *exception.SharkError {
 				return newSharkError(
 					exception.SharkErrorIdentifierNotFound, ident.Value,
 					"Make sure the variable is defined before using it",
-					exception.NewSharkErrorCause("Variable not found for reassignment", node.Token.Line, node.Token.LineTo, node.Token.ColFrom, node.Token.ColTo),
+					exception.NewSharkErrorCause("Variable not found for reassignment", node.Token.Pos),
 				)
 			}
 			if !symbol.Mutable {
 				return newSharkError(exception.SharkErrorImmutableValue, ident.Value,
 					"Add the 'mut' keyword before the variable name to make it mutable",
-					exception.NewSharkErrorCause("Cannot reassign value to a constant", node.Token.Line, node.Token.LineTo, node.Token.ColFrom, node.Token.ColTo),
+					exception.NewSharkErrorCause("Cannot reassign value to a constant", node.Token.Pos),
 				)
 			}
 			index := symbol.Index
@@ -233,7 +233,7 @@ func (c *Compiler) Compile(node ast.Node) *exception.SharkError {
 		default:
 			return newSharkError(exception.SharkErrorUnknownOperator, node.Operator,
 				"Try using an other operator, such as '&&' or '+'",
-				exception.NewSharkErrorCause("Invalid operator for infix expression", node.Token.Line, node.Token.LineTo, node.Token.ColFrom, node.Token.ColTo),
+				exception.NewSharkErrorCause("Invalid operator for infix expression", node.Token.Pos),
 			)
 		}
 	case *ast.PrefixExpression:
@@ -252,20 +252,20 @@ func (c *Compiler) Compile(node ast.Node) *exception.SharkError {
 			if node.RightIdent == nil {
 				return newSharkError(exception.SharkErrorIdentifierExpected, node.Token.Literal,
 					"Only variables can be used for '++' operator",
-					exception.NewSharkErrorCause("Operator not followed by variable", node.Token.Line, node.Token.LineTo, node.Token.ColFrom, node.Token.ColTo),
+					exception.NewSharkErrorCause("Operator not followed by variable", node.Token.Pos),
 				)
 			}
 			symbol, ok := c.symbolTable.Resolve(node.RightIdent.Value)
 			if !ok {
 				return newSharkError(exception.SharkErrorIdentifierNotFound, node.RightIdent.Value,
 					"Make sure the variable is defined before using it",
-					exception.NewSharkErrorCause("Variable not found", node.Token.Line, node.Token.LineTo, node.Token.ColFrom, node.Token.ColTo),
+					exception.NewSharkErrorCause("Variable not found", node.Token.Pos),
 				)
 			}
 			if !symbol.Mutable {
 				return newSharkError(exception.SharkErrorImmutableValue, node.RightIdent.Value,
 					"Add the 'mut' keyword before the variable name to make it mutable",
-					exception.NewSharkErrorCause("Cannot reassign value to a constant", node.Token.Line, node.Token.LineTo, node.Token.ColFrom, node.Token.ColTo),
+					exception.NewSharkErrorCause("Cannot reassign value to a constant", node.Token.Pos),
 				)
 			}
 			if symbol.Scope == GlobalScope {
@@ -278,20 +278,20 @@ func (c *Compiler) Compile(node ast.Node) *exception.SharkError {
 			if node.RightIdent == nil {
 				return newSharkError(exception.SharkErrorIdentifierExpected, node.Token.Literal,
 					"Only variables can be used for '--' operator",
-					exception.NewSharkErrorCause("Operator noy followed by variable", node.Token.Line, node.Token.LineTo, node.Token.ColFrom, node.Token.ColTo),
+					exception.NewSharkErrorCause("Operator noy followed by variable", node.Token.Pos),
 				)
 			}
 			symbol, ok := c.symbolTable.Resolve(node.RightIdent.Value)
 			if !ok {
 				return newSharkError(exception.SharkErrorIdentifierNotFound, node.RightIdent.Value,
 					"Make sure the variable is defined before using it",
-					exception.NewSharkErrorCause("Variable not found", node.Token.Line, node.Token.LineTo, node.Token.ColFrom, node.Token.ColTo),
+					exception.NewSharkErrorCause("Variable not found", node.Token.Pos),
 				)
 			}
 			if !symbol.Mutable {
 				return newSharkError(exception.SharkErrorImmutableValue, node.RightIdent.Value,
 					"Add the 'mut' keyword before the variable name to make it mutable",
-					exception.NewSharkErrorCause("Cannot reassign value to a constant", node.Token.Line, node.Token.LineTo, node.Token.ColFrom, node.Token.ColTo),
+					exception.NewSharkErrorCause("Cannot reassign value to a constant", node.Token.Pos),
 				)
 			}
 			if symbol.Scope == GlobalScope {
@@ -308,7 +308,7 @@ func (c *Compiler) Compile(node ast.Node) *exception.SharkError {
 		default:
 			return newSharkError(exception.SharkErrorUnknownOperator, node.Operator,
 				"Try using an other operator",
-				exception.NewSharkErrorCause("Invalid operator for prefix expression", node.Token.Line, node.Token.LineTo, node.Token.ColFrom, node.Token.ColTo),
+				exception.NewSharkErrorCause("Invalid operator for prefix expression", node.Token.Pos),
 			)
 		}
 	case *ast.IntegerLiteral:
@@ -390,10 +390,10 @@ func (c *Compiler) Compile(node ast.Node) *exception.SharkError {
 		if ok {
 			return newSharkError(exception.SharkErrorDuplicateIdentifier, node.Name.Value,
 				"Remove 'let' before the variable name",
-				exception.NewSharkErrorCause("Cannot use let to reassign value to an existing variable", node.Token.Line, node.Token.LineTo, node.Token.ColFrom, node.Token.ColTo),
+				exception.NewSharkErrorCause("Cannot use let to reassign value to an existing variable", node.Token.Pos),
 			)
 		}
-		symbol = c.symbolTable.Define(node.Name.Value, node.Name.Mutable)
+		symbol = c.symbolTable.Define(node.Name.Value, node.Name.Mutable, &node.Name.Token.Pos)
 		if err := c.Compile(node.Value); err != nil {
 			return err
 		}
@@ -407,7 +407,7 @@ func (c *Compiler) Compile(node ast.Node) *exception.SharkError {
 		if !ok {
 			return newSharkError(exception.SharkErrorIdentifierNotFound, node.Value,
 				fmt.Sprintf("You must define '%s' before using it with the 'let' keyword", node.Value),
-				exception.NewSharkErrorCause(fmt.Sprintf("identifier '%s' is not defined", node.Value), node.Token.Line, node.Token.LineTo, node.Token.ColFrom, node.Token.ColTo),
+				exception.NewSharkErrorCause(fmt.Sprintf("identifier '%s' is not defined", node.Value), node.Token.Pos),
 			)
 		}
 		c.loadSymbol(symbol)
@@ -465,13 +465,13 @@ func (c *Compiler) Compile(node ast.Node) *exception.SharkError {
 			if !ok {
 				return newSharkError(exception.SharkErrorIdentifierNotFound, ident.Value,
 					"Make sure the variable is defined before using it",
-					exception.NewSharkErrorCause("Variable not found for index assignment", node.Token.Line, node.Token.LineTo, node.Token.ColFrom, node.Token.ColTo),
+					exception.NewSharkErrorCause("Variable not found for index assignment", node.Token.Pos),
 				)
 			}
 			if !symbol.Mutable {
 				return newSharkError(exception.SharkErrorImmutableValue, ident.Value,
 					"Add the 'mut' keyword before the variable name to make it mutable",
-					exception.NewSharkErrorCause("Cannot reassign value to a constant", node.Token.Line, node.Token.LineTo, node.Token.ColFrom, node.Token.ColTo),
+					exception.NewSharkErrorCause("Cannot reassign value to a constant", node.Token.Pos),
 				)
 			}
 		}
@@ -483,11 +483,11 @@ func (c *Compiler) Compile(node ast.Node) *exception.SharkError {
 	case *ast.FunctionLiteral:
 		c.enterScope()
 		if node.Name != "" {
-			c.symbolTable.DefineFunctionName(node.Name)
+			c.symbolTable.DefineFunctionName(node.Name, &node.Token.Pos)
 		}
 		numDefaults := 0
 		for _, param := range node.Parameters {
-			symbol := c.symbolTable.Define(param.Value, param.Mutable)
+			symbol := c.symbolTable.Define(param.Value, param.Mutable, &node.Token.Pos)
 			if param.DefaultValue != nil {
 				numDefaults++
 				if err := c.Compile(*param.DefaultValue); err != nil {
@@ -525,7 +525,7 @@ func (c *Compiler) Compile(node ast.Node) *exception.SharkError {
 		if c.scopeIndex == 0 {
 			return newSharkError(exception.SharkErrorTopLeverReturn, nil,
 				"Use 'exit(0);' instead",
-				exception.NewSharkErrorCause("Unexpected return statement in main scope", node.Token.Line, node.Token.Line, node.Token.ColFrom, node.Token.ColTo),
+				exception.NewSharkErrorCause("Unexpected return statement in main scope", node.Token.Pos),
 			)
 		}
 		if err := c.Compile(node.ReturnValue); err != nil {

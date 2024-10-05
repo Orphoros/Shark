@@ -72,6 +72,7 @@ func (p *Parser) parseLetStatement() *ast.LetStatement {
 
 	if fl, ok := stmt.Value.(*ast.FunctionLiteral); ok {
 		fl.Name = stmt.Name.Value
+		fl.Token.Pos = stmt.Name.Token.Pos
 	}
 
 	if p.peekTokenIs(token.SEMICOLON) {

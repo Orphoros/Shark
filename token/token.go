@@ -9,6 +9,10 @@ type Type string
 type Token struct {
 	Type    Type
 	Literal string
+	Pos     Position
+}
+
+type Position struct {
 	Line    int
 	LineTo  int
 	ColFrom int

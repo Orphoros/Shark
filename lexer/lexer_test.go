@@ -406,8 +406,8 @@ func TestTokenDebugLocators(t *testing.T) {
 			if tok.Literal != tt.expectedLiteral {
 				t.Fatalf("tests[%d] - Literal wrong, expected=%q, got=%q", i, tt.expectedLiteral, tok.Literal)
 			}
-			if tok.Line != tt.line {
-				t.Fatalf("tests[%d] - line wrong for token '%s', expected=%d, got=%d", i, tok.Literal, tt.line, tok.Line)
+			if tok.Pos.Line != tt.line {
+				t.Fatalf("tests[%d] - line wrong for token '%s', expected=%d, got=%d", i, tok.Literal, tt.line, tok.Pos.Line)
 			}
 		}
 	})
@@ -452,8 +452,8 @@ func TestTokenDebugLocators(t *testing.T) {
 			if tok.Literal != tt.expectedLiteral {
 				t.Fatalf("tests[%d] - Literal wrong, expected=%q, got=%q", i, tt.expectedLiteral, tok.Literal)
 			}
-			if tok.ColFrom != tt.fromCol {
-				t.Fatalf("tests[%d] - columns wrong for token '%s', expected=(colFrom:%d, colTo:%d), got=(colFrom:%d, colTo:%d)", i, tok.Literal, tt.fromCol, tt.toCol, tok.ColFrom, tok.ColTo)
+			if tok.Pos.ColFrom != tt.fromCol {
+				t.Fatalf("tests[%d] - columns wrong for token '%s', expected=(colFrom:%d, colTo:%d), got=(colFrom:%d, colTo:%d)", i, tok.Literal, tt.fromCol, tt.toCol, tok.Pos.ColFrom, tok.Pos.ColTo)
 			}
 		}
 	})
@@ -483,11 +483,11 @@ func TestTokenDebugLocators(t *testing.T) {
 			if tok.Literal != tt.expectedLiteral {
 				t.Fatalf("tests[%d] - Literal wrong, expected=%q, got=%q", i, tt.expectedLiteral, tok.Literal)
 			}
-			if tok.ColFrom != tt.fromCol {
-				t.Fatalf("tests[%d] - colFrom wrong for token '%s', expected=%d, got=%d", i, tok.Literal, tt.fromCol, tok.ColFrom)
+			if tok.Pos.ColFrom != tt.fromCol {
+				t.Fatalf("tests[%d] - colFrom wrong for token '%s', expected=%d, got=%d", i, tok.Literal, tt.fromCol, tok.Pos.ColFrom)
 			}
-			if tok.ColTo != tt.toCol {
-				t.Fatalf("tests[%d] - colTo wrong for token '%s', expected=%d, got=%d", i, tok.Literal, tt.toCol, tok.ColTo)
+			if tok.Pos.ColTo != tt.toCol {
+				t.Fatalf("tests[%d] - colTo wrong for token '%s', expected=%d, got=%d", i, tok.Literal, tt.toCol, tok.Pos.ColTo)
 			}
 		}
 	})
@@ -518,11 +518,11 @@ func TestTokenDebugLocators(t *testing.T) {
 			if tok.Literal != tt.expectedLiteral {
 				t.Fatalf("tests[%d] - Literal wrong, expected=%q, got=%q", i, tt.expectedLiteral, tok.Literal)
 			}
-			if tok.Line != tt.fromLine {
-				t.Fatalf("tests[%d] - lines wrong for token '%s', expected=(lineFrom:%d, lineTo:%d), got=(lineFrom:%d, lineTo:%d)", i, tok.Literal, tt.fromLine, tt.toLine, tok.Line, tok.LineTo)
+			if tok.Pos.Line != tt.fromLine {
+				t.Fatalf("tests[%d] - lines wrong for token '%s', expected=(lineFrom:%d, lineTo:%d), got=(lineFrom:%d, lineTo:%d)", i, tok.Literal, tt.fromLine, tt.toLine, tok.Pos.Line, tok.Pos.LineTo)
 			}
-			if tok.LineTo != tt.toLine {
-				t.Fatalf("tests[%d] - lines wrong for token '%s', expected=(lineFrom:%d, lineTo:%d), got=(lineFrom:%d, lineTo:%d)", i, tok.Literal, tt.fromLine, tt.toLine, tok.Line, tok.LineTo)
+			if tok.Pos.LineTo != tt.toLine {
+				t.Fatalf("tests[%d] - lines wrong for token '%s', expected=(lineFrom:%d, lineTo:%d), got=(lineFrom:%d, lineTo:%d)", i, tok.Literal, tt.fromLine, tt.toLine, tok.Pos.Line, tok.Pos.LineTo)
 			}
 		}
 	})
