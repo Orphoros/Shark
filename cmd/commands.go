@@ -17,13 +17,19 @@ func ExecuteSharkCodeFile(path string, argConfig *config.Config) {
 	if err != nil {
 		exception.PrintExitMsgCtx(fmt.Sprintf("Could not locate file '%s'", path), err.Error(), 1)
 	}
-	f := internal.ReadFile(absPath)
+	f, err := internal.ReadFile(absPath)
+	if err != nil {
+		exception.PrintExitMsgCtx(fmt.Sprintf("Could not read file '%s'", path), err.Error(), 1)
+	}
 	sharkEmitter := emitter.New(&absPath, os.Stdout, &argConfig.OrpVM)
 	sharkEmitter.Interpret(string(f))
 }
 
 func DecompileSharkBinaryFile(path string) {
-	gobFile := internal.ReadFile(path)
+	gobFile, err := internal.ReadFile(path)
+	if err != nil {
+		exception.PrintExitMsgCtx(fmt.Sprintf("Could not read file '%s'", path), err.Error(), 1)
+	}
 	bc, err := bytecode.FromBytes(gobFile)
 	if err != nil {
 		exception.PrintExitMsgCtx("Could not decompile bytecode", err.Error(), 1)
@@ -39,7 +45,10 @@ func CompileSharkCodeFile(path, outName, compression string, emitInstructionSet 
 	if err != nil {
 		exception.PrintExitMsgCtx(fmt.Sprintf("Could not locate file '%s'", path), err.Error(), 1)
 	}
-	f := internal.ReadFile(absPath)
+	f, err := internal.ReadFile(absPath)
+	if err != nil {
+		exception.PrintExitMsgCtx(fmt.Sprintf("Could not read file '%s'", path), err.Error(), 1)
+	}
 	sharkEmitter := emitter.New(&absPath, os.Stdout, &argConfig.OrpVM)
 	file := string(f)
 	if bc := sharkEmitter.Compile(&file); bc != nil {
@@ -69,7 +78,10 @@ func ExecuteSharkBinaryFile(path string, argConfig *config.Config) {
 	if err != nil {
 		exception.PrintExitMsgCtx(fmt.Sprintf("Could not locate file '%s'", path), err.Error(), 1)
 	}
-	gobFile := internal.ReadFile(absPath)
+	gobFile, err := internal.ReadFile(absPath)
+	if err != nil {
+		exception.PrintExitMsgCtx(fmt.Sprintf("Could not read file '%s'", path), err.Error(), 1)
+	}
 	bc, err := bytecode.FromBytes(gobFile)
 	if err != nil {
 		exception.PrintExitMsgCtx("Could not decompile bytecode", err.Error(), 1)

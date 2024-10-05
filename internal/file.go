@@ -1,7 +1,7 @@
 package internal
 
 import (
-	"fmt"
+	"net/url"
 	"os"
 	"path/filepath"
 	"shark/exception"
@@ -13,33 +13,43 @@ func GetFileName(fileName string) string {
 	return fileName[:utf8.RuneCountInString(fileName)-utf8.RuneCountInString(filepath.Ext(fileName))]
 }
 
+func GetFilePathFromURI(uri string) (*string, error) {
+	u, err := url.ParseRequestURI(uri)
+	if err != nil {
+		return nil, err
+	}
+
+	return &u.Path, nil
+}
+
 // IsFileEndsWith checks if the file name ends with the given extension.
 func IsFileEndsWith(fileName string, ext string) bool {
 	return filepath.Ext(fileName) == ext
 }
 
-func ReadFile(fileName string) []byte {
+func ReadFile(fileName string) ([]byte, error) {
 	f, err := os.ReadFile(fileName)
 	if err != nil {
-		exception.PrintExitMsgCtx(fmt.Sprintf("Could not read contents of file '%s'", fileName), err.Error(), 1)
+		return nil, err
 	}
-	return f
+	return f, nil
 }
 
-func WriteFile(fileName string, data []byte) {
+func WriteFile(fileName string, data []byte) error {
 	gobFile, err := os.Create(fileName)
 	if err != nil {
-		exception.PrintExitMsgCtx(fmt.Sprintf("Could not create file '%s'", fileName), err.Error(), 1)
+		return err
 	}
 	defer func(gobFile *os.File) {
-		err := gobFile.Close()
-		if err != nil {
-			exception.PrintExitMsgCtx(fmt.Sprintf("Could not close file '%s'", fileName), err.Error(), 1)
+		if err := gobFile.Close(); err != nil {
+			exception.PrintExitMsgCtx("Could not close file", err.Error(), 1)
 		}
 	}(gobFile)
 	if _, err := gobFile.Write(data); err != nil {
-		exception.PrintExitMsgCtx("Could not write data to file", err.Error(), 1)
+		return err
 	}
+
+	return nil
 }
 
 func IsFileExists(file string) bool {

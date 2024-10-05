@@ -3,6 +3,7 @@ package main
 import (
 	"shark/cmd"
 	"shark/cmd/bin"
+	"shark/config"
 	"shark/serializer"
 
 	"github.com/integrii/flaggy"
@@ -26,9 +27,12 @@ func main() {
 	flaggy.String(&cnf, "c", "config", "The configuration file")
 	flaggy.Parse()
 
-	argConfig := bin.LocateConfigFile(cnf, file)
+	argConfig, err := config.LocateConfig(&cnf, &file)
+	if err != nil {
+		flaggy.ShowHelpAndExit("Error: " + err.Error())
+	}
 
 	serializer.RegisterTypes()
 
-	cmd.ExecuteSharkCodeFile(file, &argConfig)
+	cmd.ExecuteSharkCodeFile(file, argConfig)
 }
