@@ -579,7 +579,10 @@ func (c *Compiler) leaveScope() code.Instructions {
 	instructions := c.currentInstructions()
 	c.scopes = c.scopes[:len(c.scopes)-1]
 	c.scopeIndex--
+	currentSymbolTable := *c.symbolTable
+	currentSymbolTable.Outer = nil
 	c.symbolTable = c.symbolTable.Outer
+	c.symbolTable.Inner = &currentSymbolTable
 
 	return instructions
 }

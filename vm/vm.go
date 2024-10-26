@@ -277,8 +277,10 @@ func (vm *VM) Run() *exception.SharkError {
 			localIndex := code.ReadUint8(ins[ip+1:])
 			vm.currentFrame().ip += 1
 			frame := vm.currentFrame()
-			if vm.stack[frame.basePointer+int(localIndex)] == nil {
+			if vm.stack[frame.basePointer+int(localIndex)] == Null {
 				vm.stack[frame.basePointer+int(localIndex)] = vm.pop()
+			} else {
+				vm.pop()
 			}
 		case code.OpGetLocal:
 			localIndex := code.ReadUint8(ins[ip+1:])

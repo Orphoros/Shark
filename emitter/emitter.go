@@ -37,6 +37,10 @@ func New(sourceName *string, out io.Writer, vmConf *config.VmConf) *Emitter {
 	return emitter
 }
 
+func (i *Emitter) GetSymbolTable() compiler.SymbolTable {
+	return *i.symbolTable
+}
+
 func (i *Emitter) Compile(sharkCode *string) *bytecode.Bytecode {
 	l := lexer.New(sharkCode)
 	p := parser.New(l)

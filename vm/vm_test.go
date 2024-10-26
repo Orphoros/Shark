@@ -296,6 +296,14 @@ func TestCallingFunctionsWithDefaultArguments(t *testing.T) {
 			`,
 				expected: 5,
 			},
+			{
+				input: `
+			let array = [5, 20, 30]
+			let test = (a = 2) => { a * 2; };
+			test();
+			`,
+				expected: 1,
+			},
 		}
 
 		runVmTests(t, tests)

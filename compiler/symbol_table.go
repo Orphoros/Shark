@@ -24,6 +24,7 @@ type Symbol struct {
 
 type SymbolTable struct {
 	Outer          *SymbolTable
+	Inner          *SymbolTable
 	FreeSymbols    []Symbol
 	store          map[string]Symbol
 	numDefinitions int
@@ -73,6 +74,45 @@ func (s *SymbolTable) Resolve(name string) (Symbol, bool) {
 		}
 
 		return s.DefineFree(obj, obj.Mutable, obj.Pos), true
+	}
+
+	return obj, ok
+}
+
+// func (s *SymbolTable) findInStoreByIndex(lineNumber int, columnNumber int) (Symbol, bool) {
+// 	for _, sym := range s.store {
+// 		pos := sym.Pos
+// 		if pos == nil {
+// 			continue
+// 		}
+
+// 		// check if the symbol is in the same line
+// 		if pos.Line-1 != lineNumber {
+// 			continue
+// 		}
+
+// 		// check if the symbol is in the same column
+// 		if pos.ColFrom-1 <= columnNumber && columnNumber <= pos.ColTo-1 {
+// 			return sym, true
+// 		}
+// 	}
+
+// 	return Symbol{}, false
+// }
+
+func (s *SymbolTable) FindIdent(name string) (Symbol, bool) {
+	obj, ok := s.store[name]
+
+	if ok {
+		return obj, ok
+	}
+
+	if s.Inner != nil {
+		return s.Inner.FindIdent(name)
+	}
+
+	if s.Outer != nil {
+		return s.Outer.FindIdent(name)
 	}
 
 	return obj, ok

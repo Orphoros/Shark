@@ -1,6 +1,7 @@
 #Go artifacts
 coverage.out
 build
+out
 
 #IDE artifacts
 .idea
@@ -8,3 +9,5 @@ build
 
 #System files
 *.DS_Store
+
+node_modules

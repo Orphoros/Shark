@@ -1,21 +1,25 @@
-let a = [1, 2, 3, 4];
+let x = [7, 8, 1, 1, 60]; let manyArg = (a = 2, b = 3) => { puts("a=", a, "\nb=", b) }; manyArg();
 
-let double = (x) => { x * 2 };
+// let a = [1, 2, 10, 4];
 
-let map = (arr, f) => {
-    let iter = (arr, accumulated) => {
-        if (len(arr) == 0) {
-            accumulated
-        } else {
-            iter(rest(arr), push(accumulated, f(first(arr))))
-        }
-    } 
-    iter(arr, []);
-};
+// let double = (x = 20) => { x * 2 };
 
-let result = map(a, double);
+// puts(double(2));
 
-// Print original array
-puts(a);
-// Print array with doubled values
-puts(result);
+// let map = (arr, f) => {
+//     let iter = (arr, accumulated) => {
+//         if (len(arr) == 0) {
+//             accumulated
+//         } else {
+//             iter(rest(arr), push(accumulated, f(first(arr))))
+//         }
+//     } 
+//     iter(arr, []);
+// };
+
+// let result = map(a, double);
+
+// // Print original array
+// puts(a);
+// // Print array with doubled values
+// puts(result);
