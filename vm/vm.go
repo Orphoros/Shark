@@ -210,7 +210,7 @@ func (vm *VM) Run() *exception.SharkError {
 			}
 		case code.OpReturnValue:
 			if vm.currentFrame().basePointer == 0 {
-				return newSharkError(exception.SharkErrorTopLeverReturn, nil)
+				return newSharkError(exception.SharkErrorTopLeverReturn)
 			}
 			returnValue := vm.pop()
 			frame := vm.popFrame()
@@ -277,10 +277,8 @@ func (vm *VM) Run() *exception.SharkError {
 			localIndex := code.ReadUint8(ins[ip+1:])
 			vm.currentFrame().ip += 1
 			frame := vm.currentFrame()
-			if vm.stack[frame.basePointer+int(localIndex)] == Null {
+			if vm.stack[frame.basePointer+int(localIndex)] == nil {
 				vm.stack[frame.basePointer+int(localIndex)] = vm.pop()
-			} else {
-				vm.pop()
 			}
 		case code.OpGetLocal:
 			localIndex := code.ReadUint8(ins[ip+1:])
