@@ -302,7 +302,7 @@ func TestCallingFunctionsWithDefaultArguments(t *testing.T) {
 			let test = (a = 2) => { a * 2; };
 			test();
 			`,
-				expected: 1,
+				expected: 4,
 			},
 		}
 

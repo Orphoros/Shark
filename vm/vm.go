@@ -83,7 +83,8 @@ func (vm *VM) Run() *exception.SharkError {
 		case code.OpConstant:
 			constIndex := code.ReadUint16(ins[ip+1:])
 			vm.currentFrame().ip += 2
-			if err := vm.push(vm.constants[constIndex]); err != nil {
+			value := vm.constants[constIndex]
+			if err := vm.push(value); err != nil {
 				return err
 			}
 		case code.OpPop:
@@ -175,6 +176,10 @@ func (vm *VM) Run() *exception.SharkError {
 			vm.currentFrame().ip += 2
 			array := vm.buildArray(vm.sp-numElements, vm.sp)
 			vm.sp = vm.sp - numElements
+			// clear the stack between sp and sp-numElements with nil
+			for i := vm.sp; i < vm.sp+numElements; i++ {
+				vm.stack[i] = nil
+			}
 			if err := vm.push(array); err != nil {
 				return err
 			}
@@ -214,12 +219,20 @@ func (vm *VM) Run() *exception.SharkError {
 			}
 			returnValue := vm.pop()
 			frame := vm.popFrame()
+			// clear the stack between sp and basePointer with nil
+			for i := vm.sp; i < frame.basePointer; i++ {
+				vm.stack[i] = nil
+			}
 			vm.sp = frame.basePointer - 1
 			if err := vm.push(returnValue); err != nil {
 				return err
 			}
 		case code.OpReturn:
 			frame := vm.popFrame()
+			// clear the stack between sp and basePointer with nil
+			for i := vm.sp; i < frame.basePointer; i++ {
+				vm.stack[i] = nil
+			}
 			vm.sp = frame.basePointer - 1
 			if err := vm.push(Null); err != nil {
 				return err
