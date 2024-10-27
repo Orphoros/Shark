@@ -2,8 +2,6 @@ let a = [1, 2, 10, 4];
 
 let double = (x = 20) => { x * 2 };
 
-puts(double(2));
-
 let map = (arr, f) => {
     let iter = (arr, accumulated) => {
         if (len(arr) == 0) {

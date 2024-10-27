@@ -63,6 +63,8 @@ const (
 	SharkErrorImmutableValue
 
 	SharkErrorIndexOutOfBounds
+
+	SharkErrorOptionalParameter
 )
 
 const (
@@ -107,4 +109,5 @@ var errMessages = []struct {
 	{SharkErrorNoDefaultValue, "no value to set for function default parameter"},
 	{SharkErrorImmutableValue, "cannot modify immutable value '%v'"},
 	{SharkErrorIndexOutOfBounds, "index out of bounds '%v'"},
+	{SharkErrorOptionalParameter, "parameter '%v' cannot be after an optional parameter"},
 }

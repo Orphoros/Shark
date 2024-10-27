@@ -486,14 +486,22 @@ func (c *Compiler) Compile(node ast.Node) *exception.SharkError {
 			c.symbolTable.DefineFunctionName(node.Name, &node.Token.Pos)
 		}
 		numDefaults := 0
+		isOptionalsActive := false
 		for _, param := range node.Parameters {
 			symbol := c.symbolTable.Define(param.Value, param.Mutable, &node.Token.Pos)
 			if param.DefaultValue != nil {
+				isOptionalsActive = true
 				numDefaults++
 				if err := c.Compile(*param.DefaultValue); err != nil {
 					return err
 				}
 				c.emit(code.OpSetLocalDefault, symbol.Index)
+			}
+			if isOptionalsActive && param.DefaultValue == nil {
+				return newSharkError(exception.SharkErrorOptionalParameter, param.Value,
+					"Move this parameter before the optional parameters",
+					exception.NewSharkErrorCause("Non-optional parameter after optional parameter", param.Token.Pos),
+				)
 			}
 		}
 		if err := c.Compile(node.Body); err != nil {
