@@ -13,6 +13,8 @@ type LetStatement struct {
 
 func (ls *LetStatement) statementNode() {}
 
+func (ls *LetStatement) TokenPos() token.Position { return ls.Token.Pos }
+
 func (ls *LetStatement) String() string {
 	var out bytes.Buffer
 

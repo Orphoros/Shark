@@ -8,6 +8,7 @@ import (
 type Node interface {
 	TokenLiteral() string
 	String() string
+	TokenPos() token.Position
 }
 
 type Statement interface {
@@ -29,6 +30,8 @@ func (es *ExpressionStatement) statementNode() {}
 
 func (es *ExpressionStatement) TokenLiteral() string { return es.Token.Literal }
 
+func (es *ExpressionStatement) TokenPos() token.Position { return es.Token.Pos }
+
 func (es *ExpressionStatement) String() string {
 	if es.Expression != nil {
 		return es.Expression.String()
@@ -48,6 +51,14 @@ func (p *Program) String() string {
 	}
 
 	return out.String()
+}
+
+func (p *Program) TokenPos() token.Position {
+	if len(p.Statements) > 0 {
+		return p.Statements[0].TokenPos()
+	} else {
+		return token.Position{}
+	}
 }
 
 func (p *Program) TokenLiteral() string {

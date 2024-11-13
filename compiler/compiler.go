@@ -7,6 +7,7 @@ import (
 	"shark/code"
 	"shark/exception"
 	"shark/object"
+	"shark/token"
 	"sort"
 )
 
@@ -15,6 +16,8 @@ type Compiler struct {
 	scopeIndex  int
 	constants   []object.Object
 	symbolTable *SymbolTable
+	upToPos     *token.Position
+	isStopped   bool
 }
 
 type EmittedInstruction struct {
@@ -28,7 +31,7 @@ type CompilationScope struct {
 	previousInstruction EmittedInstruction
 }
 
-func New() *Compiler {
+func New(upToPos ...token.Position) *Compiler {
 	mainScope := CompilationScope{
 		instructions:        code.Instructions{},
 		lastInstruction:     EmittedInstruction{},
@@ -46,11 +49,13 @@ func New() *Compiler {
 		scopeIndex:  0,
 		constants:   []object.Object{},
 		symbolTable: SymbolTable,
+		upToPos:     &upToPos[0],
+		isStopped:   false,
 	}
 }
 
-func NewWithState(symbolTable *SymbolTable, constants []object.Object) *Compiler {
-	c := New()
+func NewWithState(symbolTable *SymbolTable, constants []object.Object, upToPos ...token.Position) *Compiler {
+	c := New(upToPos...)
 	c.symbolTable = symbolTable
 	c.constants = constants
 
@@ -62,6 +67,14 @@ func (c *Compiler) currentInstructions() code.Instructions {
 }
 
 func (c *Compiler) Compile(node ast.Node) *exception.SharkError {
+	if c.upToPos != nil {
+		nodePos := node.TokenPos()
+
+		if nodePos.Line > c.upToPos.Line {
+			c.isStopped = true
+			return &exception.SharkError{}
+		}
+	}
 	switch node := node.(type) {
 	case *ast.Program:
 		for _, statement := range node.Statements {
@@ -117,6 +130,9 @@ func (c *Compiler) Compile(node ast.Node) *exception.SharkError {
 			if err := c.Compile(node.Right); err != nil {
 				return err
 			}
+			if c.isStopped {
+				return nil
+			}
 			if err := c.Compile(node.Left); err != nil {
 				return err
 			}
@@ -125,6 +141,9 @@ func (c *Compiler) Compile(node ast.Node) *exception.SharkError {
 		} else if node.Operator == "<=" {
 			if err := c.Compile(node.Right); err != nil {
 				return err
+			}
+			if c.isStopped {
+				return nil
 			}
 			if err := c.Compile(node.Left); err != nil {
 				return err
@@ -139,6 +158,9 @@ func (c *Compiler) Compile(node ast.Node) *exception.SharkError {
 			node.Operator != "/=" {
 			if err := c.Compile(node.Left); err != nil {
 				return err
+			}
+			if c.isStopped {
+				return nil
 			}
 			if err := c.Compile(node.Right); err != nil {
 				return err
@@ -325,10 +347,16 @@ func (c *Compiler) Compile(node ast.Node) *exception.SharkError {
 		if err := c.Compile(node.Condition); err != nil {
 			return err
 		}
+		if c.isStopped {
+			return nil
+		}
 		jumpNotTruthyPos := c.emit(code.OpJumpNotTruthy, 9999)
 
 		if err := c.Compile(node.Consequence); err != nil {
 			return err
+		}
+		if c.isStopped {
+			return nil
 		}
 
 		if c.lastInstructionIs(code.OpPop) {
@@ -365,10 +393,16 @@ func (c *Compiler) Compile(node ast.Node) *exception.SharkError {
 		if err := c.Compile(node.Condition); err != nil {
 			return err
 		}
+		if c.isStopped {
+			return nil
+		}
 		jumpNotTruthyPos := c.emit(code.OpJumpNotTruthy, 9999)
 
 		if err := c.Compile(node.Body); err != nil {
 			return err
+		}
+		if c.isStopped {
+			return nil
 		}
 
 		if c.lastInstructionIs(code.OpPop) {
@@ -419,6 +453,9 @@ func (c *Compiler) Compile(node ast.Node) *exception.SharkError {
 			if err := c.Compile(element); err != nil {
 				return err
 			}
+			if c.isStopped {
+				return nil
+			}
 		}
 		c.emit(code.OpArray, len(node.Elements))
 	case *ast.HashLiteral:
@@ -433,6 +470,9 @@ func (c *Compiler) Compile(node ast.Node) *exception.SharkError {
 			if err := c.Compile(key); err != nil {
 				return err
 			}
+			if c.isStopped {
+				return nil
+			}
 			if err := c.Compile(node.Pairs[key]); err != nil {
 				return err
 			}
@@ -444,6 +484,10 @@ func (c *Compiler) Compile(node ast.Node) *exception.SharkError {
 			return err
 		}
 
+		if c.isStopped {
+			return nil
+		}
+
 		if err := c.Compile(node.Index); err != nil {
 			return err
 		}
@@ -452,6 +496,10 @@ func (c *Compiler) Compile(node ast.Node) *exception.SharkError {
 	case *ast.IndexAssignExpression:
 		if err := c.Compile(node.Value); err != nil {
 			return err
+		}
+
+		if c.isStopped {
+			return nil
 		}
 
 		if err := c.Compile(node.Left); err != nil {
@@ -495,6 +543,10 @@ func (c *Compiler) Compile(node ast.Node) *exception.SharkError {
 				if err := c.Compile(*param.DefaultValue); err != nil {
 					return err
 				}
+
+				if c.isStopped {
+					return nil
+				}
 				c.emit(code.OpSetLocalDefault, symbol.Index)
 			}
 			if isOptionalsActive && param.DefaultValue == nil {
@@ -506,6 +558,9 @@ func (c *Compiler) Compile(node ast.Node) *exception.SharkError {
 		}
 		if err := c.Compile(node.Body); err != nil {
 			return err
+		}
+		if c.isStopped {
+			return nil
 		}
 		if c.lastInstructionIs(code.OpPop) {
 			c.replaceLastPopWithReturn()
@@ -545,9 +600,15 @@ func (c *Compiler) Compile(node ast.Node) *exception.SharkError {
 		if err := c.Compile(node.Function); err != nil {
 			return err
 		}
+		if c.isStopped {
+			return nil
+		}
 		for _, arg := range node.Arguments {
 			if err := c.Compile(arg); err != nil {
 				return err
+			}
+			if c.isStopped {
+				return nil
 			}
 		}
 		c.emit(code.OpCall, len(node.Arguments))
@@ -593,6 +654,10 @@ func (c *Compiler) leaveScope() code.Instructions {
 	c.symbolTable.Inner = &currentSymbolTable
 
 	return instructions
+}
+
+func (c *Compiler) GetSymbolTable() *SymbolTable {
+	return c.symbolTable
 }
 
 func (c *Compiler) addConstant(obj object.Object) int {

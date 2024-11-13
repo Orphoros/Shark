@@ -13,6 +13,8 @@ type PostfixExpression struct {
 
 func (pe *PostfixExpression) expressionNode() {}
 
+func (pe *PostfixExpression) TokenPos() token.Position { return pe.Token.Pos }
+
 func (pe *PostfixExpression) TokenLiteral() string { return pe.Token.Literal }
 
 func (pe *PostfixExpression) String() string {

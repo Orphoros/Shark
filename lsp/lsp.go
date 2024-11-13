@@ -17,11 +17,12 @@ var (
 
 func Start() {
 	handler = protocol.Handler{
-		Initialize:        initialize,
-		Initialized:       initialized,
-		Shutdown:          shutdown,
-		SetTrace:          setTrace,
-		TextDocumentHover: hover,
+		Initialize:             initialize,
+		Initialized:            initialized,
+		Shutdown:               shutdown,
+		SetTrace:               setTrace,
+		TextDocumentHover:      hover,
+		TextDocumentDefinition: definition,
 	}
 
 	server := server.NewServer(&handler, lsName, true)

@@ -14,7 +14,7 @@ import (
 	protocol "github.com/tliron/glsp/protocol_3_16"
 )
 
-func hover(context *glsp.Context, params *protocol.HoverParams) (*protocol.Hover, error) {
+func definition(context *glsp.Context, params *protocol.DefinitionParams) (any, error) {
 	path, err := internal.GetFilePathFromURI(params.TextDocument.URI)
 	if err != nil {
 		fmt.Println(err)
@@ -51,35 +51,24 @@ func hover(context *glsp.Context, params *protocol.HoverParams) (*protocol.Hover
 
 	st := sharkEmitter.GetSymbolTable()
 
+	// FIXME: For function params, it gives the global scope definition, and not the local scope definition
 	sym, ok := st.FindIdent(identName)
 
-	if !ok {
+	if ok && sym.Scope != compiler.BuiltinScope {
+		return &protocol.Location{
+			URI: params.TextDocument.URI,
+			Range: protocol.Range{
+				Start: protocol.Position{
+					Line:      uint32(sym.Pos.Line - 1),
+					Character: uint32(sym.Pos.ColFrom - 1),
+				},
+				End: protocol.Position{
+					Line:      uint32(sym.Pos.Line - 1),
+					Character: uint32(sym.Pos.ColTo - 1),
+				},
+			},
+		}, nil
+	} else {
 		return nil, nil
 	}
-
-	var value string
-
-	switch sym.Scope {
-	case compiler.BuiltinScope:
-		value = "**Shark Function (_builtin_)**\n```shark\n" + sym.Name + "(...args)\n```"
-	case compiler.GlobalScope:
-		value = "**Shark Identifier (_global expression_)**\n```shark\nlet "
-		if sym.Mutable {
-			value += "mut "
-		}
-		value += sym.Name + "\n```"
-	case compiler.LocalScope:
-		value = "**Shark Identifier (_local expression_)**\n```shark\nlet "
-		if sym.Mutable {
-			value += "mut "
-		}
-		value += sym.Name + "\n```"
-	}
-
-	return &protocol.Hover{
-		Contents: &protocol.MarkupContent{
-			Kind:  protocol.MarkupKindMarkdown,
-			Value: value,
-		},
-	}, nil
 }

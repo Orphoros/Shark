@@ -9,6 +9,7 @@ import (
 	"shark/lexer"
 	"shark/object"
 	"shark/parser"
+	"shark/token"
 	"shark/vm"
 )
 
@@ -41,7 +42,7 @@ func (i *Emitter) GetSymbolTable() compiler.SymbolTable {
 	return *i.symbolTable
 }
 
-func (i *Emitter) Compile(sharkCode *string) *bytecode.Bytecode {
+func (i *Emitter) Compile(sharkCode *string, upToPos ...token.Position) *bytecode.Bytecode {
 	l := lexer.New(sharkCode)
 	p := parser.New(l)
 	program := p.ParseProgram()
@@ -51,8 +52,9 @@ func (i *Emitter) Compile(sharkCode *string) *bytecode.Bytecode {
 		return nil
 	}
 
-	comp := compiler.NewWithState(i.symbolTable, i.constants)
+	comp := compiler.NewWithState(i.symbolTable, i.constants, upToPos...)
 	if err := comp.Compile(program); err != nil {
+		i.symbolTable = comp.GetSymbolTable()
 		i.printCompilerError(err, i.sourceName, sharkCode)
 		return nil
 	}

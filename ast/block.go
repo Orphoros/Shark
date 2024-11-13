@@ -12,6 +12,8 @@ type BlockStatement struct {
 
 func (bs *BlockStatement) statementNode() {}
 
+func (bs *BlockStatement) TokenPos() token.Position { return bs.Token.Pos }
+
 func (bs *BlockStatement) TokenLiteral() string { return bs.Token.Literal }
 
 func (bs *BlockStatement) String() string {

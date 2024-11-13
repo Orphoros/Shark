@@ -361,3 +361,42 @@ func TestShadowingFunctionName(t *testing.T) {
 		}
 	})
 }
+
+func TestFindSymbolByName(t *testing.T) {
+	t.Run("should find symbol by name", func(t *testing.T) {
+		global := NewSymbolTable()
+		global.Define("a", true, nil)
+		global.Define("b", false, nil)
+
+		firstLocal := NewEnclosedSymbolTable(global)
+		firstLocal.Define("c", true, nil)
+		firstLocal.Define("d", false, nil)
+
+		secondLocal := NewEnclosedSymbolTable(firstLocal)
+		secondLocal.Define("e", true, nil)
+		secondLocal.Define("f", false, nil)
+
+		expected := []Symbol{
+			{Name: "a", Scope: GlobalScope, Index: 0, Mutable: true},
+			{Name: "b", Scope: GlobalScope, Index: 1, Mutable: false},
+			{Name: "c", Scope: LocalScope, Index: 0, Mutable: true},
+			{Name: "d", Scope: LocalScope, Index: 1, Mutable: false},
+			{Name: "e", Scope: LocalScope, Index: 0, Mutable: true},
+			{Name: "f", Scope: LocalScope, Index: 1, Mutable: false},
+		}
+
+		for _, sym := range expected {
+			result, ok := secondLocal.FindIdent(sym.Name)
+
+			if !ok {
+				t.Errorf("expected %s to be found", sym.Name)
+
+				continue
+			}
+
+			if result != sym {
+				t.Errorf("expected %s=%+v, got=%+v", sym.Name, sym, result)
+			}
+		}
+	})
+}

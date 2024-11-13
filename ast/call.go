@@ -14,6 +14,8 @@ type CallExpression struct {
 
 func (ce *CallExpression) expressionNode() {}
 
+func (ce *CallExpression) TokenPos() token.Position { return ce.Token.Pos }
+
 func (ce *CallExpression) TokenLiteral() string { return ce.Token.Literal }
 
 func (ce *CallExpression) String() string {

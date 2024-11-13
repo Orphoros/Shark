@@ -16,6 +16,8 @@ type FunctionLiteral struct {
 
 func (fl *FunctionLiteral) expressionNode() {}
 
+func (fl *FunctionLiteral) TokenPos() token.Position { return fl.Token.Pos }
+
 func (fl *FunctionLiteral) TokenLiteral() string { return fl.Token.Literal }
 
 func (fl *FunctionLiteral) String() string {

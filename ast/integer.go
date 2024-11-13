@@ -9,6 +9,8 @@ type IntegerLiteral struct {
 
 func (il *IntegerLiteral) expressionNode() {}
 
+func (il *IntegerLiteral) TokenPos() token.Position { return il.Token.Pos }
+
 func (il *IntegerLiteral) TokenLiteral() string { return il.Token.Literal }
 
 func (il *IntegerLiteral) String() string { return il.Token.Literal }

@@ -13,6 +13,8 @@ type HashLiteral struct {
 
 func (hl HashLiteral) expressionNode() {}
 
+func (hl HashLiteral) TokenPos() token.Position { return hl.Token.Pos }
+
 func (hl HashLiteral) TokenLiteral() string { return hl.Token.Literal }
 
 func (hl HashLiteral) String() string {

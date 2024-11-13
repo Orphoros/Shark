@@ -13,6 +13,8 @@ type WhileStatement struct {
 
 func (w *WhileStatement) statementNode() {}
 
+func (w *WhileStatement) TokenPos() token.Position { return w.Token.Pos }
+
 func (w *WhileStatement) String() string {
 	var out bytes.Buffer
 

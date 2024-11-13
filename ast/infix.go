@@ -14,6 +14,8 @@ type InfixExpression struct {
 
 func (ie *InfixExpression) expressionNode() {}
 
+func (ie *InfixExpression) TokenPos() token.Position { return ie.Token.Pos }
+
 func (ie *InfixExpression) TokenLiteral() string { return ie.Token.Literal }
 
 func (ie *InfixExpression) String() string {

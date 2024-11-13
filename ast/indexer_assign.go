@@ -11,6 +11,8 @@ type IndexAssignExpression struct {
 
 func (ia *IndexAssignExpression) expressionNode() {}
 
+func (ia *IndexAssignExpression) TokenPos() token.Position { return ia.Token.Pos }
+
 func (ia *IndexAssignExpression) TokenLiteral() string { return ia.Token.Literal }
 
 func (ia *IndexAssignExpression) String() string {

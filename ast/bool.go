@@ -9,6 +9,8 @@ type Boolean struct {
 
 func (b *Boolean) expressionNode() {}
 
+func (b *Boolean) TokenPos() token.Position { return b.Token.Pos }
+
 func (b *Boolean) TokenLiteral() string { return b.Token.Literal }
 
 func (b *Boolean) String() string { return b.Token.Literal }
