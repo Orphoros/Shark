@@ -488,7 +488,7 @@ func (c *Compiler) Compile(node ast.Node) *exception.SharkError {
 		numDefaults := 0
 		isOptionalsActive := false
 		for _, param := range node.Parameters {
-			symbol := c.symbolTable.Define(param.Value, param.Mutable, &node.Token.Pos)
+			symbol := c.symbolTable.Define(param.Value, param.Mutable, &param.Token.Pos)
 			if param.DefaultValue != nil {
 				isOptionalsActive = true
 				numDefaults++
