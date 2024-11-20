@@ -17,12 +17,11 @@ type Compiler struct {
 	constants   []object.Object
 	symbolTable *SymbolTable
 	upToPos     *token.Position
-	isStopped   bool
 }
 
 type EmittedInstruction struct {
-	Opcode   code.Opcode
-	Position int
+	opcode   code.Opcode
+	position int
 }
 
 type CompilationScope struct {
@@ -44,13 +43,20 @@ func New(upToPos ...token.Position) *Compiler {
 		SymbolTable.DefineBuiltin(i, v.Name)
 	}
 
+	var pos *token.Position
+
+	if len(upToPos) == 0 {
+		pos = nil
+	} else {
+		pos = &upToPos[0]
+	}
+
 	return &Compiler{
 		scopes:      []CompilationScope{mainScope},
 		scopeIndex:  0,
 		constants:   []object.Object{},
 		symbolTable: SymbolTable,
-		upToPos:     &upToPos[0],
-		isStopped:   false,
+		upToPos:     pos,
 	}
 }
 
@@ -66,25 +72,24 @@ func (c *Compiler) currentInstructions() code.Instructions {
 	return c.scopes[c.scopeIndex].instructions
 }
 
-func (c *Compiler) Compile(node ast.Node) *exception.SharkError {
+func (c *Compiler) Compile(node ast.Node) (*exception.SharkError, bool) {
 	if c.upToPos != nil {
 		nodePos := node.TokenPos()
 
 		if nodePos.Line > c.upToPos.Line {
-			c.isStopped = true
-			return &exception.SharkError{}
+			return nil, true
 		}
 	}
 	switch node := node.(type) {
 	case *ast.Program:
 		for _, statement := range node.Statements {
-			if err := c.Compile(statement); err != nil {
-				return err
+			if err, stopped := c.Compile(statement); err != nil || stopped {
+				return err, stopped
 			}
 		}
 	case *ast.ExpressionStatement:
-		if err := c.Compile(node.Expression); err != nil {
-			return err
+		if err, stopped := c.Compile(node.Expression); err != nil || stopped {
+			return err, stopped
 		}
 		c.emit(code.OpPop)
 	case *ast.PostfixExpression:
@@ -94,7 +99,7 @@ func (c *Compiler) Compile(node ast.Node) *exception.SharkError {
 				exception.SharkErrorIdentifierExpected, node.Token.Literal,
 				"Identifier expected for postfix expression",
 				exception.NewSharkErrorCause(fmt.Sprintf("cannot use type %T", node.Left), node.Token.Pos),
-			)
+			), false
 		}
 		symbol, ok := c.symbolTable.Resolve(ident.Value)
 		if !ok {
@@ -102,13 +107,13 @@ func (c *Compiler) Compile(node ast.Node) *exception.SharkError {
 				exception.SharkErrorIdentifierNotFound, ident.Value,
 				"Variable not found for postfix expression",
 				exception.NewSharkErrorCause("Variable not found for postfix expression", node.Token.Pos),
-			)
+			), false
 		}
 		if !symbol.Mutable {
 			return newSharkError(exception.SharkErrorImmutableValue, ident.Value,
 				"Add the 'mut' keyword before the variable name to make it mutable",
 				exception.NewSharkErrorCause("Cannot reassign value to a constant", node.Token.Pos),
-			)
+			), false
 		}
 		c.loadSymbol(symbol)
 		switch node.Operator {
@@ -127,43 +132,34 @@ func (c *Compiler) Compile(node ast.Node) *exception.SharkError {
 		}
 	case *ast.InfixExpression:
 		if node.Operator == "<" {
-			if err := c.Compile(node.Right); err != nil {
-				return err
+			if err, stopped := c.Compile(node.Right); err != nil || stopped {
+				return err, stopped
 			}
-			if c.isStopped {
-				return nil
-			}
-			if err := c.Compile(node.Left); err != nil {
-				return err
+			if err, stopped := c.Compile(node.Left); err != nil || stopped {
+				return err, stopped
 			}
 			c.emit(code.OpGreaterThan)
-			return nil
+			return nil, false
 		} else if node.Operator == "<=" {
-			if err := c.Compile(node.Right); err != nil {
-				return err
+			if err, stopped := c.Compile(node.Right); err != nil || stopped {
+				return err, stopped
 			}
-			if c.isStopped {
-				return nil
-			}
-			if err := c.Compile(node.Left); err != nil {
-				return err
+			if err, stopped := c.Compile(node.Left); err != nil || stopped {
+				return err, stopped
 			}
 			c.emit(code.OpGreaterThanEqual)
-			return nil
+			return nil, false
 		}
 		if node.Operator != "=" &&
 			node.Operator != "+=" &&
 			node.Operator != "-=" &&
 			node.Operator != "*=" &&
 			node.Operator != "/=" {
-			if err := c.Compile(node.Left); err != nil {
-				return err
+			if err, stopped := c.Compile(node.Left); err != nil || stopped {
+				return err, stopped
 			}
-			if c.isStopped {
-				return nil
-			}
-			if err := c.Compile(node.Right); err != nil {
-				return err
+			if err, stopped := c.Compile(node.Right); err != nil || stopped {
+				return err, stopped
 			}
 		}
 		switch node.Operator {
@@ -188,7 +184,7 @@ func (c *Compiler) Compile(node ast.Node) *exception.SharkError {
 					exception.SharkErrorIdentifierExpected, node.Token.Literal,
 					"Make sure to use a variable for reassignment",
 					exception.NewSharkErrorCause("left value must be an identifier, but is not", node.Token.Pos),
-				)
+				), false
 			}
 			symbol, ok := c.symbolTable.Resolve(ident.Value)
 			if !ok {
@@ -196,13 +192,13 @@ func (c *Compiler) Compile(node ast.Node) *exception.SharkError {
 					exception.SharkErrorIdentifierNotFound, ident.Value,
 					"Make sure the variable is defined before using it",
 					exception.NewSharkErrorCause("Variable not found for reassignment", node.Token.Pos),
-				)
+				), false
 			}
 			if !symbol.Mutable {
 				return newSharkError(exception.SharkErrorImmutableValue, ident.Value,
 					"Add the 'mut' keyword before the variable name to make it mutable",
 					exception.NewSharkErrorCause("Cannot reassign value to a constant", node.Token.Pos),
-				)
+				), false
 			}
 			index := symbol.Index
 
@@ -231,13 +227,13 @@ func (c *Compiler) Compile(node ast.Node) *exception.SharkError {
 
 			if node.Operator != "=" {
 				c.emit(localityGet, index)
-				if err := c.Compile(node.Right); err != nil {
-					return err
+				if err, stopped := c.Compile(node.Right); err != nil || stopped {
+					return err, stopped
 				}
 				c.emit(op)
 			} else {
-				if err := c.Compile(node.Right); err != nil {
-					return err
+				if err, stopped := c.Compile(node.Right); err != nil || stopped {
+					return err, stopped
 				}
 			}
 			c.emit(localitySet, index)
@@ -256,18 +252,18 @@ func (c *Compiler) Compile(node ast.Node) *exception.SharkError {
 			return newSharkError(exception.SharkErrorUnknownOperator, node.Operator,
 				"Try using an other operator, such as '&&' or '+'",
 				exception.NewSharkErrorCause("Invalid operator for infix expression", node.Token.Pos),
-			)
+			), false
 		}
 	case *ast.PrefixExpression:
 		switch node.Operator {
 		case "!":
-			if err := c.Compile(node.Right); err != nil {
-				return err
+			if err, stopped := c.Compile(node.Right); err != nil || stopped {
+				return err, stopped
 			}
 			c.emit(code.OpBang)
 		case "-":
-			if err := c.Compile(node.Right); err != nil {
-				return err
+			if err, stopped := c.Compile(node.Right); err != nil || stopped {
+				return err, stopped
 			}
 			c.emit(code.OpMinus)
 		case "++":
@@ -275,20 +271,20 @@ func (c *Compiler) Compile(node ast.Node) *exception.SharkError {
 				return newSharkError(exception.SharkErrorIdentifierExpected, node.Token.Literal,
 					"Only variables can be used for '++' operator",
 					exception.NewSharkErrorCause("Operator not followed by variable", node.Token.Pos),
-				)
+				), false
 			}
 			symbol, ok := c.symbolTable.Resolve(node.RightIdent.Value)
 			if !ok {
 				return newSharkError(exception.SharkErrorIdentifierNotFound, node.RightIdent.Value,
 					"Make sure the variable is defined before using it",
 					exception.NewSharkErrorCause("Variable not found", node.Token.Pos),
-				)
+				), false
 			}
 			if !symbol.Mutable {
 				return newSharkError(exception.SharkErrorImmutableValue, node.RightIdent.Value,
 					"Add the 'mut' keyword before the variable name to make it mutable",
 					exception.NewSharkErrorCause("Cannot reassign value to a constant", node.Token.Pos),
-				)
+				), false
 			}
 			if symbol.Scope == GlobalScope {
 				c.emit(code.OpIncrementGlobal, symbol.Index)
@@ -301,20 +297,20 @@ func (c *Compiler) Compile(node ast.Node) *exception.SharkError {
 				return newSharkError(exception.SharkErrorIdentifierExpected, node.Token.Literal,
 					"Only variables can be used for '--' operator",
 					exception.NewSharkErrorCause("Operator noy followed by variable", node.Token.Pos),
-				)
+				), false
 			}
 			symbol, ok := c.symbolTable.Resolve(node.RightIdent.Value)
 			if !ok {
 				return newSharkError(exception.SharkErrorIdentifierNotFound, node.RightIdent.Value,
 					"Make sure the variable is defined before using it",
 					exception.NewSharkErrorCause("Variable not found", node.Token.Pos),
-				)
+				), false
 			}
 			if !symbol.Mutable {
 				return newSharkError(exception.SharkErrorImmutableValue, node.RightIdent.Value,
 					"Add the 'mut' keyword before the variable name to make it mutable",
 					exception.NewSharkErrorCause("Cannot reassign value to a constant", node.Token.Pos),
-				)
+				), false
 			}
 			if symbol.Scope == GlobalScope {
 				c.emit(code.OpDecrementGlobal, symbol.Index)
@@ -323,15 +319,15 @@ func (c *Compiler) Compile(node ast.Node) *exception.SharkError {
 			}
 			c.loadSymbol(symbol)
 		case "...":
-			if err := c.Compile(node.Right); err != nil {
-				return err
+			if err, stopped := c.Compile(node.Right); err != nil || stopped {
+				return err, stopped
 			}
 			c.emit(code.OpSpread)
 		default:
 			return newSharkError(exception.SharkErrorUnknownOperator, node.Operator,
 				"Try using an other operator",
 				exception.NewSharkErrorCause("Invalid operator for prefix expression", node.Token.Pos),
-			)
+			), false
 		}
 	case *ast.IntegerLiteral:
 		integer := &object.Integer{Value: node.Value}
@@ -344,19 +340,13 @@ func (c *Compiler) Compile(node ast.Node) *exception.SharkError {
 		}
 	case *ast.IfExpression:
 		//FIXME: No new scope is created for block statements inside "if" and "else"
-		if err := c.Compile(node.Condition); err != nil {
-			return err
-		}
-		if c.isStopped {
-			return nil
+		if err, stopped := c.Compile(node.Condition); err != nil || stopped {
+			return err, stopped
 		}
 		jumpNotTruthyPos := c.emit(code.OpJumpNotTruthy, 9999)
 
-		if err := c.Compile(node.Consequence); err != nil {
-			return err
-		}
-		if c.isStopped {
-			return nil
+		if err, stopped := c.Compile(node.Consequence); err != nil || stopped {
+			return err, stopped
 		}
 
 		if c.lastInstructionIs(code.OpPop) {
@@ -375,8 +365,8 @@ func (c *Compiler) Compile(node ast.Node) *exception.SharkError {
 		if node.Alternative == nil || len(node.Alternative.Statements) == 0 {
 			c.emit(code.OpNull)
 		} else {
-			if err := c.Compile(node.Alternative); err != nil {
-				return err
+			if err, stopped := c.Compile(node.Alternative); err != nil || stopped {
+				return err, stopped
 			}
 			if c.lastInstructionIs(code.OpPop) {
 				c.removeLastPop()
@@ -390,19 +380,13 @@ func (c *Compiler) Compile(node ast.Node) *exception.SharkError {
 	case *ast.WhileStatement:
 		//FIXME: No new scope is created for block statements inside "while"
 		conditionPos := len(c.currentInstructions())
-		if err := c.Compile(node.Condition); err != nil {
-			return err
-		}
-		if c.isStopped {
-			return nil
+		if err, stopped := c.Compile(node.Condition); err != nil || stopped {
+			return err, stopped
 		}
 		jumpNotTruthyPos := c.emit(code.OpJumpNotTruthy, 9999)
 
-		if err := c.Compile(node.Body); err != nil {
-			return err
-		}
-		if c.isStopped {
-			return nil
+		if err, stopped := c.Compile(node.Body); err != nil || stopped {
+			return err, stopped
 		}
 
 		if c.lastInstructionIs(code.OpPop) {
@@ -415,8 +399,8 @@ func (c *Compiler) Compile(node ast.Node) *exception.SharkError {
 		c.changeOperand(jumpNotTruthyPos, afterBodyPos)
 	case *ast.BlockStatement:
 		for _, statement := range node.Statements {
-			if err := c.Compile(statement); err != nil {
-				return err
+			if err, stopped := c.Compile(statement); err != nil || stopped {
+				return err, stopped
 			}
 		}
 	case *ast.LetStatement:
@@ -425,11 +409,11 @@ func (c *Compiler) Compile(node ast.Node) *exception.SharkError {
 			return newSharkError(exception.SharkErrorDuplicateIdentifier, node.Name.Value,
 				"Remove 'let' before the variable name",
 				exception.NewSharkErrorCause("Cannot use let to reassign value to an existing variable", node.Token.Pos),
-			)
+			), false
 		}
 		symbol = c.symbolTable.Define(node.Name.Value, node.Name.Mutable, &node.Name.Token.Pos)
-		if err := c.Compile(node.Value); err != nil {
-			return err
+		if err, stopped := c.Compile(node.Value); err != nil || stopped {
+			return err, stopped
 		}
 		if symbol.Scope == GlobalScope {
 			c.emit(code.OpSetGlobal, symbol.Index)
@@ -442,7 +426,7 @@ func (c *Compiler) Compile(node ast.Node) *exception.SharkError {
 			return newSharkError(exception.SharkErrorIdentifierNotFound, node.Value,
 				fmt.Sprintf("You must define '%s' before using it with the 'let' keyword", node.Value),
 				exception.NewSharkErrorCause(fmt.Sprintf("identifier '%s' is not defined", node.Value), node.Token.Pos),
-			)
+			), false
 		}
 		c.loadSymbol(symbol)
 	case *ast.StringLiteral:
@@ -450,11 +434,8 @@ func (c *Compiler) Compile(node ast.Node) *exception.SharkError {
 		c.emit(code.OpConstant, c.addConstant(str))
 	case *ast.ArrayLiteral:
 		for _, element := range node.Elements {
-			if err := c.Compile(element); err != nil {
-				return err
-			}
-			if c.isStopped {
-				return nil
+			if err, stopped := c.Compile(element); err != nil || stopped {
+				return err, stopped
 			}
 		}
 		c.emit(code.OpArray, len(node.Elements))
@@ -467,43 +448,32 @@ func (c *Compiler) Compile(node ast.Node) *exception.SharkError {
 			return keys[i].String() < keys[j].String()
 		})
 		for _, key := range keys {
-			if err := c.Compile(key); err != nil {
-				return err
+			if err, stopped := c.Compile(key); err != nil || stopped {
+				return err, stopped
 			}
-			if c.isStopped {
-				return nil
-			}
-			if err := c.Compile(node.Pairs[key]); err != nil {
-				return err
+			if err, stopped := c.Compile(node.Pairs[key]); err != nil || stopped {
+				return err, stopped
 			}
 		}
 
 		c.emit(code.OpHash, len(node.Pairs)*2)
 	case *ast.IndexExpression:
-		if err := c.Compile(node.Left); err != nil {
-			return err
+		if err, stopped := c.Compile(node.Left); err != nil || stopped {
+			return err, stopped
 		}
 
-		if c.isStopped {
-			return nil
-		}
-
-		if err := c.Compile(node.Index); err != nil {
-			return err
+		if err, stopped := c.Compile(node.Index); err != nil || stopped {
+			return err, stopped
 		}
 
 		c.emit(code.OpIndex)
 	case *ast.IndexAssignExpression:
-		if err := c.Compile(node.Value); err != nil {
-			return err
+		if err, stopped := c.Compile(node.Value); err != nil || stopped {
+			return err, stopped
 		}
 
-		if c.isStopped {
-			return nil
-		}
-
-		if err := c.Compile(node.Left); err != nil {
-			return err
+		if err, stopped := c.Compile(node.Left); err != nil || stopped {
+			return err, stopped
 		}
 
 		// if value is an identifier, check if it is mutable
@@ -514,18 +484,18 @@ func (c *Compiler) Compile(node ast.Node) *exception.SharkError {
 				return newSharkError(exception.SharkErrorIdentifierNotFound, ident.Value,
 					"Make sure the variable is defined before using it",
 					exception.NewSharkErrorCause("Variable not found for index assignment", node.Token.Pos),
-				)
+				), false
 			}
 			if !symbol.Mutable {
 				return newSharkError(exception.SharkErrorImmutableValue, ident.Value,
 					"Add the 'mut' keyword before the variable name to make it mutable",
 					exception.NewSharkErrorCause("Cannot reassign value to a constant", node.Token.Pos),
-				)
+				), false
 			}
 		}
 
-		if err := c.Compile(node.Index); err != nil {
-			return err
+		if err, stopped := c.Compile(node.Index); err != nil || stopped {
+			return err, stopped
 		}
 		c.emit(code.OpIndexAssign)
 	case *ast.FunctionLiteral:
@@ -540,12 +510,8 @@ func (c *Compiler) Compile(node ast.Node) *exception.SharkError {
 			if param.DefaultValue != nil {
 				isOptionalsActive = true
 				numDefaults++
-				if err := c.Compile(*param.DefaultValue); err != nil {
-					return err
-				}
-
-				if c.isStopped {
-					return nil
+				if err, stopped := c.Compile(*param.DefaultValue); err != nil || stopped {
+					return err, stopped
 				}
 				c.emit(code.OpSetLocalDefault, symbol.Index)
 			}
@@ -553,14 +519,11 @@ func (c *Compiler) Compile(node ast.Node) *exception.SharkError {
 				return newSharkError(exception.SharkErrorOptionalParameter, param.Value,
 					"Move this parameter before the optional parameters",
 					exception.NewSharkErrorCause("Non-optional parameter after optional parameter", param.Token.Pos),
-				)
+				), false
 			}
 		}
-		if err := c.Compile(node.Body); err != nil {
-			return err
-		}
-		if c.isStopped {
-			return nil
+		if err, stopped := c.Compile(node.Body); err != nil || stopped {
+			return err, stopped
 		}
 		if c.lastInstructionIs(code.OpPop) {
 			c.replaceLastPopWithReturn()
@@ -589,40 +552,34 @@ func (c *Compiler) Compile(node ast.Node) *exception.SharkError {
 			return newSharkError(exception.SharkErrorTopLeverReturn, nil,
 				"Use 'exit(0);' instead",
 				exception.NewSharkErrorCause("Unexpected return statement in main scope", node.Token.Pos),
-			)
+			), false
 		}
-		if err := c.Compile(node.ReturnValue); err != nil {
-			return err
+		if err, stopped := c.Compile(node.ReturnValue); err != nil || stopped {
+			return err, stopped
 		}
 
 		c.emit(code.OpReturnValue)
 	case *ast.CallExpression:
-		if err := c.Compile(node.Function); err != nil {
-			return err
-		}
-		if c.isStopped {
-			return nil
+		if err, stopped := c.Compile(node.Function); err != nil || stopped {
+			return err, stopped
 		}
 		for _, arg := range node.Arguments {
-			if err := c.Compile(arg); err != nil {
-				return err
-			}
-			if c.isStopped {
-				return nil
+			if err, stopped := c.Compile(arg); err != nil || stopped {
+				return err, stopped
 			}
 		}
 		c.emit(code.OpCall, len(node.Arguments))
 	}
 
-	return nil
+	return nil, false
 }
 
 func (c *Compiler) replaceLastPopWithReturn() {
-	lastPos := c.scopes[c.scopeIndex].lastInstruction.Position
+	lastPos := c.scopes[c.scopeIndex].lastInstruction.position
 
 	c.replaceInstruction(lastPos, code.Make(code.OpReturnValue))
 
-	c.scopes[c.scopeIndex].lastInstruction.Opcode = code.OpReturnValue
+	c.scopes[c.scopeIndex].lastInstruction.opcode = code.OpReturnValue
 }
 
 func (c *Compiler) Bytecode() *bytecode.Bytecode {
@@ -686,7 +643,7 @@ func (c *Compiler) emit(op code.Opcode, operands ...int) int {
 
 func (c *Compiler) setLastInstruction(op code.Opcode, pos int) {
 	previous := c.scopes[c.scopeIndex].lastInstruction
-	last := EmittedInstruction{Opcode: op, Position: pos}
+	last := EmittedInstruction{opcode: op, position: pos}
 	c.scopes[c.scopeIndex].previousInstruction = previous
 	c.scopes[c.scopeIndex].lastInstruction = last
 }
@@ -704,14 +661,14 @@ func (c *Compiler) lastInstructionIs(op code.Opcode) bool {
 		return false
 	}
 
-	return c.scopes[c.scopeIndex].lastInstruction.Opcode == op
+	return c.scopes[c.scopeIndex].lastInstruction.opcode == op
 }
 
 func (c *Compiler) removeLastPop() {
 	last := c.scopes[c.scopeIndex].lastInstruction
 	previous := c.scopes[c.scopeIndex].previousInstruction
 	oldInstructions := c.currentInstructions()
-	newInstructions := oldInstructions[:last.Position]
+	newInstructions := oldInstructions[:last.position]
 	c.scopes[c.scopeIndex].instructions = newInstructions
 	c.scopes[c.scopeIndex].lastInstruction = previous
 }

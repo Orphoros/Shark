@@ -53,11 +53,12 @@ func (i *Emitter) Compile(sharkCode *string, upToPos ...token.Position) *bytecod
 	}
 
 	comp := compiler.NewWithState(i.symbolTable, i.constants, upToPos...)
-	if err := comp.Compile(program); err != nil {
-		i.symbolTable = comp.GetSymbolTable()
+	if err, _ := comp.Compile(program); err != nil {
 		i.printCompilerError(err, i.sourceName, sharkCode)
 		return nil
 	}
+
+	i.symbolTable = comp.GetSymbolTable()
 
 	return comp.Bytecode()
 }
@@ -94,7 +95,7 @@ func (i *Emitter) Interpret(in string) {
 	}
 
 	comp := compiler.NewWithState(i.symbolTable, i.constants)
-	err := comp.Compile(program)
+	err, _ := comp.Compile(program)
 	if err != nil {
 		i.printCompilerError(err, i.sourceName, &in)
 		return

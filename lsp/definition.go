@@ -51,7 +51,6 @@ func definition(context *glsp.Context, params *protocol.DefinitionParams) (any, 
 
 	st := sharkEmitter.GetSymbolTable()
 
-	// FIXME: For function params, it gives the global scope definition, and not the local scope definition
 	sym, ok := st.FindIdent(identName)
 
 	if ok && sym.Scope != compiler.BuiltinScope {

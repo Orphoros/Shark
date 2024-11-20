@@ -196,7 +196,7 @@ func runVmTests(t *testing.T, tests []vmTestCase) {
 
 		comp := compiler.New()
 
-		if err := comp.Compile(program); err != nil {
+		if err, _ := comp.Compile(program); err != nil {
 			t.Fatalf("compiler error: %+v", err)
 		}
 
@@ -455,7 +455,7 @@ func TestCallingFunctionWithWrongArguments(t *testing.T) {
 		for _, tt := range tests {
 			program := parse(tt.input)
 			comp := compiler.New()
-			if err := comp.Compile(program); err != nil {
+			if err, _ := comp.Compile(program); err != nil {
 				t.Fatalf("compiler error: %+v", err)
 			}
 			vm := NewDefault(comp.Bytecode())

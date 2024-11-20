@@ -1324,9 +1324,9 @@ func TestCompilerScopes(t *testing.T) {
 		}
 
 		last := compiler.scopes[compiler.scopeIndex].lastInstruction
-		if last.Opcode != code.OpSub {
+		if last.opcode != code.OpSub {
 			t.Errorf("lastInstruction.Opcode wrong. got=%d, want=%d",
-				last.Opcode, code.OpSub)
+				last.opcode, code.OpSub)
 		}
 
 		if compiler.symbolTable.Outer != globalSymbolTable {
@@ -1354,15 +1354,15 @@ func TestCompilerScopes(t *testing.T) {
 		}
 
 		last = compiler.scopes[compiler.scopeIndex].lastInstruction
-		if last.Opcode != code.OpAdd {
+		if last.opcode != code.OpAdd {
 			t.Errorf("lastInstruction.Opcode wrong. got=%d, want=%d",
-				last.Opcode, code.OpAdd)
+				last.opcode, code.OpAdd)
 		}
 
 		previous := compiler.scopes[compiler.scopeIndex].previousInstruction
-		if previous.Opcode != code.OpMul {
+		if previous.opcode != code.OpMul {
 			t.Errorf("previousInstruction.Opcode wrong. got=%d, want=%d",
-				previous.Opcode, code.OpMul)
+				previous.opcode, code.OpMul)
 		}
 	})
 }
@@ -1617,7 +1617,7 @@ func runCompilerTests(t *testing.T, tests []compilerTestCase) {
 
 		compiler := New()
 
-		if err := compiler.Compile(program); err != nil {
+		if err, _ := compiler.Compile(program); err != nil {
 			t.Fatalf("compiler error: %+v", err)
 		}
 
