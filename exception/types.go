@@ -65,6 +65,10 @@ const (
 	SharkErrorIndexOutOfBounds
 
 	SharkErrorOptionalParameter
+
+	SharkErrorDivisionByZero
+
+	SharkErrorUnknownType
 )
 
 const (
@@ -110,4 +114,6 @@ var errMessages = []struct {
 	{SharkErrorImmutableValue, "cannot modify immutable value '%v'"},
 	{SharkErrorIndexOutOfBounds, "index out of bounds '%v'"},
 	{SharkErrorOptionalParameter, "parameter '%v' cannot be after an optional parameter"},
+	{SharkErrorDivisionByZero, "division by zero"},
+	{SharkErrorUnknownType, "unknown type '%v'"},
 }
