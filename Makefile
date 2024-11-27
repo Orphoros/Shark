@@ -33,59 +33,68 @@ BUILD_NUMBER=$(shell date +%y)$(shell date +%j)
 BIN_FLAGS=-trimpath -gcflags=all="-l=10 -C" -ldflags="-s -w -X 'main.Version=${BUILD_VERSION}' -X 'main.Build=$(BUILD_NUMBER)' -X 'main.Codename=$(INSTRUCTION_FAMILY_CODENAME)'"
 LIB_FLAGS=-ldflags="-s -w" -trimpath -gcflags=all="-l -C" -buildmode=c-shared
 
+GOOS = linux darwin windows
+GOARCH = amd64 arm64
+
+.PHONY: all build clean test dep check coverage lint serve-coverage help
+
+##@ Commands
+
 all: clean dep test compile
 
-compile:
+build: ## Build the Shark binaries
 	@echo "Compiling Shark SDK..."
-
-	@echo "Building Shark SDK for current OS and Platform..."
-	@GOARCH=amd64 GOOS=darwin go build ${BIN_FLAGS} -o ${BUILD_DIR}/bin/Darwin/amd64/${BINARY_NAME} ./cmd/bin/sdk
-	@echo "[DONE]: Darwin AMD64"
-	@GOARCH=amd64 GOOS=linux go build ${BIN_FLAGS} -o ${BUILD_DIR}/bin/Linux/amd64/${BINARY_NAME} ./cmd/bin/sdk
-	@echo "[DONE]: Linux AMD64"
-	@GOARCH=amd64 GOOS=windows go build ${BIN_FLAGS} -o ${BUILD_DIR}/bin/Windows/amd64/${BINARY_NAME}.exe ./cmd/bin/sdk
-	@echo "[DONE]: Windows AMD64"
-	@GOARCH=arm64 GOOS=darwin go build ${BIN_FLAGS} -o ${BUILD_DIR}/bin/Darwin/arm64/${BINARY_NAME} ./cmd/bin/sdk
-	@echo "[DONE]: Darwin ARM64"
+	@for os in $(GOOS); do \
+		if [ "$$os" = "windows" ]; then \
+			EXE_EXT=".exe"; \
+		fi; \
+		for arch in $(GOARCH); do \
+			GOARCH=$$arch GOOS=$$os go build ${BIN_FLAGS} -o ${BUILD_DIR}/bin/$$os/$$arch/${BINARY_NAME}$$EXE_EXT ./cmd/bin/sdk; \
+		done; \
+	done
+	@echo "[DONE]: Shark SDK compiled"
 
 	@echo "Compiling the Shark Compiler..."
-	@GOARCH=amd64 GOOS=darwin go build ${BIN_FLAGS} -o ${BUILD_DIR}/bin/Darwin/amd64/${BINARY_NAME}c ./cmd/bin/compiler
-	@echo "[DONE]: Darwin AMD64"
-	@GOARCH=amd64 GOOS=linux go build ${BIN_FLAGS} -o ${BUILD_DIR}/bin/Linux/amd64/${BINARY_NAME}c ./cmd/bin/compiler
-	@echo "[DONE]: Linux AMD64"
-	@GOARCH=amd64 GOOS=windows go build ${BIN_FLAGS} -o ${BUILD_DIR}/bin/Windows/amd64/${BINARY_NAME}c.exe ./cmd/bin/compiler
-	@echo "[DONE]: Windows AMD64"
-	@GOARCH=arm64 GOOS=darwin go build ${BIN_FLAGS} -o ${BUILD_DIR}/bin/Darwin/arm64/${BINARY_NAME}c ./cmd/bin/compiler
-	@echo "[DONE]: Darwin ARM64"
+	@for os in $(GOOS); do \
+		if [ "$$os" = "windows" ]; then \
+			EXE_EXT=".exe"; \
+		fi; \
+		for arch in $(GOARCH); do \
+			GOARCH=$$arch GOOS=$$os go build ${BIN_FLAGS} -o ${BUILD_DIR}/bin/$$os/$$arch/${BINARY_NAME}c$$EXE_EXT ./cmd/bin/compiler; \
+		done; \
+	done
+	@echo "[DONE]: Shark Compiler compiled"
 
 	@echo "Compiling the Shark Virtual Machine..."
-	@GOARCH=amd64 GOOS=darwin go build ${BIN_FLAGS} -o ${BUILD_DIR}/bin/Darwin/amd64/orpvm ./cmd/bin/vm
-	@echo "[DONE]: Darwin AMD64"
-	@GOARCH=amd64 GOOS=linux go build ${BIN_FLAGS} -o ${BUILD_DIR}/bin/Linux/amd64/orpvm ./cmd/bin/vm
-	@echo "[DONE]: Linux AMD64"
-	@GOARCH=amd64 GOOS=windows go build ${BIN_FLAGS} -o ${BUILD_DIR}/bin/Windows/amd64/orpvm.exe ./cmd/bin/vm
-	@echo "[DONE]: Windows AMD64"
-	@GOARCH=arm64 GOOS=darwin go build ${BIN_FLAGS} -o ${BUILD_DIR}/bin/Darwin/arm64/orpvm ./cmd/bin/vm
-	@echo "[DONE]: Darwin ARM64"
+	@for os in $(GOOS); do \
+		if [ "$$os" = "windows" ]; then \
+			EXE_EXT=".exe"; \
+		fi; \
+		for arch in $(GOARCH); do \
+			GOARCH=$$arch GOOS=$$os go build ${BIN_FLAGS} -o ${BUILD_DIR}/bin/$$os/$$arch/orpvm$$EXE_EXT ./cmd/bin/vm; \
+		done; \
+	done
+	@echo "[DONE]: Shark Virtual Machine compiled"
 
 	@echo "Compiling the Shark language server..."
-	@GOARCH=amd64 GOOS=darwin go build ${BIN_FLAGS} -o ${BUILD_DIR}/bin/Darwin/amd64/${BINARY_NAME}ls ./cmd/bin/lsp
-	@echo "[DONE]: Darwin AMD64"
-	@GOARCH=amd64 GOOS=linux go build ${BIN_FLAGS} -o ${BUILD_DIR}/bin/Linux/amd64/${BINARY_NAME}ls ./cmd/bin/lsp
-	@echo "[DONE]: Linux AMD64"
-	@GOARCH=amd64 GOOS=windows go build ${BIN_FLAGS} -o ${BUILD_DIR}/bin/Windows/amd64/${BINARY_NAME}ls.exe ./cmd/bin/lsp
-	@echo "[DONE]: Windows AMD64"
-	@GOARCH=arm64 GOOS=darwin go build ${BIN_FLAGS} -o ${BUILD_DIR}/bin/Darwin/arm64/${BINARY_NAME}ls ./cmd/bin/lsp
-	@echo "[DONE]: Darwin ARM64"
+	@for os in $(GOOS); do \
+		if [ "$$os" = "windows" ]; then \
+			EXE_EXT=".exe"; \
+		fi; \
+		for arch in $(GOARCH); do \
+			GOARCH=$$arch GOOS=$$os go build ${BIN_FLAGS} -o ${BUILD_DIR}/bin/$$os/$$arch/${BINARY_NAME}ls$$EXE_EXT ./cmd/bin/lsp; \
+		done; \
+	done
+	@echo "[DONE]: Shark language server compiled"
 
 	@echo "Compiling Shark C bindings for current OS and Platform.."
 	@go build ${LIB_FLAGS} -o ${BUILD_DIR}/lib/${DETECTED_OS}/${MACHINE}/${LIB_REFIX}${BINARY_NAME}.${LIB_EXT} ./cmd/lib
 	@echo "[DONE]: Lib compiled"
 
-run:
-	@go run ./cmd/bin/main.go
+run-lsp: ## Run the language server
+	@go run ./cmd/bin/lsp/main.go
 
-clean:
+clean: ## Remove development artifacts and clean build directory
 	@echo "Cleaning build directory..."
 	@rm -rf ${BUILD_DIR}
 	@echo "[DONE]: Cleaned build directory"
@@ -93,12 +102,16 @@ clean:
 	@go clean -modcache -i -r
 	@echo "[DONE]: Cleaned modcache"
 
-test:
+test: ## Run unit tests
 	@echo "Running tests..."
-	@go test -coverprofile=coverage.out -cover -v ./...
+	@mkdir -p ${BUILD_DIR}
+	@go test -coverprofile=./${BUILD_DIR}/coverage.out -cover -v ./...
 	@echo "[DONE]: Tests completed, coverage report generated in coverage.out"
+	@echo "Validating race conditions..."
+	@go test -race -short ./...
+	@echo "[DONE]: Testing completed"
 
-dep:
+dep: ## Download and tidy dependencies
 	@echo "Downloading dependencies..."
 	@go mod download
 	@echo "[DONE]: Dependencies downloaded"
@@ -106,9 +119,24 @@ dep:
 	@go mod tidy
 	@echo "[DONE]: Dependencies tidied"
 
-check:
+check: ## Check OS and ARCH
 	@echo "Detected OS:   ${DETECTED_OS}"
 	@echo "Detected ARCH: ${MACHINE}"
 
-coverage:
-	@go tool cover -html=coverage.out
+coverage: test ## Generate coverage report
+	@echo "Generating coverage report..."
+	@go tool cover -html=./${BUILD_DIR}/coverage.out -o ./${BUILD_DIR}/coverage.html
+
+lint: ## Run linter
+	@echo "Running linter..."
+	@command -v golangci-lint >/dev/null 2>&1 || { echo >&2 "golangci-lint is required but not installed. Aborting."; exit 1; }
+	@golangci-lint run --timeout 5m
+	@echo "[DONE]: Linter completed"
+
+serve-coverage: test ## Serve coverage report in browser
+	@echo "Serving coverage report..."
+	@go tool cover -html=./${BUILD_DIR}/coverage.out  
+	@go tool cover -html=./${BUILD_DIR}/coverage.out -o ./${BUILD_DIR}/coverage.html
+
+help:
+	@awk 'BEGIN {FS = ":.*##"; printf "\nUsage:\n  make <command> \033[36m\033[0m\n"} /^[a-zA-Z_-]+:.*?##/ { printf "  \033[36m%-15s\033[0m %s\n", $$1, $$2 } /^##@/ { printf "\n\033[1m%s\033[0m\n", substr($$0, 5) } ' $(MAKEFILE_LIST)
