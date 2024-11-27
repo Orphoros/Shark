@@ -68,6 +68,16 @@ compile:
 	@GOARCH=arm64 GOOS=darwin go build ${BIN_FLAGS} -o ${BUILD_DIR}/bin/Darwin/arm64/orpvm ./cmd/bin/vm
 	@echo "[DONE]: Darwin ARM64"
 
+	@echo "Compiling the Shark language server..."
+	@GOARCH=amd64 GOOS=darwin go build ${BIN_FLAGS} -o ${BUILD_DIR}/bin/Darwin/amd64/${BINARY_NAME}ls ./cmd/bin/lsp
+	@echo "[DONE]: Darwin AMD64"
+	@GOARCH=amd64 GOOS=linux go build ${BIN_FLAGS} -o ${BUILD_DIR}/bin/Linux/amd64/${BINARY_NAME}ls ./cmd/bin/lsp
+	@echo "[DONE]: Linux AMD64"
+	@GOARCH=amd64 GOOS=windows go build ${BIN_FLAGS} -o ${BUILD_DIR}/bin/Windows/amd64/${BINARY_NAME}ls.exe ./cmd/bin/lsp
+	@echo "[DONE]: Windows AMD64"
+	@GOARCH=arm64 GOOS=darwin go build ${BIN_FLAGS} -o ${BUILD_DIR}/bin/Darwin/arm64/${BINARY_NAME}ls ./cmd/bin/lsp
+	@echo "[DONE]: Darwin ARM64"
+
 	@echo "Compiling Shark C bindings for current OS and Platform.."
 	@go build ${LIB_FLAGS} -o ${BUILD_DIR}/lib/${DETECTED_OS}/${MACHINE}/${LIB_REFIX}${BINARY_NAME}.${LIB_EXT} ./cmd/lib
 	@echo "[DONE]: Lib compiled"

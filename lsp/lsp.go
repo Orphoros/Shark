@@ -10,12 +10,11 @@ import (
 
 var (
 	lsName  = "shark"
-	port    = 59027
 	handler protocol.Handler
 	version = "0.0.1"
 )
 
-func Start() {
+func Start(port int) {
 	handler = protocol.Handler{
 		Initialize:             initialize,
 		Initialized:            initialized,
