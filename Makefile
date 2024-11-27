@@ -40,7 +40,7 @@ GOARCH = amd64 arm64
 
 ##@ Commands
 
-all: clean dep test compile
+all: clean dep test build ## Run all commands
 
 build: ## Build the Shark binaries
 	@echo "Compiling Shark SDK..."
