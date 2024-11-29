@@ -9,4 +9,4 @@ This project used the following open source resources for its development and fo
 | Monkey | The Monkey programming language extended by Steve Kemp. Used for inspiration on how to implement additional features such as code comments | <https://github.com/skx/monkey> |
 | Annotate Snippet RS | Inspiration from Rust on how to print errors | <https://github.com/rust-lang/annotate-snippets-rs> |
 | Awesome Go | A curated list of awesome Go frameworks, libraries and software. Used various free, open source libraries from this list (see go.mod) | <https://github.com/avelino/awesome-go> |
-| Public domain logos | Logos and iconograhpy used in this project is from SVG Repo. | <https://www.svgrepo.com/> |
+| Public domain logos | Logos and iconography used in this project is from SVG Repo. | <https://www.svgrepo.com/> |
