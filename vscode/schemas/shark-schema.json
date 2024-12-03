@@ -27,6 +27,12 @@
                     "description": "The maximum number of frames",
                     "maximum": 2147483647,
                     "minimum": 1
+                },
+                "cacheSize": {
+                    "type": "integer",
+                    "description": "The size of the cache in bytes",
+                    "maximum": 2147483647,
+                    "minimum": 1
                 }
             }
         }

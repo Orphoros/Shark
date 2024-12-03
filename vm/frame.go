@@ -9,6 +9,8 @@ type Frame struct {
 	cl          *object.Closure
 	ip          int
 	basePointer int
+	cacheKey    string
+	canCache    bool
 }
 
 func NewFrame(cl *object.Closure, basePointer int) *Frame {

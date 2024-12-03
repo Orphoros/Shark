@@ -18,6 +18,7 @@ Shark is written in Go aiming to be a simple, dynamically typed language with a 
 - Garbage collected
 - VS Code extension for syntax highlighting
 - Language server
+- Caching
 
 > [!NOTE]
 > Shark is currently in development and there is no release yet.

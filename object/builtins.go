@@ -9,13 +9,13 @@ var Builtins = []struct {
 	Name    string
 	Builtin *Builtin
 }{
-	{"exit", &Builtin{Fn: Exit}},
-	{"puts", &Builtin{Fn: Puts}},
-	{"len", &Builtin{Fn: Len}},
-	{"first", &Builtin{Fn: First}},
-	{"last", &Builtin{Fn: Last}},
-	{"rest", &Builtin{Fn: Rest}},
-	{"push", &Builtin{Fn: Push}},
+	{"exit", &Builtin{Fn: Exit, Ident: "exit"}},
+	{"puts", &Builtin{Fn: Puts, Ident: "puts"}},
+	{"len", &Builtin{Fn: Len, Ident: "len"}},
+	{"first", &Builtin{Fn: First, Ident: "first"}},
+	{"last", &Builtin{Fn: Last, Ident: "last"}},
+	{"rest", &Builtin{Fn: Rest, Ident: "rest"}},
+	{"push", &Builtin{Fn: Push, Ident: "push"}},
 }
 
 func Len(args ...Object) Object {

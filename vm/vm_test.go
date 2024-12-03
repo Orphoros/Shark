@@ -977,9 +977,27 @@ func TestRecursiveFibonacci(t *testing.T) {
 					}
 				}
 			};
-			fibonacci(15);
+			fibonacci(50);
 			`,
-				expected: 610,
+				expected: 12586269025,
+			},
+		}
+
+		runVmTests(t, tests)
+	})
+}
+
+func TestCache(t *testing.T) {
+	t.Run("should get the result from the func when called twice", func(t *testing.T) {
+		tests := []vmTestCase{
+			{
+				input: `
+			let fn = (x) => {
+				return x+1;
+			};
+			fn(4) + fn(4);
+			`,
+				expected: 10,
 			},
 		}
 

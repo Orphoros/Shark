@@ -7,6 +7,10 @@ import (
 	"shark/config"
 	"shark/exception"
 	"shark/object"
+	"strings"
+	"time"
+
+	"github.com/hashicorp/golang-lru/v2/expirable"
 )
 
 var True = &object.Boolean{Value: true}
@@ -14,17 +18,14 @@ var False = &object.Boolean{Value: false}
 var Null = &object.Null{}
 
 type VM struct {
-	constants []object.Object
-
-	stack []object.Object
-	sp    int // Always points to the next value. Top of stack is stack[sp-1]
-
-	globals []object.Object
-
+	constants   []object.Object
+	stack       []object.Object
+	sp          int // Always points to the next value. Top of stack is stack[sp-1]
+	globals     []object.Object
 	frames      []*Frame
 	framesIndex int
-
-	conf *config.VmConf
+	conf        *config.VmConf
+	cache       *expirable.LRU[string, object.Object]
 }
 
 func NewDefault(bytecode *bytecode.Bytecode) *VM {
@@ -42,17 +43,14 @@ func New(bytecode *bytecode.Bytecode, conf *config.VmConf) *VM {
 	frames[0] = mainFrame
 
 	return &VM{
-		constants: bytecode.Constants,
-
-		stack: make([]object.Object, conf.StackSize),
-		sp:    0,
-
-		globals: make([]object.Object, conf.GlobalsSize),
-
+		constants:   bytecode.Constants,
+		stack:       make([]object.Object, conf.StackSize),
+		sp:          0,
+		globals:     make([]object.Object, conf.GlobalsSize),
 		frames:      frames,
 		framesIndex: 1,
-
-		conf: conf,
+		conf:        conf,
+		cache:       expirable.NewLRU[string, object.Object](conf.CacheSize, nil, time.Minute*5),
 	}
 }
 
@@ -225,6 +223,10 @@ func (vm *VM) Run() *exception.SharkError {
 			vm.sp = frame.basePointer - 1
 			if err := vm.push(returnValue); err != nil {
 				return err
+			}
+			// cache the result if applicable
+			if frame.canCache {
+				vm.cache.Add(frame.cacheKey, returnValue)
 			}
 		case code.OpReturn:
 			frame := vm.popFrame()
@@ -685,6 +687,22 @@ func (vm *VM) callBuiltin(builtin *object.Builtin, numArgs int) *exception.Shark
 func (vm *VM) executeCall(numArgs int) *exception.SharkError {
 	callee := vm.stack[vm.sp-1-numArgs]
 
+	args := vm.stack[vm.sp-numArgs : vm.sp]
+
+	key, canCache := vm.createCacheKey(callee, args)
+
+	if canCache {
+		if result, ok := vm.cache.Get(key); ok {
+			// Pop the callee and arguments off the stack
+			vm.sp = vm.sp - numArgs - 1
+			// Push the cached result onto the stack
+			if err := vm.push(result); err != nil {
+				return err
+			}
+			return nil
+		}
+	}
+
 	switch callee := callee.(type) {
 	case *object.Closure:
 		cl := callee
@@ -710,6 +728,8 @@ func (vm *VM) executeCall(numArgs int) *exception.SharkError {
 		frame.cl = cl
 		frame.ip = -1
 		frame.basePointer = vm.sp - numArgs
+		frame.cacheKey = key
+		frame.canCache = canCache
 
 		vm.framesIndex++
 		vm.currentFrame().ip = frame.ip
@@ -719,9 +739,48 @@ func (vm *VM) executeCall(numArgs int) *exception.SharkError {
 		return nil
 
 	case *object.Builtin:
-		return vm.callBuiltin(callee, numArgs)
+		if err := vm.callBuiltin(callee, numArgs); err != nil {
+			return err
+		}
+		result := vm.stack[vm.sp-1]
+		if canCache {
+			vm.cache.Add(key, result)
+		}
+		return nil
 
 	default:
 		return newSharkError(exception.SharkErrorNonFunctionCall, callee.Type())
 	}
+}
+
+func (vm *VM) createCacheKey(callee object.Object, args []object.Object) (string, bool) {
+	var keyBuilder strings.Builder
+
+	switch callee := callee.(type) {
+	case *object.Closure:
+		keyBuilder.WriteString(fmt.Sprintf("%p", callee.Fn))
+	case *object.Builtin:
+		// if the builtin function is puts(), do not cache the result
+		if callee.Ident == "puts" {
+			return "", false
+		}
+		keyBuilder.WriteString(fmt.Sprintf("%p", callee))
+	default:
+		keyBuilder.WriteString(fmt.Sprintf("%p", callee))
+	}
+
+	keyBuilder.WriteString("(")
+	for i, arg := range args {
+		if i > 0 {
+			keyBuilder.WriteString(",")
+		}
+		if hashableArg, ok := arg.(object.Hashable); ok {
+			keyBuilder.WriteString(fmt.Sprintf("%s:%v", arg.Type(), hashableArg.HashKey()))
+		} else {
+			return "", false
+		}
+	}
+	keyBuilder.WriteString(")")
+
+	return keyBuilder.String(), true
 }

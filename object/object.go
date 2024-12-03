@@ -29,7 +29,8 @@ type ReturnValue struct {
 }
 
 type Builtin struct {
-	Fn BuiltinFunction
+	Ident string
+	Fn    BuiltinFunction
 }
 
 type BuiltinFunction func(args ...Object) Object

@@ -2,6 +2,7 @@
   "orpVm": {
     "stackSize": 32768,
     "globalsSize": 65536,
-    "maxFrames": 32768
+    "maxFrames": 32768,
+    "cacheSize": 1024
   }
 }
