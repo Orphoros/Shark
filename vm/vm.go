@@ -760,8 +760,7 @@ func (vm *VM) createCacheKey(callee object.Object, args []object.Object) (string
 	case *object.Closure:
 		keyBuilder.WriteString(fmt.Sprintf("%p", callee.Fn))
 	case *object.Builtin:
-		// if the builtin function is puts(), do not cache the result
-		if callee.Ident == "puts" {
+		if !callee.CanCache {
 			return "", false
 		}
 		keyBuilder.WriteString(fmt.Sprintf("%p", callee))

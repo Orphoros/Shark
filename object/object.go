@@ -29,8 +29,8 @@ type ReturnValue struct {
 }
 
 type Builtin struct {
-	Ident string
-	Fn    BuiltinFunction
+	CanCache bool
+	Fn       BuiltinFunction
 }
 
 type BuiltinFunction func(args ...Object) Object
