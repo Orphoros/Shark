@@ -1,5 +1,5 @@
 {
-  "orpVm": {
+  "nvm": {
     "stackSize": 32768,
     "globalsSize": 65536,
     "maxFrames": 32768,

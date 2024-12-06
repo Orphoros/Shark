@@ -9,12 +9,12 @@ import (
 )
 
 type Config struct {
-	OrpVM VmConf `json:"orpVm"`
+	NidumVM VmConf `json:"nvm"`
 }
 
 func NewDefaultConfig() Config {
 	return Config{
-		OrpVM: NewDefaultVmConf(),
+		NidumVM: NewDefaultVmConf(),
 	}
 }
 
@@ -32,14 +32,14 @@ func NewConfigFromFile(path string) (*Config, error) {
 	}
 
 	defVmConf := NewDefaultVmConf()
-	if conf.OrpVM.GlobalsSize == 0 {
-		conf.OrpVM.GlobalsSize = defVmConf.GlobalsSize
+	if conf.NidumVM.GlobalsSize == 0 {
+		conf.NidumVM.GlobalsSize = defVmConf.GlobalsSize
 	}
-	if conf.OrpVM.StackSize == 0 {
-		conf.OrpVM.StackSize = defVmConf.StackSize
+	if conf.NidumVM.StackSize == 0 {
+		conf.NidumVM.StackSize = defVmConf.StackSize
 	}
-	if conf.OrpVM.MaxFrames == 0 {
-		conf.OrpVM.MaxFrames = defVmConf.MaxFrames
+	if conf.NidumVM.MaxFrames == 0 {
+		conf.NidumVM.MaxFrames = defVmConf.MaxFrames
 	}
 
 	return &conf, nil

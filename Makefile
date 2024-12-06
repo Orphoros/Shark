@@ -65,13 +65,13 @@ build: ## Build the Shark binaries
 	done
 	@echo "[DONE]: Shark Compiler compiled"
 
-	@echo "Compiling the Shark Virtual Machine..."
+	@echo "Compiling the Nidum Virtual Machine..."
 	@for os in $(GOOS); do \
 		if [ "$$os" = "windows" ]; then \
 			EXE_EXT=".exe"; \
 		fi; \
 		for arch in $(GOARCH); do \
-			GOARCH=$$arch GOOS=$$os go build ${BIN_FLAGS} -o ${BUILD_DIR}/bin/$$os/$$arch/orpvm$$EXE_EXT ./cmd/bin/vm; \
+			GOARCH=$$arch GOOS=$$os go build ${BIN_FLAGS} -o ${BUILD_DIR}/bin/$$os/$$arch/nidum$$EXE_EXT ./cmd/bin/vm; \
 		done; \
 	done
 	@echo "[DONE]: Shark Virtual Machine compiled"

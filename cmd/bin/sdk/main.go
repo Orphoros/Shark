@@ -50,10 +50,15 @@ func main() {
 	decompileCommand.Description = "Decompiles a shark binary"
 	decompileCommand.AddPositionalValue(&file, "file", 1, true, "The bytecode file")
 
+	metaViewCommand := flaggy.NewSubcommand("meta")
+	metaViewCommand.Description = "View the metadata of a SharkLang bytecode file"
+	metaViewCommand.AddPositionalValue(&file, "file", 1, true, "The bytecode file")
+
 	flaggy.AttachSubcommand(runCommand, 1)
 	flaggy.AttachSubcommand(compileCommand, 1)
 	flaggy.AttachSubcommand(execCommand, 1)
 	flaggy.AttachSubcommand(decompileCommand, 1)
+	flaggy.AttachSubcommand(metaViewCommand, 1)
 	flaggy.Parse()
 
 	argConfig, err := config.LocateConfig(&cnf, &file)
@@ -71,6 +76,8 @@ func main() {
 		cmd.ExecuteSharkCodeFile(file, argConfig)
 	} else if decompileCommand.Used {
 		cmd.DecompileSharkBinaryFile(file)
+	} else if metaViewCommand.Used {
+		cmd.ShowOjbMeta(file)
 	} else {
 		flaggy.ShowHelpAndExit("Error: No subcommand provided")
 	}

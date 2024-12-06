@@ -31,7 +31,7 @@ func hover(context *glsp.Context, params *protocol.HoverParams) (*protocol.Hover
 		return nil, err
 	}
 
-	sharkEmitter := emitter.New(path, os.Stdout, &argConfig.OrpVM)
+	sharkEmitter := emitter.New(path, os.Stdout, &argConfig.NidumVM)
 
 	l := lexer.New(&content)
 

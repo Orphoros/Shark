@@ -14,20 +14,7 @@ type Bytecode struct {
 	Constants    []object.Object
 }
 
-type Type byte
-
-type Version byte
-
-const (
-	BcTypeNormal Type = iota
-	BcTypeCompressedBrotli
-)
-
-var magicNumber []byte = []byte{0x6F, 0x62, 0x63} // "onbc"
-
-const (
-	BcVersionOnos1 Version = iota
-)
+var magicNumber []byte = []byte{0x6e, 0x65, 0x78} // "nex"
 
 func (b *Bytecode) GobEncode() ([]byte, error) {
 	w := new(bytes.Buffer)
@@ -53,7 +40,7 @@ func (b *Bytecode) GobDecode(buf []byte) error {
 	return nil
 }
 
-func FromBytes(data []byte) (*Bytecode, error) {
+func FromBytes(data ObjCode) (*Bytecode, error) {
 	r := bytes.NewReader(data)
 
 	mn := make([]byte, len(magicNumber))
@@ -107,7 +94,7 @@ func FromBytes(data []byte) (*Bytecode, error) {
 	return b, nil
 }
 
-func (b *Bytecode) ToBytes(bytecodeType Type, version Version) ([]byte, error) {
+func (b *Bytecode) ToObj(bytecodeType Type, version Version) (ObjCode, error) {
 	buf := new(bytes.Buffer)
 
 	// Write magic number

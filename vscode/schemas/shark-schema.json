@@ -5,10 +5,10 @@
     "type": "object",
     "additionalProperties": false,
     "properties": {
-        "orpVm": {
+        "nvm": {
             "type": "object",
             "additionalProperties": false,
-            "description": "The configuration for the Orphoros VM",
+            "description": "The configuration for the Nidum VM",
             "properties": {
                 "stackSize": {
                     "type": "integer",
