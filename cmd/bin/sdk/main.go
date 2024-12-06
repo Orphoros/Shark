@@ -54,11 +54,15 @@ func main() {
 	metaViewCommand.Description = "View the metadata of a SharkLang bytecode file"
 	metaViewCommand.AddPositionalValue(&file, "file", 1, true, "The bytecode file")
 
+	genConf := flaggy.NewSubcommand("genconf")
+	genConf.Description = "Generate a default configuration file to the current directory"
+
 	flaggy.AttachSubcommand(runCommand, 1)
 	flaggy.AttachSubcommand(compileCommand, 1)
 	flaggy.AttachSubcommand(execCommand, 1)
 	flaggy.AttachSubcommand(decompileCommand, 1)
 	flaggy.AttachSubcommand(metaViewCommand, 1)
+	flaggy.AttachSubcommand(genConf, 1)
 	flaggy.Parse()
 
 	argConfig, err := config.LocateConfig(&cnf, &file)
@@ -78,6 +82,8 @@ func main() {
 		cmd.DecompileSharkBinaryFile(file)
 	} else if metaViewCommand.Used {
 		cmd.ShowOjbMeta(file)
+	} else if genConf.Used {
+		cmd.GenerateDefaultConfig()
 	} else {
 		flaggy.ShowHelpAndExit("Error: No subcommand provided")
 	}

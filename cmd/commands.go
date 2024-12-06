@@ -1,6 +1,7 @@
 package cmd
 
 import (
+	"encoding/json"
 	"fmt"
 	"io"
 	"os"
@@ -130,4 +131,22 @@ func ShowOjbMeta(path string) {
 	fmt.Printf("OBJ SIZE: \t%d bytes\n", len(objFile))
 	fmt.Printf("INSTRUCT SIZE: \t%d bytes\n", instructSize)
 	fmt.Printf("NUM CONSTS: \t%d\n", len(bytecode.Constants))
+}
+
+func GenerateDefaultConfig() {
+	def := config.NewDefaultConfig()
+
+	json, err := json.MarshalIndent(def, "", "  ")
+	if err != nil {
+		exception.PrintExitMsgCtx("Could not marshal default config", err.Error(), 1)
+	}
+
+	dir, err := os.Getwd()
+	if err != nil {
+		exception.PrintExitMsgCtx("Could not get the current working directory", err.Error(), 1)
+	}
+
+	if err := internal.WriteFile(filepath.Join(dir, "shark.json"), json); err != nil {
+		exception.PrintExitMsgCtx("Could not write to file", err.Error(), 1)
+	}
 }
