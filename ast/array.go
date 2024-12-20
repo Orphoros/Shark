@@ -1,6 +1,7 @@
 package ast
 
 import (
+	"shark/object"
 	"shark/token"
 	"strings"
 )
@@ -10,7 +11,7 @@ type ArrayLiteral struct {
 	Elements []Expression
 }
 
-func (al *ArrayLiteral) expressionNode() {}
+func (al *ArrayLiteral) Type() object.Type { return object.ARRAY_OBJ }
 
 func (al *ArrayLiteral) TokenPos() token.Position { return al.Token.Pos }
 

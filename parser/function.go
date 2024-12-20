@@ -31,18 +31,24 @@ func (p *Parser) parseFunctionParameters() []*ast.Identifier {
 	}
 
 	mutable := false
+	variadic := false
+
 	if p.curTokenIs(token.MUTABLE) {
 		mutable = true
 		p.nextToken()
+	} else if p.curTokenIs(token.VAR) {
+		variadic = true
+		p.nextToken()
 	}
 
-	ident := &ast.Identifier{Token: p.curToken, Value: p.curToken.Literal, Mutable: mutable}
+	ident := &ast.Identifier{Token: p.curToken, Value: p.curToken.Literal, Mutable: mutable, VariadicType: variadic}
 
 	if p.peekTokenIs(token.ASSIGN) {
 		p.nextToken()
 		p.nextToken()
 		exp := p.parseExpression(LOWEST)
 		ident.DefaultValue = &exp
+		ident.ObjType = exp.Type()
 	}
 
 	identifiers = append(identifiers, ident)
@@ -50,13 +56,26 @@ func (p *Parser) parseFunctionParameters() []*ast.Identifier {
 	for p.peekTokenIs(token.COMMA) {
 		p.nextToken()
 		p.nextToken()
-		ident := &ast.Identifier{Token: p.curToken, Value: p.curToken.Literal}
+
+		mutable = false
+		variadic = false
+
+		if p.curTokenIs(token.MUTABLE) {
+			mutable = true
+			p.nextToken()
+		} else if p.curTokenIs(token.VAR) {
+			variadic = true
+			p.nextToken()
+		}
+
+		ident := &ast.Identifier{Token: p.curToken, Value: p.curToken.Literal, Mutable: mutable, VariadicType: variadic}
 
 		if p.peekTokenIs(token.ASSIGN) {
 			p.nextToken()
 			p.nextToken()
 			exp := p.parseExpression(LOWEST)
 			ident.DefaultValue = &exp
+			ident.ObjType = exp.Type()
 		}
 		identifiers = append(identifiers, ident)
 	}

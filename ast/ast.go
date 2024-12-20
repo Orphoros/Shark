@@ -2,6 +2,7 @@ package ast
 
 import (
 	"bytes"
+	"shark/object"
 	"shark/token"
 )
 
@@ -18,7 +19,7 @@ type Statement interface {
 
 type Expression interface {
 	Node
-	expressionNode()
+	Type() object.Type
 }
 
 type ExpressionStatement struct {
@@ -27,6 +28,8 @@ type ExpressionStatement struct {
 }
 
 func (es *ExpressionStatement) statementNode() {}
+
+func (es *ExpressionStatement) Type() object.Type { return es.Expression.Type() }
 
 func (es *ExpressionStatement) TokenLiteral() string { return es.Token.Literal }
 

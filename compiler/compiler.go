@@ -109,9 +109,9 @@ func (c *Compiler) Compile(node ast.Node) (*exception.SharkError, bool) {
 				exception.NewSharkErrorCause("Variable not found for postfix expression", node.Token.Pos),
 			), false
 		}
-		if !symbol.Mutable {
+		if !symbol.VariadicType && !symbol.Mutable {
 			return newSharkError(exception.SharkErrorImmutableValue, ident.Value,
-				"Add the 'mut' keyword before the variable name to make it mutable",
+				"Add the 'mut' keyword before the variable name to make it mutable, or use the 'var' keyword to declare the variable",
 				exception.NewSharkErrorCause("Cannot reassign value to a constant", node.Token.Pos),
 			), false
 		}
@@ -194,11 +194,19 @@ func (c *Compiler) Compile(node ast.Node) (*exception.SharkError, bool) {
 					exception.NewSharkErrorCause("Variable not found for reassignment", node.Token.Pos),
 				), false
 			}
-			if !symbol.Mutable {
+			if !symbol.VariadicType && !symbol.Mutable {
 				return newSharkError(exception.SharkErrorImmutableValue, ident.Value,
-					"Add the 'mut' keyword before the variable name to make it mutable",
+					"Add the 'mut' keyword before the variable name to make it mutable, or use the 'var' keyword to declare the variable",
 					exception.NewSharkErrorCause("Cannot reassign value to a constant", node.Token.Pos),
 				), false
+			}
+			if !symbol.VariadicType {
+				if symbol.ObjType != node.Right.Type() {
+					return newSharkError(exception.SharkErrorTypeMismatch, node.Right.Type(),
+						"Declare the variable with 'var' keyword instead",
+						exception.NewSharkErrorCause(fmt.Sprintf("Cannot assign type '%s' to type '%s'", node.Right.Type(), symbol.ObjType), node.Token.Pos),
+					), false
+				}
 			}
 			index := symbol.Index
 
@@ -280,9 +288,9 @@ func (c *Compiler) Compile(node ast.Node) (*exception.SharkError, bool) {
 					exception.NewSharkErrorCause("Variable not found", node.Token.Pos),
 				), false
 			}
-			if !symbol.Mutable {
+			if !symbol.VariadicType && !symbol.Mutable {
 				return newSharkError(exception.SharkErrorImmutableValue, node.RightIdent.Value,
-					"Add the 'mut' keyword before the variable name to make it mutable",
+					"Add the 'mut' keyword before the variable name to make it mutable, or use the 'var' keyword to declare the variable",
 					exception.NewSharkErrorCause("Cannot reassign value to a constant", node.Token.Pos),
 				), false
 			}
@@ -306,9 +314,9 @@ func (c *Compiler) Compile(node ast.Node) (*exception.SharkError, bool) {
 					exception.NewSharkErrorCause("Variable not found", node.Token.Pos),
 				), false
 			}
-			if !symbol.Mutable {
+			if !symbol.VariadicType && !symbol.Mutable {
 				return newSharkError(exception.SharkErrorImmutableValue, node.RightIdent.Value,
-					"Add the 'mut' keyword before the variable name to make it mutable",
+					"Add the 'mut' keyword before the variable name to make it mutable, or use the 'var' keyword to declare the variable",
 					exception.NewSharkErrorCause("Cannot reassign value to a constant", node.Token.Pos),
 				), false
 			}
@@ -411,7 +419,7 @@ func (c *Compiler) Compile(node ast.Node) (*exception.SharkError, bool) {
 				exception.NewSharkErrorCause("Cannot use let to reassign value to an existing variable", node.Token.Pos),
 			), false
 		}
-		symbol = c.symbolTable.Define(node.Name.Value, node.Name.Mutable, &node.Name.Token.Pos)
+		symbol = c.symbolTable.Define(node.Name.Value, node.Name.Mutable, node.Name.VariadicType, node.Name.ObjType, &node.Name.Token.Pos)
 		if err, stopped := c.Compile(node.Value); err != nil || stopped {
 			return err, stopped
 		}
@@ -486,9 +494,9 @@ func (c *Compiler) Compile(node ast.Node) (*exception.SharkError, bool) {
 					exception.NewSharkErrorCause("Variable not found for index assignment", node.Token.Pos),
 				), false
 			}
-			if !symbol.Mutable {
+			if !symbol.VariadicType && !symbol.Mutable {
 				return newSharkError(exception.SharkErrorImmutableValue, ident.Value,
-					"Add the 'mut' keyword before the variable name to make it mutable",
+					"Add the 'mut' keyword before the variable name to make it mutable, or use the 'var' keyword to declare the variable",
 					exception.NewSharkErrorCause("Cannot reassign value to a constant", node.Token.Pos),
 				), false
 			}
@@ -506,7 +514,7 @@ func (c *Compiler) Compile(node ast.Node) (*exception.SharkError, bool) {
 		numDefaults := 0
 		isOptionalsActive := false
 		for _, param := range node.Parameters {
-			symbol := c.symbolTable.Define(param.Value, param.Mutable, &param.Token.Pos)
+			symbol := c.symbolTable.Define(param.Value, param.Mutable, param.VariadicType, param.ObjType, &param.Token.Pos)
 			if param.DefaultValue != nil {
 				isOptionalsActive = true
 				numDefaults++

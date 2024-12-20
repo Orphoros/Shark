@@ -1,15 +1,20 @@
 package ast
 
-import "shark/token"
+import (
+	"shark/object"
+	"shark/token"
+)
 
 type Identifier struct {
 	Token        token.Token
 	Value        string
 	DefaultValue *Expression
 	Mutable      bool
+	VariadicType bool
+	ObjType      object.Type
 }
 
-func (i *Identifier) expressionNode() {}
+func (i *Identifier) Type() object.Type { return i.ObjType }
 
 func (i *Identifier) TokenPos() token.Position { return i.Token.Pos }
 

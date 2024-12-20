@@ -2,6 +2,7 @@ package ast
 
 import (
 	"bytes"
+	"shark/object"
 	"shark/token"
 )
 
@@ -12,7 +13,7 @@ type IfExpression struct {
 	Alternative *BlockStatement
 }
 
-func (ie IfExpression) expressionNode() {}
+func (ie IfExpression) Type() object.Type { return object.RETURN_VALUE_OBJ }
 
 func (ie IfExpression) TokenPos() token.Position { return ie.Token.Pos }
 

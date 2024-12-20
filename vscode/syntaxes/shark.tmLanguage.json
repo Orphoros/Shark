@@ -98,7 +98,7 @@
         },
         {
           "name": "storage.type.shark",
-          "match": "\\b(let)\\b"
+          "match": "\\b(let|var)\\b"
         },
         {
           "name": "storage.modifier.shark",
@@ -150,7 +150,7 @@
       "patterns": [
         {
           "name": "meta.function.definition.shark",
-          "begin": "\\b(let)\\s+(mut\\s+)?([a-zA-Z_][a-zA-Z0-9_]*)\\s*=\\s*\\(",
+          "begin": "\\b(let|var)\\s+(mut\\s+)?([a-zA-Z_][a-zA-Z0-9_]*)\\s*=\\s*\\(",
           "beginCaptures": {
             "1": {
               "name": "storage.type.shark"
@@ -191,7 +191,7 @@
       "patterns": [
         {
           "name": "variable.parameter.shark",
-          "match": "\\b(mut\\s+)?[a-zA-Z_][a-zA-Z0-9_]*\\b",
+          "match": "\\b(mut\\s+)?(var)\\s+[a-zA-Z_][a-zA-Z0-9_]*\\b",
           "captures": {
             "1": {
               "name": "storage.modifier.shark"
@@ -219,7 +219,7 @@
       "patterns": [
         {
           "name": "meta.variable.declaration.shark",
-          "begin": "\\b(let)\\s+(mut\\s+)?([a-zA-Z_][a-zA-Z0-9_]*)\\s*=",
+          "begin": "\\b(let|var)\\s+(mut\\s+)?([a-zA-Z_][a-zA-Z0-9_]*)\\s*=",
           "beginCaptures": {
             "1": {
               "name": "storage.type.shark"
@@ -240,7 +240,7 @@
         },
         {
           "name": "variable.other.readwrite.shark",
-          "match": "\\b(?!if\\b|else\\b|while\\b|return\\b|let\\b|mut\\b|true\\b|false\\b)[a-zA-Z_][a-zA-Z0-9_]*\\b"
+          "match": "\\b(?!if\\b|else\\b|while\\b|return\\b|let\\b|var\\b|mut\\b|true\\b|false\\b)[a-zA-Z_][a-zA-Z0-9_]*\\b"
         }
       ]
     },

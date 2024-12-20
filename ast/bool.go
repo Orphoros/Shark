@@ -1,13 +1,16 @@
 package ast
 
-import "shark/token"
+import (
+	"shark/object"
+	"shark/token"
+)
 
 type Boolean struct {
 	Token token.Token
 	Value bool
 }
 
-func (b *Boolean) expressionNode() {}
+func (b *Boolean) Type() object.Type { return object.BOOLEAN_OBJ }
 
 func (b *Boolean) TokenPos() token.Position { return b.Token.Pos }
 

@@ -137,6 +137,7 @@ func (i *Emitter) printParserErrors(errors []exception.SharkError, filename, con
 func (i *Emitter) printCompilerError(err *exception.SharkError, filename *string, content *string) {
 	err.SetInputName(*filename)
 	err.SetInputContent(content)
+	// TODO: If an error happens, the exit code should be 1
 	if _, err := io.WriteString(i.output, err.String()); err != nil {
 		return
 	}

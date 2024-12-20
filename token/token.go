@@ -68,6 +68,7 @@ const (
 	RANGE       = ".."
 	SPREAD      = "..."
 	MUTABLE     = "MUTABLE"
+	VAR         = "VAR"
 )
 
 // List of reserved Shark keywords.
@@ -80,6 +81,7 @@ var keywords = map[string]Type{
 	"return": RETURN,
 	"while":  WHILE,
 	"mut":    MUTABLE,
+	"var":    VAR,
 }
 
 // Checks if an identifier is a reserved Shark keyword. If it is, it returns the token type.

@@ -63,17 +63,29 @@ func hover(context *glsp.Context, params *protocol.HoverParams) (*protocol.Hover
 	case compiler.BuiltinScope:
 		value = "**Shark Function (_builtin_)**\n```shark\n" + sym.Name + "(...args)\n```"
 	case compiler.GlobalScope:
-		value = "**Shark Identifier (_global expression_)**\n```shark\nlet "
+		value = "**Shark Identifier (_global expression_)**\n```shark\n"
+		if sym.VariadicType {
+			value += "var "
+		} else {
+			value += "let "
+		}
 		if sym.Mutable {
 			value += "mut "
 		}
-		value += sym.Name + "\n```"
+		value += sym.Name + " : " + sym.ObjType.String() + "\n```"
 	case compiler.LocalScope:
-		value = "**Shark Identifier (_local expression_)**\n```shark\nlet "
+		value = "**Shark Identifier (_local expression_)**\n```shark\n"
+		if sym.VariadicType {
+			value += "var "
+		} else {
+			value += "let "
+		}
+
 		if sym.Mutable {
 			value += "mut "
 		}
-		value += sym.Name + "\n```"
+
+		value += sym.Name + " : " + sym.ObjType.String() + "\n```"
 	}
 
 	return &protocol.Hover{

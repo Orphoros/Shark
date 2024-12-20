@@ -69,6 +69,8 @@ const (
 	SharkErrorDivisionByZero
 
 	SharkErrorUnknownType
+
+	SharkErrorTypeMismatch
 )
 
 const (
@@ -116,4 +118,5 @@ var errMessages = []struct {
 	{SharkErrorOptionalParameter, "parameter '%v' cannot be after an optional parameter"},
 	{SharkErrorDivisionByZero, "division by zero"},
 	{SharkErrorUnknownType, "unknown type '%v'"},
+	{SharkErrorTypeMismatch, "type mismatch '%v'"},
 }

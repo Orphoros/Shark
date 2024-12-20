@@ -1,5 +1,5 @@
 let sumOfAP = (mut a, d, n) => {
-    let mut sum = 0;
+    var sum = 0;
     let mut i = 0;
 
     while (i < n) {

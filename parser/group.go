@@ -12,8 +12,13 @@ func (p *Parser) parseGroupedExpression() ast.Expression {
 		p.curTokenIs(token.MUTABLE) ||
 		(p.curTokenIs(token.RPAREN) && p.peekTokenIs(token.ARROW)) ||
 		(p.curTokenIs(token.IDENT) && p.peekTokenIs(token.ASSIGN)) ||
+		(p.curTokenIs(token.VAR) && p.peekTokenIs(token.IDENT)) ||
 		(p.curTokenIs(token.IDENT) && p.peekTokenIs(token.RPAREN)) {
 		return p.parseFunctionLiteral()
+	}
+
+	if p.curTokenIs(token.VAR) {
+		return nil
 	}
 
 	exp := p.parseExpression(LOWEST)

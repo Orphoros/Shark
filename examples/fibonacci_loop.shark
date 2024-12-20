@@ -1,8 +1,8 @@
 // Fibonacci function using a space optimized approach.
 let fibonacci = (number = 35) => {
-    let mut a = 0;
-    let mut b = 1;
-    let mut c = 1;
+    var a = 0;
+    var b = 1;
+    var c = 1;
 
     if (number == 0) {
         return a;

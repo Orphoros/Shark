@@ -8,19 +8,27 @@ type Object interface {
 }
 
 const (
-	INTEGER_OBJ           = "INTEGER"
-	BOOLEAN_OBJ           = "BOOLEAN"
-	NULL_OBJ              = "NULL"
-	RETURN_VALUE_OBJ      = "RETURN_VALUE"
-	ERROR_OBJ             = "ERROR"
-	FUNCTION_OBJ          = "FUNCTION"
-	STRING_OBJ            = "STRING"
-	BUILTIN_OBJ           = "BUILTIN"
-	ARRAY_OBJ             = "ARRAY"
-	HASH_OBJ              = "HASH"
-	COMPILED_FUNCTION_OBJ = "COMPILED_FUNCTION"
-	CLOSURE_OBJ           = "CLOSURE"
+	INTEGER_OBJ           Type = "INTEGER"
+	BOOLEAN_OBJ           Type = "BOOLEAN"
+	NULL_OBJ              Type = "NULL"
+	RETURN_VALUE_OBJ      Type = "RETURN_VALUE"
+	ERROR_OBJ             Type = "ERROR"
+	FUNCTION_OBJ          Type = "FUNCTION"
+	STRING_OBJ            Type = "STRING"
+	BUILTIN_OBJ           Type = "BUILTIN"
+	ARRAY_OBJ             Type = "ARRAY"
+	HASH_OBJ              Type = "HASH"
+	COMPILED_FUNCTION_OBJ Type = "COMPILED_FUNCTION"
+	CLOSURE_OBJ           Type = "CLOSURE"
 )
+
+func (t Type) String() string {
+	if t == "" {
+		return "UNDEFINED"
+	}
+
+	return string(t)
+}
 
 type Null struct{}
 

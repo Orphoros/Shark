@@ -2,6 +2,7 @@ package ast
 
 import (
 	"bytes"
+	"shark/object"
 	"shark/token"
 	"strings"
 )
@@ -12,7 +13,7 @@ type CallExpression struct {
 	Arguments []Expression
 }
 
-func (ce *CallExpression) expressionNode() {}
+func (ce *CallExpression) Type() object.Type { return object.RETURN_VALUE_OBJ }
 
 func (ce *CallExpression) TokenPos() token.Position { return ce.Token.Pos }
 

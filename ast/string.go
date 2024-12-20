@@ -1,13 +1,16 @@
 package ast
 
-import "shark/token"
+import (
+	"shark/object"
+	"shark/token"
+)
 
 type StringLiteral struct {
 	Token token.Token
 	Value string
 }
 
-func (sl *StringLiteral) expressionNode() {}
+func (sl *StringLiteral) Type() object.Type { return object.STRING_OBJ }
 
 func (sl *StringLiteral) TokenPos() token.Position { return sl.Token.Pos }
 

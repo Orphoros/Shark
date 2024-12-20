@@ -1,6 +1,7 @@
 package compiler
 
 import (
+	"shark/object"
 	"shark/token"
 )
 
@@ -15,11 +16,13 @@ const (
 )
 
 type Symbol struct {
-	Name    string
-	Mutable bool
-	Scope   SymbolScope
-	Index   int
-	Pos     *token.Position
+	Name         string
+	Mutable      bool
+	VariadicType bool
+	ObjType      object.Type
+	Scope        SymbolScope
+	Index        int
+	Pos          *token.Position
 }
 
 type SymbolTable struct {
@@ -44,8 +47,8 @@ func NewEnclosedSymbolTable(outer *SymbolTable) *SymbolTable {
 	return st
 }
 
-func (s *SymbolTable) Define(name string, mutable bool, pos *token.Position) Symbol {
-	symbol := Symbol{Name: name, Index: s.numDefinitions, Mutable: mutable, Pos: pos}
+func (s *SymbolTable) Define(name string, mutable, variadicType bool, objType object.Type, pos *token.Position) Symbol {
+	symbol := Symbol{Name: name, Index: s.numDefinitions, Mutable: mutable, Pos: pos, VariadicType: variadicType, ObjType: objType}
 
 	if s.Outer == nil {
 		symbol.Scope = GlobalScope
@@ -73,7 +76,7 @@ func (s *SymbolTable) Resolve(name string) (Symbol, bool) {
 			return obj, ok
 		}
 
-		return s.DefineFree(obj, obj.Mutable, obj.Pos), true
+		return s.DefineFree(obj, obj.Mutable, obj.VariadicType, obj.ObjType, obj.Pos), true
 	}
 
 	return obj, ok
@@ -98,17 +101,17 @@ func (s *SymbolTable) FindIdent(name string) (Symbol, bool) {
 }
 
 func (s *SymbolTable) DefineBuiltin(index int, name string) Symbol {
-	symbol := Symbol{Name: name, Scope: BuiltinScope, Index: index, Mutable: false}
+	symbol := Symbol{Name: name, Scope: BuiltinScope, Index: index, Mutable: false, VariadicType: false}
 
 	s.store[name] = symbol
 
 	return symbol
 }
 
-func (s *SymbolTable) DefineFree(original Symbol, mutable bool, pos *token.Position) Symbol {
+func (s *SymbolTable) DefineFree(original Symbol, mutable, variadicType bool, objType object.Type, pos *token.Position) Symbol {
 	s.FreeSymbols = append(s.FreeSymbols, original)
 
-	symbol := Symbol{Name: original.Name, Scope: FreeScope, Index: len(s.FreeSymbols) - 1, Mutable: mutable, Pos: pos}
+	symbol := Symbol{Name: original.Name, Scope: FreeScope, Index: len(s.FreeSymbols) - 1, Mutable: mutable, Pos: pos, VariadicType: variadicType, ObjType: objType}
 
 	s.store[original.Name] = symbol
 

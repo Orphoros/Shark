@@ -56,11 +56,20 @@
     },
     "Mutable Variable": {
         "prefix": [
+            "var-mut"
+        ],
+        "body": [
+            "var mut ${1:name} = ${2:value};"
+        ],
+        "description": "A mutable variable."
+    },
+    "Static Type Variable": {
+        "prefix": [
             "let-mut"
         ],
         "body": [
             "let mut ${1:name} = ${2:value};"
         ],
-        "description": "A mutable variable."
+        "description": "A static type mutable variable."
     }
 }

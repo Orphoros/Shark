@@ -7,7 +7,7 @@ import (
 
 func (p *Parser) parseStatement() ast.Statement {
 	switch p.curToken.Type {
-	case token.LET:
+	case token.LET, token.VAR:
 		return p.parseLetStatement()
 	case token.RETURN:
 		return p.parseReturnStatement()
@@ -46,12 +46,18 @@ func (p *Parser) parseReturnStatement() *ast.ReturnStatement {
 }
 
 func (p *Parser) parseLetStatement() *ast.LetStatement {
-	stmt := &ast.LetStatement{Token: p.curToken}
-
+	variadicType := false
 	mutable := false
 
-	// check if mutable
-	if p.peekTokenIs(token.MUTABLE) {
+	if p.curTokenIs(token.VAR) {
+		variadicType = true
+
+	}
+
+	stmt := &ast.LetStatement{Token: p.curToken}
+
+	// check if mutable for let statement
+	if !variadicType && p.peekTokenIs(token.MUTABLE) {
 		mutable = true
 		p.nextToken()
 	}
@@ -60,7 +66,7 @@ func (p *Parser) parseLetStatement() *ast.LetStatement {
 		return nil
 	}
 
-	stmt.Name = &ast.Identifier{Token: p.curToken, Value: p.curToken.Literal, Mutable: mutable}
+	stmt.Name = &ast.Identifier{Token: p.curToken, Value: p.curToken.Literal, Mutable: mutable, VariadicType: variadicType}
 
 	if !p.expectPeek(token.ASSIGN) {
 		return nil
@@ -69,6 +75,12 @@ func (p *Parser) parseLetStatement() *ast.LetStatement {
 	p.nextToken()
 
 	stmt.Value = p.parseExpression(LOWEST)
+
+	if stmt.Value == nil {
+		return nil
+	}
+
+	stmt.Name.ObjType = stmt.Value.Type()
 
 	if fl, ok := stmt.Value.(*ast.FunctionLiteral); ok {
 		fl.Name = stmt.Name.Value

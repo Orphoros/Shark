@@ -57,7 +57,7 @@
     "snippets": [
       {
         "language": "shark",
-        "path": "./snippets/shark.json"
+        "path": "./snippets/shark-snippet.json"
       }
     ],
     "jsonValidation": [
