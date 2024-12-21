@@ -1,47 +1,48 @@
 package compiler
 
 import (
+	"shark/object"
 	"testing"
 )
 
 func TestDefine(t *testing.T) {
 	t.Run("should define a new symbol", func(t *testing.T) {
 		expected := map[string]Symbol{
-			"a": {Name: "a", Scope: GlobalScope, Index: 0, Mutable: true},
-			"b": {Name: "b", Scope: GlobalScope, Index: 1, Mutable: false},
-			"c": {Name: "c", Scope: LocalScope, Index: 0, Mutable: true},
-			"d": {Name: "d", Scope: LocalScope, Index: 1, Mutable: false},
-			"e": {Name: "e", Scope: LocalScope, Index: 0, Mutable: true},
-			"f": {Name: "f", Scope: LocalScope, Index: 1, Mutable: false},
+			"a": {Name: "a", Scope: GlobalScope, Index: 0, Mutable: true, VariadicType: true, ObjType: object.INTEGER_OBJ},
+			"b": {Name: "b", Scope: GlobalScope, Index: 1, Mutable: false, VariadicType: false, ObjType: object.INTEGER_OBJ},
+			"c": {Name: "c", Scope: LocalScope, Index: 0, Mutable: true, VariadicType: true, ObjType: object.INTEGER_OBJ},
+			"d": {Name: "d", Scope: LocalScope, Index: 1, Mutable: false, VariadicType: false, ObjType: object.INTEGER_OBJ},
+			"e": {Name: "e", Scope: LocalScope, Index: 0, Mutable: true, VariadicType: true, ObjType: object.INTEGER_OBJ},
+			"f": {Name: "f", Scope: LocalScope, Index: 1, Mutable: false, VariadicType: false, ObjType: object.INTEGER_OBJ},
 		}
 
 		global := NewSymbolTable()
 
-		if a := global.Define("a", true, nil); a != expected["a"] {
+		if a := global.Define("a", true, true, object.INTEGER_OBJ, nil); a != expected["a"] {
 			t.Errorf("expected %s=%+v, got=%+v", "a", expected["a"], a)
 		}
 
-		if b := global.Define("b", false, nil); b != expected["b"] {
+		if b := global.Define("b", false, false, object.INTEGER_OBJ, nil); b != expected["b"] {
 			t.Errorf("expected %s=%+v, got=%+v", "b", expected["b"], b)
 		}
 
 		firstLocal := NewEnclosedSymbolTable(global)
 
-		if c := firstLocal.Define("c", true, nil); c != expected["c"] {
+		if c := firstLocal.Define("c", true, true, object.INTEGER_OBJ, nil); c != expected["c"] {
 			t.Errorf("expected %s=%+v, got=%+v", "c", expected["c"], c)
 		}
 
-		if d := firstLocal.Define("d", false, nil); d != expected["d"] {
+		if d := firstLocal.Define("d", false, false, object.INTEGER_OBJ, nil); d != expected["d"] {
 			t.Errorf("expected %s=%+v, got=%+v", "d", expected["d"], d)
 		}
 
 		secondLocal := NewEnclosedSymbolTable(firstLocal)
 
-		if e := secondLocal.Define("e", true, nil); e != expected["e"] {
+		if e := secondLocal.Define("e", true, true, object.INTEGER_OBJ, nil); e != expected["e"] {
 			t.Errorf("expected %s=%+v, got=%+v", "e", expected["e"], e)
 		}
 
-		if f := secondLocal.Define("f", false, nil); f != expected["f"] {
+		if f := secondLocal.Define("f", false, false, object.INTEGER_OBJ, nil); f != expected["f"] {
 			t.Errorf("expected %s=%+v, got=%+v", "f", expected["f"], f)
 		}
 	})
@@ -51,12 +52,12 @@ func TestResolveGlobal(t *testing.T) {
 	t.Run("should resolve a global symbol", func(t *testing.T) {
 		global := NewSymbolTable()
 
-		global.Define("a", true, nil)
-		global.Define("b", true, nil)
+		global.Define("a", true, true, object.INTEGER_OBJ, nil)
+		global.Define("b", true, true, object.INTEGER_OBJ, nil)
 
 		expected := []Symbol{
-			{Name: "a", Scope: GlobalScope, Index: 0, Mutable: true},
-			{Name: "b", Scope: GlobalScope, Index: 1, Mutable: true},
+			{Name: "a", Scope: GlobalScope, Index: 0, Mutable: true, VariadicType: true, ObjType: object.INTEGER_OBJ},
+			{Name: "b", Scope: GlobalScope, Index: 1, Mutable: true, VariadicType: true, ObjType: object.INTEGER_OBJ},
 		}
 
 		for _, sym := range expected {
@@ -79,18 +80,18 @@ func TestResolveLocal(t *testing.T) {
 	t.Run("should resolve a local symbol", func(t *testing.T) {
 		global := NewSymbolTable()
 
-		global.Define("a", true, nil)
-		global.Define("b", false, nil)
+		global.Define("a", true, true, object.INTEGER_OBJ, nil)
+		global.Define("b", false, false, object.INTEGER_OBJ, nil)
 
 		local := NewEnclosedSymbolTable(global)
-		local.Define("c", true, nil)
-		local.Define("d", false, nil)
+		local.Define("c", true, true, object.INTEGER_OBJ, nil)
+		local.Define("d", false, false, object.INTEGER_OBJ, nil)
 
 		expected := []Symbol{
-			{Name: "a", Scope: GlobalScope, Index: 0, Mutable: true},
-			{Name: "b", Scope: GlobalScope, Index: 1, Mutable: false},
-			{Name: "c", Scope: LocalScope, Index: 0, Mutable: true},
-			{Name: "d", Scope: LocalScope, Index: 1, Mutable: false},
+			{Name: "a", Scope: GlobalScope, Index: 0, Mutable: true, VariadicType: true, ObjType: object.INTEGER_OBJ},
+			{Name: "b", Scope: GlobalScope, Index: 1, Mutable: false, VariadicType: false, ObjType: object.INTEGER_OBJ},
+			{Name: "c", Scope: LocalScope, Index: 0, Mutable: true, VariadicType: true, ObjType: object.INTEGER_OBJ},
+			{Name: "d", Scope: LocalScope, Index: 1, Mutable: false, VariadicType: false, ObjType: object.INTEGER_OBJ},
 		}
 
 		for _, sym := range expected {
@@ -112,16 +113,16 @@ func TestResolveLocal(t *testing.T) {
 func TestResolveNestedLocal(t *testing.T) {
 	t.Run("should resolve a nested local symbol", func(t *testing.T) {
 		global := NewSymbolTable()
-		global.Define("a", true, nil)
-		global.Define("b", false, nil)
+		global.Define("a", true, true, object.INTEGER_OBJ, nil)
+		global.Define("b", false, false, object.INTEGER_OBJ, nil)
 
 		firstLocal := NewEnclosedSymbolTable(global)
-		firstLocal.Define("c", true, nil)
-		firstLocal.Define("d", false, nil)
+		firstLocal.Define("c", true, true, object.INTEGER_OBJ, nil)
+		firstLocal.Define("d", false, false, object.INTEGER_OBJ, nil)
 
 		secondLocal := NewEnclosedSymbolTable(firstLocal)
-		secondLocal.Define("e", true, nil)
-		secondLocal.Define("f", false, nil)
+		secondLocal.Define("e", true, true, object.INTEGER_OBJ, nil)
+		secondLocal.Define("f", false, false, object.INTEGER_OBJ, nil)
 
 		tests := []struct {
 			table           *SymbolTable
@@ -130,19 +131,19 @@ func TestResolveNestedLocal(t *testing.T) {
 			{
 				firstLocal,
 				[]Symbol{
-					{Name: "a", Scope: GlobalScope, Index: 0, Mutable: true},
-					{Name: "b", Scope: GlobalScope, Index: 1, Mutable: false},
-					{Name: "c", Scope: LocalScope, Index: 0, Mutable: true},
-					{Name: "d", Scope: LocalScope, Index: 1, Mutable: false},
+					{Name: "a", Scope: GlobalScope, Index: 0, Mutable: true, VariadicType: true, ObjType: object.INTEGER_OBJ},
+					{Name: "b", Scope: GlobalScope, Index: 1, Mutable: false, VariadicType: false, ObjType: object.INTEGER_OBJ},
+					{Name: "c", Scope: LocalScope, Index: 0, Mutable: true, VariadicType: true, ObjType: object.INTEGER_OBJ},
+					{Name: "d", Scope: LocalScope, Index: 1, Mutable: false, VariadicType: false, ObjType: object.INTEGER_OBJ},
 				},
 			},
 			{
 				secondLocal,
 				[]Symbol{
-					{Name: "a", Scope: GlobalScope, Index: 0, Mutable: true},
-					{Name: "b", Scope: GlobalScope, Index: 1, Mutable: false},
-					{Name: "e", Scope: LocalScope, Index: 0, Mutable: true},
-					{Name: "f", Scope: LocalScope, Index: 1, Mutable: false},
+					{Name: "a", Scope: GlobalScope, Index: 0, Mutable: true, VariadicType: true, ObjType: object.INTEGER_OBJ},
+					{Name: "b", Scope: GlobalScope, Index: 1, Mutable: false, VariadicType: false, ObjType: object.INTEGER_OBJ},
+					{Name: "e", Scope: LocalScope, Index: 0, Mutable: true, VariadicType: true, ObjType: object.INTEGER_OBJ},
+					{Name: "f", Scope: LocalScope, Index: 1, Mutable: false, VariadicType: false, ObjType: object.INTEGER_OBJ},
 				},
 			},
 		}
@@ -172,10 +173,10 @@ func TestDefineResolveBultins(t *testing.T) {
 		secondLocal := NewEnclosedSymbolTable(firstLocal)
 
 		expected := []Symbol{
-			{Name: "a", Scope: BuiltinScope, Index: 0, Mutable: false},
-			{Name: "c", Scope: BuiltinScope, Index: 1, Mutable: false},
-			{Name: "e", Scope: BuiltinScope, Index: 2, Mutable: false},
-			{Name: "f", Scope: BuiltinScope, Index: 3, Mutable: false},
+			{Name: "a", Scope: BuiltinScope, Index: 0, Mutable: false, VariadicType: false},
+			{Name: "c", Scope: BuiltinScope, Index: 1, Mutable: false, VariadicType: false},
+			{Name: "e", Scope: BuiltinScope, Index: 2, Mutable: false, VariadicType: false},
+			{Name: "f", Scope: BuiltinScope, Index: 3, Mutable: false, VariadicType: false},
 		}
 
 		for i, v := range expected {
@@ -203,16 +204,16 @@ func TestDefineResolveBultins(t *testing.T) {
 func TestResolveFree(t *testing.T) {
 	t.Run("should resolve a free symbol", func(t *testing.T) {
 		global := NewSymbolTable()
-		global.Define("a", true, nil)
-		global.Define("b", false, nil)
+		global.Define("a", true, true, object.INTEGER_OBJ, nil)
+		global.Define("b", false, false, object.INTEGER_OBJ, nil)
 
 		firstLocal := NewEnclosedSymbolTable(global)
-		firstLocal.Define("c", true, nil)
-		firstLocal.Define("d", false, nil)
+		firstLocal.Define("c", true, true, object.INTEGER_OBJ, nil)
+		firstLocal.Define("d", false, false, object.INTEGER_OBJ, nil)
 
 		secondLocal := NewEnclosedSymbolTable(firstLocal)
-		secondLocal.Define("e", true, nil)
-		secondLocal.Define("f", false, nil)
+		secondLocal.Define("e", true, true, object.INTEGER_OBJ, nil)
+		secondLocal.Define("f", false, false, object.INTEGER_OBJ, nil)
 
 		tests := []struct {
 			table               *SymbolTable
@@ -222,26 +223,26 @@ func TestResolveFree(t *testing.T) {
 			{
 				firstLocal,
 				[]Symbol{
-					{Name: "a", Scope: GlobalScope, Index: 0, Mutable: true},
-					{Name: "b", Scope: GlobalScope, Index: 1, Mutable: false},
-					{Name: "c", Scope: LocalScope, Index: 0, Mutable: true},
-					{Name: "d", Scope: LocalScope, Index: 1, Mutable: false},
+					{Name: "a", Scope: GlobalScope, Index: 0, Mutable: true, VariadicType: true, ObjType: object.INTEGER_OBJ},
+					{Name: "b", Scope: GlobalScope, Index: 1, Mutable: false, VariadicType: false, ObjType: object.INTEGER_OBJ},
+					{Name: "c", Scope: LocalScope, Index: 0, Mutable: true, VariadicType: true, ObjType: object.INTEGER_OBJ},
+					{Name: "d", Scope: LocalScope, Index: 1, Mutable: false, VariadicType: false, ObjType: object.INTEGER_OBJ},
 				},
 				[]Symbol{},
 			},
 			{
 				secondLocal,
 				[]Symbol{
-					{Name: "a", Scope: GlobalScope, Index: 0, Mutable: true},
-					{Name: "b", Scope: GlobalScope, Index: 1, Mutable: false},
-					{Name: "c", Scope: FreeScope, Index: 0, Mutable: true},
-					{Name: "d", Scope: FreeScope, Index: 1, Mutable: false},
-					{Name: "e", Scope: LocalScope, Index: 0, Mutable: true},
-					{Name: "f", Scope: LocalScope, Index: 1, Mutable: false},
+					{Name: "a", Scope: GlobalScope, Index: 0, Mutable: true, VariadicType: true, ObjType: object.INTEGER_OBJ},
+					{Name: "b", Scope: GlobalScope, Index: 1, Mutable: false, VariadicType: false, ObjType: object.INTEGER_OBJ},
+					{Name: "c", Scope: FreeScope, Index: 0, Mutable: true, VariadicType: true, ObjType: object.INTEGER_OBJ},
+					{Name: "d", Scope: FreeScope, Index: 1, Mutable: false, VariadicType: false, ObjType: object.INTEGER_OBJ},
+					{Name: "e", Scope: LocalScope, Index: 0, Mutable: true, VariadicType: true, ObjType: object.INTEGER_OBJ},
+					{Name: "f", Scope: LocalScope, Index: 1, Mutable: false, VariadicType: false, ObjType: object.INTEGER_OBJ},
 				},
 				[]Symbol{
-					{Name: "c", Scope: LocalScope, Index: 0, Mutable: true},
-					{Name: "d", Scope: LocalScope, Index: 1, Mutable: false},
+					{Name: "c", Scope: LocalScope, Index: 0, Mutable: true, VariadicType: true, ObjType: object.INTEGER_OBJ},
+					{Name: "d", Scope: LocalScope, Index: 1, Mutable: false, VariadicType: false, ObjType: object.INTEGER_OBJ},
 				},
 			},
 		}
@@ -280,20 +281,20 @@ func TestResolveFree(t *testing.T) {
 func TestResolveUnresolvableFree(t *testing.T) {
 	t.Run("should resolve an unresolvable free symbol", func(t *testing.T) {
 		global := NewSymbolTable()
-		global.Define("a", true, nil)
+		global.Define("a", true, true, object.INTEGER_OBJ, nil)
 
 		firstLocal := NewEnclosedSymbolTable(global)
-		firstLocal.Define("c", true, nil)
+		firstLocal.Define("c", true, true, object.INTEGER_OBJ, nil)
 
 		secondLocal := NewEnclosedSymbolTable(firstLocal)
-		secondLocal.Define("e", true, nil)
-		secondLocal.Define("f", false, nil)
+		secondLocal.Define("e", true, true, object.INTEGER_OBJ, nil)
+		secondLocal.Define("f", false, false, object.INTEGER_OBJ, nil)
 
 		expected := []Symbol{
-			{Name: "a", Scope: GlobalScope, Index: 0, Mutable: true},
-			{Name: "c", Scope: FreeScope, Index: 0, Mutable: true},
-			{Name: "e", Scope: LocalScope, Index: 0, Mutable: true},
-			{Name: "f", Scope: LocalScope, Index: 1, Mutable: false},
+			{Name: "a", Scope: GlobalScope, Index: 0, Mutable: true, VariadicType: true, ObjType: object.INTEGER_OBJ},
+			{Name: "c", Scope: FreeScope, Index: 0, Mutable: true, VariadicType: true, ObjType: object.INTEGER_OBJ},
+			{Name: "e", Scope: LocalScope, Index: 0, Mutable: true, VariadicType: true, ObjType: object.INTEGER_OBJ},
+			{Name: "f", Scope: LocalScope, Index: 1, Mutable: false, VariadicType: false, ObjType: object.INTEGER_OBJ},
 		}
 
 		for _, sym := range expected {
@@ -326,7 +327,7 @@ func TestDefineAndResolveFunctionName(t *testing.T) {
 	t.Run("should define and resolve function name", func(t *testing.T) {
 		global := NewSymbolTable()
 		global.DefineFunctionName("a", nil)
-		expected := Symbol{Name: "a", Scope: FunctionScope, Index: 0}
+		expected := Symbol{Name: "a", Scope: FunctionScope, Index: 0, Mutable: false, VariadicType: false}
 
 		result, ok := global.Resolve(expected.Name)
 		if !ok {
@@ -345,9 +346,9 @@ func TestShadowingFunctionName(t *testing.T) {
 	t.Run("should shadow function name", func(t *testing.T) {
 		global := NewSymbolTable()
 		global.DefineFunctionName("a", nil)
-		global.Define("a", true, nil)
+		global.Define("a", true, true, object.INTEGER_OBJ, nil)
 
-		expected := Symbol{Name: "a", Scope: GlobalScope, Index: 0, Mutable: true}
+		expected := Symbol{Name: "a", Scope: GlobalScope, Index: 0, Mutable: true, VariadicType: true, ObjType: object.INTEGER_OBJ}
 
 		result, ok := global.Resolve(expected.Name)
 		if !ok {
@@ -365,24 +366,24 @@ func TestShadowingFunctionName(t *testing.T) {
 func TestFindSymbolByName(t *testing.T) {
 	t.Run("should find symbol by name", func(t *testing.T) {
 		global := NewSymbolTable()
-		global.Define("a", true, nil)
-		global.Define("b", false, nil)
+		global.Define("a", true, true, object.INTEGER_OBJ, nil)
+		global.Define("b", false, false, object.INTEGER_OBJ, nil)
 
 		firstLocal := NewEnclosedSymbolTable(global)
-		firstLocal.Define("c", true, nil)
-		firstLocal.Define("d", false, nil)
+		firstLocal.Define("c", true, true, object.INTEGER_OBJ, nil)
+		firstLocal.Define("d", false, false, object.INTEGER_OBJ, nil)
 
 		secondLocal := NewEnclosedSymbolTable(firstLocal)
-		secondLocal.Define("e", true, nil)
-		secondLocal.Define("f", false, nil)
+		secondLocal.Define("e", true, true, object.INTEGER_OBJ, nil)
+		secondLocal.Define("f", false, false, object.INTEGER_OBJ, nil)
 
 		expected := []Symbol{
-			{Name: "a", Scope: GlobalScope, Index: 0, Mutable: true},
-			{Name: "b", Scope: GlobalScope, Index: 1, Mutable: false},
-			{Name: "c", Scope: LocalScope, Index: 0, Mutable: true},
-			{Name: "d", Scope: LocalScope, Index: 1, Mutable: false},
-			{Name: "e", Scope: LocalScope, Index: 0, Mutable: true},
-			{Name: "f", Scope: LocalScope, Index: 1, Mutable: false},
+			{Name: "a", Scope: GlobalScope, Index: 0, Mutable: true, VariadicType: true, ObjType: object.INTEGER_OBJ},
+			{Name: "b", Scope: GlobalScope, Index: 1, Mutable: false, VariadicType: false, ObjType: object.INTEGER_OBJ},
+			{Name: "c", Scope: LocalScope, Index: 0, Mutable: true, VariadicType: true, ObjType: object.INTEGER_OBJ},
+			{Name: "d", Scope: LocalScope, Index: 1, Mutable: false, VariadicType: false, ObjType: object.INTEGER_OBJ},
+			{Name: "e", Scope: LocalScope, Index: 0, Mutable: true, VariadicType: true, ObjType: object.INTEGER_OBJ},
+			{Name: "f", Scope: LocalScope, Index: 1, Mutable: false, VariadicType: false, ObjType: object.INTEGER_OBJ},
 		}
 
 		for _, sym := range expected {
