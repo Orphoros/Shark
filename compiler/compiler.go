@@ -178,7 +178,7 @@ func (c *Compiler) Compile(node ast.Node) (*exception.SharkError, bool) {
 		case "==":
 			c.emit(code.OpEqual)
 		case "=", "+=", "-=", "*=", "/=":
-			ident, ok := node.Left.(*ast.Identifier)
+			identLeft, ok := node.Left.(*ast.Identifier)
 			if !ok {
 				return newSharkError(
 					exception.SharkErrorIdentifierExpected, node.Token.Literal,
@@ -186,29 +186,46 @@ func (c *Compiler) Compile(node ast.Node) (*exception.SharkError, bool) {
 					exception.NewSharkErrorCause("left value must be an identifier, but is not", node.Token.Pos),
 				), false
 			}
-			symbol, ok := c.symbolTable.Resolve(ident.Value)
+			symbolLeft, ok := c.symbolTable.Resolve(identLeft.Value)
 			if !ok {
 				return newSharkError(
-					exception.SharkErrorIdentifierNotFound, ident.Value,
+					exception.SharkErrorIdentifierNotFound, identLeft.Value,
 					"Make sure the variable is defined before using it",
 					exception.NewSharkErrorCause("Variable not found for reassignment", node.Token.Pos),
 				), false
 			}
-			if !symbol.VariadicType && !symbol.Mutable {
-				return newSharkError(exception.SharkErrorImmutableValue, ident.Value,
+			if !symbolLeft.VariadicType && !symbolLeft.Mutable {
+				return newSharkError(exception.SharkErrorImmutableValue, identLeft.Value,
 					"Add the 'mut' keyword before the variable name to make it mutable, or use the 'var' keyword to declare the variable",
 					exception.NewSharkErrorCause("Cannot reassign value to a constant", node.Token.Pos),
 				), false
 			}
-			if !symbol.VariadicType {
-				if symbol.ObjType != node.Right.Type() {
-					return newSharkError(exception.SharkErrorTypeMismatch, node.Right.Type(),
-						"Declare the variable with 'var' keyword instead",
-						exception.NewSharkErrorCause(fmt.Sprintf("Cannot assign type '%s' to type '%s'", node.Right.Type(), symbol.ObjType), node.Token.Pos),
+			/// ---------
+
+			identRight, ok := node.Left.(*ast.Identifier)
+			if ok {
+				symbolRight, ok := c.symbolTable.Resolve(identRight.Value)
+				if !ok {
+					return newSharkError(
+						exception.SharkErrorIdentifierNotFound, identRight.Value,
+						"Make sure the variable is defined before using it",
+						exception.NewSharkErrorCause("Variable not found for reassignment", node.Token.Pos),
 					), false
 				}
+				if symbolLeft.ObjType != symbolRight.ObjType && !symbolLeft.VariadicType {
+					return newSharkError(exception.SharkErrorTypeMismatch, symbolRight.ObjType,
+						"Declare the variable with 'var' keyword instead",
+						exception.NewSharkErrorCause(fmt.Sprintf("Cannot assign type '%s' to type '%s'", symbolRight.ObjType, symbolLeft.ObjType), node.Token.Pos),
+					), false
+				}
+			} else if symbolLeft.ObjType != node.Right.Type() && !symbolLeft.VariadicType {
+				return newSharkError(exception.SharkErrorTypeMismatch, node.Right.Type(),
+					"Declare the variable with 'var' keyword instead",
+					exception.NewSharkErrorCause(fmt.Sprintf("Cannot assign type '%s' to type '%s'", node.Right.Type(), symbolLeft.ObjType), node.Token.Pos),
+				), false
 			}
-			index := symbol.Index
+
+			index := symbolLeft.Index
 
 			var op code.Opcode
 
@@ -225,7 +242,7 @@ func (c *Compiler) Compile(node ast.Node) (*exception.SharkError, bool) {
 
 			var localitySet, localityGet code.Opcode
 
-			if symbol.Scope == GlobalScope {
+			if symbolLeft.Scope == GlobalScope {
 				localitySet = code.OpSetGlobal
 				localityGet = code.OpGetGlobal
 			} else {
