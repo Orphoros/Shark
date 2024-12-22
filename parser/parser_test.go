@@ -908,6 +908,149 @@ func TestFunctionParameterParsing(t *testing.T) {
 			}
 		}
 	})
+
+	t.Run("should parse function parameters with default values and without", func(t *testing.T) {
+		tests := []struct {
+			input    string
+			expected []struct {
+				identifier string
+				value      interface{}
+			}
+		}{
+			{"(x = 1, y) => {};", []struct {
+				identifier string
+				value      interface{}
+			}{{"x", 1}, {"y", nil}}},
+			{"(x = 1, y = 2, z) => {};", []struct {
+				identifier string
+				value      interface{}
+			}{{"x", 1}, {"y", 2}, {"z", nil}}},
+			{"(x = 1, y = 2, z = 3, a) => {};", []struct {
+				identifier string
+				value      interface{}
+			}{{"x", 1}, {"y", 2}, {"z", 3}, {"a", nil}}},
+		}
+
+		for _, tt := range tests {
+			l := lexer.New(&tt.input)
+			p := New(l)
+			program := p.ParseProgram()
+
+			checkParserErrors(t, p)
+
+			stmt := program.Statements[0].(*ast.ExpressionStatement)
+			function := stmt.Expression.(*ast.FunctionLiteral)
+
+			if len(function.Parameters) != len(tt.expected) {
+				t.Errorf("length parameters wrong. want %d, got=%d", len(tt.expected), len(function.Parameters))
+			}
+
+			for i, param := range tt.expected {
+				testLiteralExpression(t, function.Parameters[i], param.identifier)
+				if param.value != nil {
+					testLiteralExpression(t, *function.Parameters[i].DefaultValue, param.value)
+				}
+			}
+		}
+	})
+
+	t.Run("should parse function parameters with mut and without", func(t *testing.T) {
+		tests := []struct {
+			input    string
+			expected []struct {
+				identifier string
+				mutable    bool
+			}
+		}{
+			{"(x, y) => {};", []struct {
+				identifier string
+				mutable    bool
+			}{{"x", false}, {"y", false}}},
+			{"(mut x, y) => {};", []struct {
+				identifier string
+				mutable    bool
+			}{{"x", true}, {"y", false}}},
+			{"(x, mut y) => {};", []struct {
+				identifier string
+				mutable    bool
+			}{{"x", false}, {"y", true}}},
+			{"(mut x, mut y) => {};", []struct {
+				identifier string
+				mutable    bool
+			}{{"x", true}, {"y", true}}},
+		}
+
+		for _, tt := range tests {
+			l := lexer.New(&tt.input)
+			p := New(l)
+			program := p.ParseProgram()
+
+			checkParserErrors(t, p)
+
+			stmt := program.Statements[0].(*ast.ExpressionStatement)
+			function := stmt.Expression.(*ast.FunctionLiteral)
+
+			if len(function.Parameters) != len(tt.expected) {
+				t.Errorf("length parameters wrong. want %d, got=%d", len(tt.expected), len(function.Parameters))
+			}
+
+			for i, param := range tt.expected {
+				testLiteralExpression(t, function.Parameters[i], param.identifier)
+				if function.Parameters[i].Mutable != param.mutable {
+					t.Errorf("parameter %s mutability wrong. want %t, got=%t", param.identifier, param.mutable, function.Parameters[i].Mutable)
+				}
+			}
+		}
+	})
+
+	t.Run("should parse function parameters with var and without", func(t *testing.T) {
+		tests := []struct {
+			input    string
+			expected []struct {
+				identifier string
+				variable   bool
+			}
+		}{
+			{"(x, y) => {};", []struct {
+				identifier string
+				variable   bool
+			}{{"x", false}, {"y", false}}},
+			{"(var x, y) => {};", []struct {
+				identifier string
+				variable   bool
+			}{{"x", true}, {"y", false}}},
+			{"(x, var y) => {};", []struct {
+				identifier string
+				variable   bool
+			}{{"x", false}, {"y", true}}},
+			{"(var x, var y) => {};", []struct {
+				identifier string
+				variable   bool
+			}{{"x", true}, {"y", true}}},
+		}
+
+		for _, tt := range tests {
+			l := lexer.New(&tt.input)
+			p := New(l)
+			program := p.ParseProgram()
+
+			checkParserErrors(t, p)
+
+			stmt := program.Statements[0].(*ast.ExpressionStatement)
+			function := stmt.Expression.(*ast.FunctionLiteral)
+
+			if len(function.Parameters) != len(tt.expected) {
+				t.Errorf("length parameters wrong. want %d, got=%d", len(tt.expected), len(function.Parameters))
+			}
+
+			for i, param := range tt.expected {
+				testLiteralExpression(t, function.Parameters[i], param.identifier)
+				if function.Parameters[i].VariadicType != param.variable {
+					t.Errorf("parameter %s variable wrong. want %t, got=%t", param.identifier, param.variable, function.Parameters[i].VariadicType)
+				}
+			}
+		}
+	})
 }
 
 func TestCallExpressionParsing(t *testing.T) {

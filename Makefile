@@ -129,7 +129,7 @@ lint: ## Run linter
 	@golangci-lint run --timeout 5m
 	@echo "[DONE]: Linter completed"
 
-coverage: test ## Serve coverage report in browser
+coverage-report: test ## Serve coverage report in browser
 	@echo "Serving coverage report..."
 	@go tool cover -html=./${BUILD_DIR}/coverage.out  
 	@go tool cover -html=./${BUILD_DIR}/coverage.out -o ./${BUILD_DIR}/coverage.html

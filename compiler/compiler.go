@@ -200,7 +200,6 @@ func (c *Compiler) Compile(node ast.Node) (*exception.SharkError, bool) {
 					exception.NewSharkErrorCause("Cannot reassign value to a constant", node.Token.Pos),
 				), false
 			}
-			/// ---------
 
 			identRight, ok := node.Left.(*ast.Identifier)
 			if ok {
