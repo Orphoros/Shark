@@ -16,6 +16,15 @@ var Builtins = []struct {
 	{"last", &Builtin{Fn: Last, CanCache: true}},
 	{"rest", &Builtin{Fn: Rest, CanCache: true}},
 	{"push", &Builtin{Fn: Push, CanCache: true}},
+	{"type", &Builtin{Fn: ObjType, CanCache: true}},
+}
+
+func ObjType(args ...Object) Object {
+	if len(args) != 1 {
+		return newError("wrong number of arguments. got=%d, want=1", len(args))
+	}
+
+	return &String{Value: string(args[0].Type())}
 }
 
 func Len(args ...Object) Object {
@@ -30,6 +39,8 @@ func Len(args ...Object) Object {
 		return &Integer{Value: int64(len(arg.Elements))}
 	case *Hash:
 		return &Integer{Value: int64(len(arg.Pairs))}
+	case *Tuple:
+		return &Integer{Value: int64(len(arg.Elements))}
 	default:
 		return newError("argument to `len` not supported, got %s", args[0].Type())
 	}
@@ -40,16 +51,25 @@ func First(args ...Object) Object {
 		return newError("wrong number of arguments. got=%d, want=1", len(args))
 	}
 
-	if args[0].Type() != ARRAY_OBJ {
-		return newError("argument to `first` must be ARRAY, got %s", args[0].Type())
+	switch arg := args[0].(type) {
+	case *String:
+		if len(arg.Value) > 0 {
+			return &String{Value: string(arg.Value[0])}
+		}
+		return nil
+	case *Array:
+		if len(arg.Elements) > 0 {
+			return arg.Elements[0]
+		}
+		return nil
+	case *Tuple:
+		if len(arg.Elements) > 0 {
+			return arg.Elements[0]
+		}
+		return nil
+	default:
+		return newError("argument to `first` not supported, got %s", args[0].Type())
 	}
-
-	arr := args[0].(*Array)
-	if len(arr.Elements) > 0 {
-		return arr.Elements[0]
-	}
-
-	return nil
 }
 
 func Puts(args ...Object) Object {
@@ -67,17 +87,28 @@ func Last(args ...Object) Object {
 		return newError("wrong number of arguments. got=%d, want=1", len(args))
 	}
 
-	if args[0].Type() != ARRAY_OBJ {
-		return newError("argument to `last` must be ARRAY, got %s", args[0].Type())
+	switch arg := args[0].(type) {
+	case *String:
+		length := len(arg.Value)
+		if length > 0 {
+			return &String{Value: string(arg.Value[length-1])}
+		}
+		return nil
+	case *Array:
+		length := len(arg.Elements)
+		if length > 0 {
+			return arg.Elements[length-1]
+		}
+		return nil
+	case *Tuple:
+		length := len(arg.Elements)
+		if length > 0 {
+			return arg.Elements[length-1]
+		}
+		return nil
+	default:
+		return newError("argument to `last` not supported, got %s", args[0].Type())
 	}
-
-	arr := args[0].(*Array)
-	length := len(arr.Elements)
-	if length > 0 {
-		return arr.Elements[length-1]
-	}
-
-	return nil
 }
 
 func Rest(args ...Object) Object {

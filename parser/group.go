@@ -6,6 +6,7 @@ import (
 )
 
 func (p *Parser) parseGroupedExpression() ast.Expression {
+	curToken := p.curToken
 	p.nextToken()
 
 	if (p.curTokenIs(token.IDENT) && p.peekTokenIs(token.COMMA)) ||
@@ -22,6 +23,10 @@ func (p *Parser) parseGroupedExpression() ast.Expression {
 	}
 
 	exp := p.parseExpression(LOWEST)
+
+	if p.peekTokenIs(token.COMMA) {
+		return p.parseTupleLiteral(curToken, exp)
+	}
 
 	if !p.expectPeek(token.RPAREN) {
 		return nil

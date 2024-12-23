@@ -174,6 +174,17 @@ func TestArrayLiterals(t *testing.T) {
 	})
 }
 
+func TestTupleLiterals(t *testing.T) {
+	t.Run("should evaluate tuple literals", func(t *testing.T) {
+		tests := []vmTestCase{
+			{"(1, 2, 3)", object.Tuple{Elements: []object.Object{&object.Integer{Value: 1}, &object.Integer{Value: 2}, &object.Integer{Value: 3}}}},
+			{"(1 + 2, 3 * 4, 5 + 6)", object.Tuple{Elements: []object.Object{&object.Integer{Value: 3}, &object.Integer{Value: 12}, &object.Integer{Value: 11}}}},
+		}
+
+		runVmTests(t, tests)
+	})
+}
+
 func TestRangeOperator(t *testing.T) {
 	t.Run("should evaluate range operator between numbers", func(t *testing.T) {
 		tests := []vmTestCase{
@@ -231,7 +242,7 @@ func TestHashLiterals(t *testing.T) {
 }
 
 func TestIndexExpressions(t *testing.T) {
-	t.Run("should evaluate index expressions", func(t *testing.T) {
+	t.Run("should evaluate array index expressions", func(t *testing.T) {
 		tests := []vmTestCase{
 			{"[1, 2, 3][1]", 2},
 			{"[1, 2, 3][0 + 2]", 3},
@@ -239,10 +250,40 @@ func TestIndexExpressions(t *testing.T) {
 			{"[][0]", Null},
 			{"[1, 2, 3][99]", Null},
 			{"[1][-1]", Null},
+		}
+
+		runVmTests(t, tests)
+	})
+
+	t.Run("should evaluate hash index expressions", func(t *testing.T) {
+		tests := []vmTestCase{
 			{"{1: 1, 2: 2}[1]", 1},
 			{"{1: 1, 2: 2}[2]", 2},
 			{"{1: 1}[0]", Null},
 			{"{}[0]", Null},
+		}
+
+		runVmTests(t, tests)
+	})
+
+	t.Run("should evaluate tuple index expressions", func(t *testing.T) {
+		tests := []vmTestCase{
+			{"(1, 2, 3)[1]", 2},
+			{"(1, 2, 3)[0 + 2]", 3},
+			{"(1, 2, 3)[99]", Null},
+			{"(1, 2, 3)[-1]", Null},
+		}
+
+		runVmTests(t, tests)
+	})
+
+	t.Run("should evaluate string index expressions", func(t *testing.T) {
+		tests := []vmTestCase{
+			{`"shark"[0]`, "s"},
+			{`"shark"[1]`, "h"},
+			{`"shark"[4]`, "k"},
+			{`"shark"[10]`, Null},
+			{`"shark"[-1]`, Null},
 		}
 
 		runVmTests(t, tests)
@@ -801,26 +842,82 @@ func TestFirstClassFunctions(t *testing.T) {
 }
 
 func TestBuiltinFunctions(t *testing.T) {
-	t.Run("should evaluate builtin functions", func(t *testing.T) {
+	t.Run("should evaluate puts builtin functions", func(t *testing.T) {
+		tests := []vmTestCase{
+			{`puts("hello", "world!")`, Null},
+		}
+
+		runVmTests(t, tests)
+	})
+
+	t.Run("should evaluate len builtin functions", func(t *testing.T) {
 		tests := []vmTestCase{
 			{`len("")`, 0},
 			{`len("four")`, 4},
 			{`len("hello world")`, 11},
+			{`len((true, 2, "a"))`, 3},
 			{`len(1)`, &object.Error{Message: "argument to `len` not supported, got INTEGER"}},
 			{`len("one", "two")`, &object.Error{Message: "wrong number of arguments. got=2, want=1"}},
 			{`len([1, 2, 3])`, 3},
 			{`len([])`, 0},
-			{`puts("hello", "world!")`, Null},
+		}
+
+		runVmTests(t, tests)
+	})
+
+	t.Run("should evaluate first builtin functions", func(t *testing.T) {
+		tests := []vmTestCase{
 			{`first([1, 2, 3])`, 1},
 			{`first([])`, Null},
-			{`first(1)`, &object.Error{Message: "argument to `first` must be ARRAY, got INTEGER"}},
+			{`first((1, true, "a"))`, 1},
+			{`first("hello")`, "h"},
+			{`first(1)`, &object.Error{Message: "argument to `first` not supported, got INTEGER"}},
+		}
+
+		runVmTests(t, tests)
+	})
+
+	t.Run("should evaluate last builtin functions", func(t *testing.T) {
+		tests := []vmTestCase{
 			{`last([1, 2, 3])`, 3},
 			{`last([])`, Null},
-			{`last(1)`, &object.Error{Message: "argument to `last` must be ARRAY, got INTEGER"}},
+			{`last("hello")`, "o"},
+			{`last((1, true, "a"))`, "a"},
+			{`last(1)`, &object.Error{Message: "argument to `last` not supported, got INTEGER"}},
+		}
+
+		runVmTests(t, tests)
+	})
+
+	t.Run("should evaluate rest builtin functions", func(t *testing.T) {
+		tests := []vmTestCase{
 			{`rest([1, 2, 3])`, []int{2, 3}},
 			{`rest([])`, Null},
+			{`rest(1)`, &object.Error{Message: "argument to `rest` must be ARRAY, got INTEGER"}},
+		}
+
+		runVmTests(t, tests)
+	})
+
+	t.Run("should evaluate push builtin functions", func(t *testing.T) {
+		tests := []vmTestCase{
 			{`push([], 1)`, []int{1}},
 			{`push(1, 1)`, &object.Error{Message: "argument to `push` must be ARRAY, got INTEGER"}},
+		}
+
+		runVmTests(t, tests)
+	})
+
+	t.Run("should evaluate type builtin functions", func(t *testing.T) {
+		tests := []vmTestCase{
+			{`type(1)`, "INTEGER"},
+			{`type("hello")`, "STRING"},
+			{`type([1, 2, 3])`, "ARRAY"},
+			{`type((1, true, "a"))`, "TUPLE"},
+			{`type({1: 1})`, "HASH"},
+			{`type(puts)`, "BUILTIN"},
+			{`type(type)`, "BUILTIN"},
+			{`type(type(1))`, "STRING"},
 		}
 
 		runVmTests(t, tests)
@@ -1069,6 +1166,25 @@ func testExpectedObject(t *testing.T, expected interface{}, actual object.Object
 	case string:
 		if err := testStringObject(expected, actual); err != nil {
 			t.Fatalf("testStringObject failed: %s", err)
+		}
+	case object.Tuple:
+		tuple, ok := actual.(*object.Tuple)
+		if !ok {
+			t.Fatalf("object is not Tuple. got=%T (%+v)", actual, actual)
+
+			return
+		}
+
+		if len(tuple.Elements) != len(expected.Elements) {
+			t.Fatalf("wrong number of elements. want=%d, got=%d", len(expected.Elements), len(tuple.Elements))
+
+			return
+		}
+
+		for i, expectedElem := range expected.Elements {
+			if err := testIntegerObject(int64(expectedElem.(*object.Integer).Value), tuple.Elements[i]); err != nil {
+				t.Fatalf("testIntegerObject failed: %s", err)
+			}
 		}
 	case []int:
 		array, ok := actual.(*object.Array)

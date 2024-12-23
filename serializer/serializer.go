@@ -15,6 +15,7 @@ const (
 	TBoolean
 	TString
 	TArray
+	TTuple
 	THash
 	TReturnValue
 	TError
@@ -25,7 +26,7 @@ const (
 	TInstructions
 	TCompilationScope
 	TEmittedInstruction
-	TObjectArray
+	TObject
 )
 
 func RegisterTypes() {
@@ -34,6 +35,7 @@ func RegisterTypes() {
 	gob.RegisterName(fmt.Sprintf("%c", TBoolean), &object.Boolean{})
 	gob.RegisterName(fmt.Sprintf("%c", TString), &object.String{})
 	gob.RegisterName(fmt.Sprintf("%c", TArray), &object.Array{})
+	gob.RegisterName(fmt.Sprintf("%c", TTuple), &object.Tuple{})
 	gob.RegisterName(fmt.Sprintf("%c", THash), &object.Hash{})
 	gob.RegisterName(fmt.Sprintf("%c", TReturnValue), &object.ReturnValue{})
 	gob.RegisterName(fmt.Sprintf("%c", TError), &object.Error{})
@@ -44,5 +46,5 @@ func RegisterTypes() {
 	gob.RegisterName(fmt.Sprintf("%c", TInstructions), code.Instructions{})
 	gob.RegisterName(fmt.Sprintf("%c", TCompilationScope), &compiler.CompilationScope{})
 	gob.RegisterName(fmt.Sprintf("%c", TEmittedInstruction), &compiler.EmittedInstruction{})
-	gob.RegisterName(fmt.Sprintf("%c", TObjectArray), []object.Object{})
+	gob.RegisterName(fmt.Sprintf("%c", TObject), []object.Object{})
 }

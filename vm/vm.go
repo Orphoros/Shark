@@ -180,6 +180,18 @@ func (vm *VM) Run() *exception.SharkError {
 			if err := vm.push(array); err != nil {
 				return err
 			}
+		case code.OpTuple:
+			numElements := int(code.ReadUint16(ins[ip+1:]))
+			vm.currentFrame().ip += 2
+			tpl := vm.buildTuple(vm.sp-numElements, vm.sp)
+			vm.sp = vm.sp - numElements
+			// clear the stack between sp and sp-numElements with nil
+			for i := vm.sp; i < vm.sp+numElements; i++ {
+				vm.stack[i] = nil
+			}
+			if err := vm.push(tpl); err != nil {
+				return err
+			}
 		case code.OpHash:
 			numElements := int(code.ReadUint16(ins[ip+1:]))
 			vm.currentFrame().ip += 2
@@ -527,6 +539,16 @@ func (vm *VM) buildArray(startIndex, endIndex int) object.Object {
 	return &object.Array{Elements: elements}
 }
 
+func (vm *VM) buildTuple(startIndex, endIndex int) object.Object {
+	elements := make([]object.Object, endIndex-startIndex)
+
+	for i := startIndex; i < endIndex; i++ {
+		elements[i-startIndex] = vm.stack[i]
+	}
+
+	return &object.Tuple{Elements: elements}
+}
+
 func (vm *VM) buildHash(startIndex, endIndex int) (object.Object, *exception.SharkError) {
 	hashedPairs := make(map[object.HashKey]object.HashPair)
 
@@ -557,11 +579,21 @@ func (vm *VM) executeIndexExpression(left, index object.Object) *exception.Shark
 		if index, ok := index.(*object.Integer); ok {
 			return vm.executeArrayIndex(left, index)
 		}
-		return newSharkError(exception.SharkErrorNonIndexable, left, index)
+		return newSharkError(exception.SharkErrorNonIndexable, left.Type())
+	case *object.String:
+		if index, ok := index.(*object.Integer); ok {
+			return vm.executeStringIndex(left, index)
+		}
+		return newSharkError(exception.SharkErrorNonIndexable, left.Type())
+	case *object.Tuple:
+		if index, ok := index.(*object.Integer); ok {
+			return vm.executeTupleIndex(left, index)
+		}
+		return newSharkError(exception.SharkErrorNonIndexable, left.Type())
 	case *object.Hash:
 		return vm.executeHashIndex(left, index)
 	default:
-		return newSharkError(exception.SharkErrorNonIndexable, left, index)
+		return newSharkError(exception.SharkErrorNonIndexable, left.Type())
 	}
 }
 
@@ -575,6 +607,29 @@ func (vm *VM) executeArrayIndex(array, index object.Object) *exception.SharkErro
 	}
 
 	return vm.push(arrayObject.Elements[i])
+}
+
+func (vm *VM) executeStringIndex(str, index object.Object) *exception.SharkError {
+	strObject := str.(*object.String)
+	i := index.(*object.Integer).Value
+	m := int64(len(strObject.Value) - 1)
+
+	if i < 0 || i > m {
+		return vm.push(Null)
+	}
+
+	return vm.push(&object.String{Value: string(strObject.Value[i])})
+}
+
+func (vm *VM) executeTupleIndex(tpl, index object.Object) *exception.SharkError {
+	tplObject := tpl.(*object.Tuple)
+	i := index.(*object.Integer).Value
+
+	if i < 0 || i >= int64(len(tplObject.Elements)) {
+		return vm.push(Null)
+	}
+
+	return vm.push(tplObject.Elements[i])
 }
 
 func (vm *VM) executeHashIndex(hash, index object.Object) *exception.SharkError {
@@ -600,12 +655,12 @@ func (vm *VM) executeIndexAssign(left, index, value object.Object) *exception.Sh
 		case *object.Integer:
 			return vm.executeArrayIndexAssign(left, index, value)
 		default:
-			return newSharkError(exception.SharkErrorNonIndexable, index)
+			return newSharkError(exception.SharkErrorNonIndexable, index.Type())
 		}
 	case *object.Hash:
 		return vm.executeHashIndexAssign(left, index, value)
 	default:
-		return newSharkError(exception.SharkErrorNonIndexable, index)
+		return newSharkError(exception.SharkErrorNonIndexable, left.Type())
 	}
 }
 

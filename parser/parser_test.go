@@ -1295,6 +1295,49 @@ func TestParsingIndexExpressions(t *testing.T) {
 	})
 }
 
+func TestParsingTupleLiterals(t *testing.T) {
+	t.Run("should parse tuple literals with primitives", func(t *testing.T) {
+		input := "(1, 2, 3)"
+
+		l := lexer.New(&input)
+		p := New(l)
+		program := p.ParseProgram()
+
+		checkParserErrors(t, p)
+
+		stmt := program.Statements[0].(*ast.ExpressionStatement)
+		tpl := stmt.Expression.(*ast.TupleLiteral)
+
+		if len(tpl.Elements) != 3 {
+			t.Fatalf("len(tpl.Values) not 3. got=%d", len(tpl.Elements))
+		}
+
+		testIntegerLiteral(t, tpl.Elements[0], 1)
+		testIntegerLiteral(t, tpl.Elements[1], 2)
+		testIntegerLiteral(t, tpl.Elements[2], 3)
+	})
+	t.Run("should parse tuple literals with expressions", func(t *testing.T) {
+		input := "(1*2, 2-1, 3**4)"
+
+		l := lexer.New(&input)
+		p := New(l)
+		program := p.ParseProgram()
+
+		checkParserErrors(t, p)
+
+		stmt := program.Statements[0].(*ast.ExpressionStatement)
+		tpl := stmt.Expression.(*ast.TupleLiteral)
+
+		if len(tpl.Elements) != 3 {
+			t.Fatalf("len(tpl.Values) not 3. got=%d", len(tpl.Elements))
+		}
+
+		testInfixExpression(t, tpl.Elements[0], 1, "*", 2)
+		testInfixExpression(t, tpl.Elements[1], 2, "-", 1)
+		testInfixExpression(t, tpl.Elements[2], 3, "**", 4)
+	})
+}
+
 func TestParsingHashLiteralsStringKeys(t *testing.T) {
 	t.Run("should parse hash literals with string keys", func(t *testing.T) {
 		input := `{"one": 1, "two": 2, "three": 3}`

@@ -53,6 +53,30 @@ func (p *Parser) parseExpression(precedence int) ast.Expression {
 	return leftExp
 }
 
+func (p *Parser) parseTupleLiteral(curToken token.Token, firstItem ast.Expression) ast.Expression {
+	tuple := &ast.TupleLiteral{Token: curToken}
+	var list = []ast.Expression{firstItem}
+
+	if p.peekTokenIs(token.RPAREN) {
+		p.nextToken()
+		return tuple
+	}
+
+	for p.peekTokenIs(token.COMMA) {
+		p.nextToken()
+		p.nextToken()
+		list = append(list, p.parseExpression(LOWEST))
+	}
+
+	if !p.expectPeek(token.RPAREN) {
+		return nil
+	}
+
+	tuple.Elements = list
+
+	return tuple
+}
+
 func (p *Parser) parseExpressionList(end token.Type) []ast.Expression {
 	var list []ast.Expression
 

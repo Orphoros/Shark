@@ -892,6 +892,42 @@ func TestArrayLiterals(t *testing.T) {
 	})
 }
 
+func TestTupleLiterals(t *testing.T) {
+	t.Run("should compile tuple literals", func(t *testing.T) {
+		tests := []compilerTestCase{
+			{
+				input:             "(1, 2)",
+				expectedConstants: []interface{}{1, 2},
+				expectedInstructions: []code.Instructions{
+					code.Make(code.OpConstant, 0),
+					code.Make(code.OpConstant, 1),
+					code.Make(code.OpTuple, 2),
+					code.Make(code.OpPop),
+				},
+			},
+			{
+				input:             "(1 + 2, 3 - 4, 5 * 6)",
+				expectedConstants: []interface{}{1, 2, 3, 4, 5, 6},
+				expectedInstructions: []code.Instructions{
+					code.Make(code.OpConstant, 0),
+					code.Make(code.OpConstant, 1),
+					code.Make(code.OpAdd),
+					code.Make(code.OpConstant, 2),
+					code.Make(code.OpConstant, 3),
+					code.Make(code.OpSub),
+					code.Make(code.OpConstant, 4),
+					code.Make(code.OpConstant, 5),
+					code.Make(code.OpMul),
+					code.Make(code.OpTuple, 3),
+					code.Make(code.OpPop),
+				},
+			},
+		}
+
+		runCompilerTests(t, tests)
+	})
+}
+
 func TestRangeOperator(t *testing.T) {
 	t.Run("should spread incrementing numbers as range", func(t *testing.T) {
 		tests := []compilerTestCase{

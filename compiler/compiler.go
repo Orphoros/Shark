@@ -201,7 +201,7 @@ func (c *Compiler) Compile(node ast.Node) (*exception.SharkError, bool) {
 				), false
 			}
 
-			identRight, ok := node.Left.(*ast.Identifier)
+			identRight, ok := node.Right.(*ast.Identifier)
 			if ok {
 				symbolRight, ok := c.symbolTable.Resolve(identRight.Value)
 				if !ok {
@@ -463,6 +463,13 @@ func (c *Compiler) Compile(node ast.Node) (*exception.SharkError, bool) {
 			}
 		}
 		c.emit(code.OpArray, len(node.Elements))
+	case *ast.TupleLiteral:
+		for _, element := range node.Elements {
+			if err, stopped := c.Compile(element); err != nil || stopped {
+				return err, stopped
+			}
+		}
+		c.emit(code.OpTuple, len(node.Elements))
 	case *ast.HashLiteral:
 		var keys []ast.Expression
 		for key := range node.Pairs {

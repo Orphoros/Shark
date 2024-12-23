@@ -20,6 +20,7 @@ const (
 	HASH_OBJ              Type = "HASH"
 	COMPILED_FUNCTION_OBJ Type = "COMPILED_FUNCTION"
 	CLOSURE_OBJ           Type = "CLOSURE"
+	TUPLE_OBJ             Type = "TUPLE"
 )
 
 func (t Type) String() string {
