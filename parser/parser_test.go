@@ -1338,6 +1338,110 @@ func TestParsingTupleLiterals(t *testing.T) {
 	})
 }
 
+func TestParsingTupleDeconstruct(t *testing.T) {
+	t.Run("should parse tuple deconstruct", func(t *testing.T) {
+		input := "let (a, b, c) = (1, 2, 3);"
+
+		l := lexer.New(&input)
+		p := New(l)
+		program := p.ParseProgram()
+
+		checkParserErrors(t, p)
+
+		stmt := program.Statements[0].(*ast.TupleDeconstruction)
+		tpl := stmt.Value.(*ast.TupleLiteral)
+
+		if len(tpl.Elements) != 3 {
+			t.Fatalf("len(tpl.Values) not 3. got=%d", len(tpl.Elements))
+		}
+
+		testIdentifier(t, stmt.Names[0], "a")
+		testIdentifier(t, stmt.Names[1], "b")
+		testIdentifier(t, stmt.Names[2], "c")
+
+		for i, name := range stmt.Names {
+			if name.VariadicType {
+				t.Fatalf("name %d is variadic", i)
+			}
+			if name.Mutable {
+				t.Fatalf("name %d is mutable", i)
+			}
+		}
+
+		testIntegerLiteral(t, tpl.Elements[0], 1)
+		testIntegerLiteral(t, tpl.Elements[1], 2)
+		testIntegerLiteral(t, tpl.Elements[2], 3)
+	})
+
+	t.Run("should parse tuple deconstruct with mut keyword", func(t *testing.T) {
+		input := "let (mut a, mut b, mut c) = (1, 2, 3);"
+
+		l := lexer.New(&input)
+		p := New(l)
+		program := p.ParseProgram()
+
+		checkParserErrors(t, p)
+
+		stmt := program.Statements[0].(*ast.TupleDeconstruction)
+		tpl := stmt.Value.(*ast.TupleLiteral)
+
+		if len(tpl.Elements) != 3 {
+			t.Fatalf("len(tpl.Values) not 3. got=%d", len(tpl.Elements))
+		}
+
+		testIdentifier(t, stmt.Names[0], "a")
+		testIdentifier(t, stmt.Names[1], "b")
+		testIdentifier(t, stmt.Names[2], "c")
+
+		for i, name := range stmt.Names {
+			if name.VariadicType {
+				t.Fatalf("name %d is variadic", i)
+			}
+			if !name.Mutable {
+				t.Fatalf("name %d is not mutable", i)
+			}
+		}
+
+		testIntegerLiteral(t, tpl.Elements[0], 1)
+		testIntegerLiteral(t, tpl.Elements[1], 2)
+		testIntegerLiteral(t, tpl.Elements[2], 3)
+	})
+
+	t.Run("should parse tuple deconstruct with var keyword", func(t *testing.T) {
+		input := "var (a, b, c) = (1, 2, 3);"
+
+		l := lexer.New(&input)
+		p := New(l)
+		program := p.ParseProgram()
+
+		checkParserErrors(t, p)
+
+		stmt := program.Statements[0].(*ast.TupleDeconstruction)
+		tpl := stmt.Value.(*ast.TupleLiteral)
+
+		if len(tpl.Elements) != 3 {
+			t.Fatalf("len(tpl.Values) not 3. got=%d", len(tpl.Elements))
+		}
+
+		testIdentifier(t, stmt.Names[0], "a")
+		testIdentifier(t, stmt.Names[1], "b")
+		testIdentifier(t, stmt.Names[2], "c")
+
+		for i, name := range stmt.Names {
+			if !name.VariadicType {
+				t.Fatalf("name %d is not variadic", i)
+			}
+			if name.Mutable {
+				t.Fatalf("name %d is mutable", i)
+			}
+		}
+
+		testIntegerLiteral(t, tpl.Elements[0], 1)
+		testIntegerLiteral(t, tpl.Elements[1], 2)
+		testIntegerLiteral(t, tpl.Elements[2], 3)
+	})
+}
+
 func TestParsingHashLiteralsStringKeys(t *testing.T) {
 	t.Run("should parse hash literals with string keys", func(t *testing.T) {
 		input := `{"one": 1, "two": 2, "three": 3}`

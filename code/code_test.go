@@ -33,6 +33,7 @@ func TestMake(t *testing.T) {
 			{OpSetGlobal, []int{65534}, []byte{byte(OpSetGlobal), 255, 254}},
 			{OpArray, []int{65534}, []byte{byte(OpArray), 255, 254}},
 			{OpTuple, []int{65534}, []byte{byte(OpTuple), 255, 254}},
+			{OpTupleDeconstruct, []int{65534}, []byte{byte(OpTupleDeconstruct), 255, 254}},
 			{OpHash, []int{65534}, []byte{byte(OpHash), 255, 254}},
 			{OpIndex, []int{}, []byte{byte(OpIndex)}},
 			{OpCall, []int{255}, []byte{byte(OpCall), 255}},
@@ -110,6 +111,7 @@ func TestInstructionString(t *testing.T) {
 			Make(OpRange),
 			Make(OpSpread),
 			Make(OpTuple, 65534),
+			Make(OpTupleDeconstruct, 65534),
 		}
 
 		expected := `0000 OpAdd
@@ -152,6 +154,7 @@ func TestInstructionString(t *testing.T) {
 0067 OpRange
 0068 OpSpread
 0069 OpTuple 65534
+0072 OpTupleDeconstruct 65534
 `
 
 		concatted := Instructions{}

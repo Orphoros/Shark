@@ -928,6 +928,41 @@ func TestTupleLiterals(t *testing.T) {
 	})
 }
 
+func TestTupleDeconstructExpressions(t *testing.T) {
+	t.Run("should compile tuple deconstruct expressions", func(t *testing.T) {
+		tests := []compilerTestCase{
+			{
+				input:             "let (a, b) = (1, 2);",
+				expectedConstants: []interface{}{1, 2},
+				expectedInstructions: []code.Instructions{
+					code.Make(code.OpConstant, 0),
+					code.Make(code.OpConstant, 1),
+					code.Make(code.OpTuple, 2),
+					code.Make(code.OpTupleDeconstruct, 2),
+					code.Make(code.OpSetGlobal, 0),
+					code.Make(code.OpSetGlobal, 1),
+				},
+			},
+			{
+				input:             "let (a, b, c) = (1, 2, 3);",
+				expectedConstants: []interface{}{1, 2, 3},
+				expectedInstructions: []code.Instructions{
+					code.Make(code.OpConstant, 0),
+					code.Make(code.OpConstant, 1),
+					code.Make(code.OpConstant, 2),
+					code.Make(code.OpTuple, 3),
+					code.Make(code.OpTupleDeconstruct, 3),
+					code.Make(code.OpSetGlobal, 0),
+					code.Make(code.OpSetGlobal, 1),
+					code.Make(code.OpSetGlobal, 2),
+				},
+			},
+		}
+
+		runCompilerTests(t, tests)
+	})
+}
+
 func TestRangeOperator(t *testing.T) {
 	t.Run("should spread incrementing numbers as range", func(t *testing.T) {
 		tests := []compilerTestCase{

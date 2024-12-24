@@ -185,6 +185,39 @@ func TestTupleLiterals(t *testing.T) {
 	})
 }
 
+func TestTupleDestructuring(t *testing.T) {
+	t.Run("should evaluate tuple destructuring", func(t *testing.T) {
+		tests := []vmTestCase{
+			{
+				input: `
+            let a = (1, 2, 3);
+            let (x, y, z) = a;
+            x;
+            `,
+				expected: 1,
+			},
+			{
+				input: `
+			let a = (1, 2, 3);
+			let (x, y, z) = a;
+			y;
+			`,
+				expected: 2,
+			},
+			{
+				input: `
+			let a = (1, 2, 3);
+			let (x, y, z) = a;
+			z;
+			`,
+				expected: 3,
+			},
+		}
+
+		runVmTests(t, tests)
+	})
+}
+
 func TestRangeOperator(t *testing.T) {
 	t.Run("should evaluate range operator between numbers", func(t *testing.T) {
 		tests := []vmTestCase{

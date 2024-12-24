@@ -8,6 +8,9 @@ import (
 func (p *Parser) parseStatement() ast.Statement {
 	switch p.curToken.Type {
 	case token.LET, token.VAR:
+		if p.peekTokenIs(token.LPAREN) {
+			return p.parseTupleDestructuring()
+		}
 		return p.parseLetStatement()
 	case token.RETURN:
 		return p.parseReturnStatement()
@@ -51,7 +54,6 @@ func (p *Parser) parseLetStatement() *ast.LetStatement {
 
 	if p.curTokenIs(token.VAR) {
 		variadicType = true
-
 	}
 
 	stmt := &ast.LetStatement{Token: p.curToken}
@@ -118,4 +120,80 @@ func (p *Parser) parseWhileStatement() *ast.WhileStatement {
 	stmt.Body = p.parseBlockStatement()
 
 	return stmt
+}
+
+func (p *Parser) parseTupleDestructuring() *ast.TupleDeconstruction {
+	variadicType := false
+
+	if p.curTokenIs(token.VAR) {
+		variadicType = true
+
+	}
+
+	stmt := &ast.TupleDeconstruction{Token: p.curToken}
+
+	if !p.expectPeek(token.LPAREN) {
+		return nil
+	}
+
+	if variadicType && !p.expectPeek(token.IDENT) {
+		return nil
+	} else if !variadicType {
+		p.nextToken()
+	}
+
+	stmt.Names = p.parseIdentifierList(variadicType)
+
+	if !p.expectPeek(token.RPAREN) {
+		return nil
+	}
+
+	if !p.expectPeek(token.ASSIGN) {
+		return nil
+	}
+
+	p.nextToken()
+	stmt.Value = p.parseExpression(LOWEST)
+
+	if p.peekTokenIs(token.SEMICOLON) {
+		p.nextToken()
+	}
+
+	return stmt
+}
+
+func (p *Parser) parseIdentifierList(variadicType bool) []*ast.Identifier {
+	var identifiers []*ast.Identifier
+	mutable := false
+
+	if p.curTokenIs(token.RPAREN) {
+		return identifiers
+	}
+
+	if p.curTokenIs(token.MUTABLE) {
+		mutable = true
+		p.nextToken()
+	}
+
+	ident := &ast.Identifier{Token: p.curToken, Value: p.curToken.Literal, Mutable: mutable, VariadicType: variadicType}
+	identifiers = append(identifiers, ident)
+
+	for p.peekTokenIs(token.COMMA) {
+		p.nextToken()
+
+		if variadicType && !p.expectPeek(token.IDENT) {
+			return nil
+		} else if !variadicType {
+			p.nextToken()
+		}
+
+		if p.curTokenIs(token.MUTABLE) {
+			mutable = true
+			p.nextToken()
+		}
+		ident := &ast.Identifier{Token: p.curToken, Value: p.curToken.Literal, Mutable: mutable, VariadicType: variadicType}
+		identifiers = append(identifiers, ident)
+	}
+
+	return identifiers
 }

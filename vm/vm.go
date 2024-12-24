@@ -250,6 +250,22 @@ func (vm *VM) Run() *exception.SharkError {
 			if err := vm.push(Null); err != nil {
 				return err
 			}
+		case code.OpTupleDeconstruct:
+			numElements := int(code.ReadUint16(ins[ip+1:]))
+			vm.currentFrame().ip += 2
+			tpl := vm.pop()
+			tuple, ok := tpl.(*object.Tuple)
+			if !ok {
+				return newSharkError(exception.SharkErrorMismatchedTypes, tpl.Type(), object.TUPLE_OBJ)
+			}
+			if len(tuple.Elements) != numElements {
+				return newSharkError(exception.SharkErrorTupleDeconstructMismatch, len(tuple.Elements), numElements)
+			}
+			for i := numElements - 1; i >= 0; i-- {
+				if err := vm.push(tuple.Elements[i]); err != nil {
+					return err
+				}
+			}
 		case code.OpSpread:
 			operand := vm.pop()
 			strObj, ok := operand.(*object.String)
@@ -453,6 +469,10 @@ func (vm *VM) executeComparison(op code.Opcode) *exception.SharkError {
 		if rightVal, ok := right.(*object.Boolean); ok {
 			return vm.executeBooleanComparison(op, leftVal, rightVal)
 		}
+	case *object.String:
+		if rightVal, ok := right.(*object.String); ok {
+			return vm.executeStringComparison(op, leftVal, rightVal)
+		}
 	}
 
 	return newSharkError(exception.SharkErrorMismatchedTypes, left.Type(), right.Type())
@@ -491,6 +511,20 @@ func (vm *VM) executeIntegerComparison(op code.Opcode, left, right object.Object
 		return vm.push(nativeBoolToBooleanObject(leftValue >= rightValue))
 	default:
 		return newSharkError(exception.SharkErrorUnknownOperator, op)
+	}
+}
+
+func (vm *VM) executeStringComparison(op code.Opcode, left, right object.Object) *exception.SharkError {
+	leftValue := left.(*object.String).Value
+	rightValue := right.(*object.String).Value
+
+	switch op {
+	case code.OpEqual:
+		return vm.push(nativeBoolToBooleanObject(rightValue == leftValue))
+	case code.OpNotEqual:
+		return vm.push(nativeBoolToBooleanObject(rightValue != leftValue))
+	default:
+		return newSharkError(exception.SharkErrorUnknownStringOperator, op)
 	}
 }
 

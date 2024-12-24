@@ -71,6 +71,8 @@ const (
 	SharkErrorUnknownType
 
 	SharkErrorTypeMismatch
+
+	SharkErrorTupleDeconstructMismatch
 )
 
 const (
@@ -119,4 +121,5 @@ var errMessages = []struct {
 	{SharkErrorDivisionByZero, "division by zero"},
 	{SharkErrorUnknownType, "unknown type '%v'"},
 	{SharkErrorTypeMismatch, "type mismatch '%v'"},
+	{SharkErrorTupleDeconstructMismatch, "cannot deconstruct a tuple with %v elements into %v variables"},
 }

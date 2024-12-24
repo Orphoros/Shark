@@ -444,6 +444,53 @@ func (c *Compiler) Compile(node ast.Node) (*exception.SharkError, bool) {
 		} else {
 			c.emit(code.OpSetLocal, symbol.Index)
 		}
+	case *ast.TupleDeconstruction:
+		// check if the right value is an identifier tuple
+		rightIdent, ok := node.Value.(*ast.Identifier)
+		if ok {
+			// check if ident is a tuple
+			symbol, ok := c.symbolTable.Resolve(rightIdent.Value)
+			if !ok {
+				return newSharkError(exception.SharkErrorIdentifierNotFound, rightIdent.Value,
+					"Make sure the variable is defined before using it with the 'let' keyword",
+					exception.NewSharkErrorCause("Variable not found for tuple deconstruction", node.Token.Pos),
+				), false
+			}
+			if symbol.ObjType != object.TUPLE_OBJ {
+				return newSharkError(exception.SharkErrorTypeMismatch, symbol.ObjType,
+					"Use a tuple for tuple deconstruction",
+					exception.NewSharkErrorCause(fmt.Sprintf("Cannot deconstruct type '%s'", symbol.ObjType), node.Token.Pos),
+				), false
+			}
+			c.loadSymbol(symbol)
+		} else {
+			rightValue := node.Value.Type()
+			if rightValue != object.TUPLE_OBJ && rightValue != object.RETURN_VALUE_OBJ {
+				return newSharkError(exception.SharkErrorTypeMismatch, rightValue,
+					"Use a tuple for tuple deconstruction",
+					exception.NewSharkErrorCause(fmt.Sprintf("Cannot deconstruct type '%s'", rightValue), node.Token.Pos),
+				), false
+			}
+			if err, stopped := c.Compile(node.Value); err != nil || stopped {
+				return err, stopped
+			}
+		}
+		c.emit(code.OpTupleDeconstruct, len(node.Names))
+		for _, name := range node.Names {
+			symbol, ok := c.symbolTable.Resolve(name.Value)
+			if ok {
+				return newSharkError(exception.SharkErrorDuplicateIdentifier, name.Value,
+					"Remove 'let' before the variable name",
+					exception.NewSharkErrorCause("Cannot use let to reassign value to an existing variable", node.Token.Pos),
+				), false
+			}
+			symbol = c.symbolTable.Define(name.Value, name.Mutable, name.VariadicType, name.ObjType, &name.Token.Pos)
+			if symbol.Scope == GlobalScope {
+				c.emit(code.OpSetGlobal, symbol.Index)
+			} else {
+				c.emit(code.OpSetLocal, symbol.Index)
+			}
+		}
 	case *ast.Identifier:
 		symbol, ok := c.symbolTable.Resolve(node.Value)
 		if !ok {
