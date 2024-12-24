@@ -9,6 +9,7 @@ require github.com/integrii/flaggy v1.5.2
 require (
 	github.com/andybalholm/brotli v1.1.0
 	github.com/hashicorp/golang-lru/v2 v2.0.7
+	github.com/phuslu/log v1.0.113
 	github.com/tliron/glsp v0.2.2
 )
 

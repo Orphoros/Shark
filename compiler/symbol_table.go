@@ -3,6 +3,8 @@ package compiler
 import (
 	"shark/object"
 	"shark/token"
+
+	"github.com/phuslu/log"
 )
 
 type SymbolScope string
@@ -55,6 +57,14 @@ func (s *SymbolTable) Define(name string, mutable, variadicType bool, objType ob
 	} else {
 		symbol.Scope = LocalScope
 	}
+
+	log.Trace().
+		Str("name", name).
+		Bool("mutable", mutable).
+		Bool("variadicType", variadicType).
+		Str("objType", objType.String()).
+		Str("scope", string(symbol.Scope)).
+		Int("index", s.numDefinitions).Msg("Define new symbol")
 
 	s.store[name] = symbol
 	s.numDefinitions++
@@ -115,6 +125,14 @@ func (s *SymbolTable) DefineFree(original Symbol, mutable, variadicType bool, ob
 
 	s.store[original.Name] = symbol
 
+	log.Trace().
+		Str("name", original.Name).
+		Bool("mutable", mutable).
+		Bool("variadicType", variadicType).
+		Str("objType", objType.String()).
+		Str("scope", string(symbol.Scope)).
+		Int("index", symbol.Index).Msg("Define free symbol")
+
 	return symbol
 }
 
@@ -122,6 +140,11 @@ func (s *SymbolTable) DefineFunctionName(name string, pos *token.Position) Symbo
 	symbol := Symbol{Name: name, Scope: FunctionScope, Index: 0, Pos: pos}
 
 	s.store[name] = symbol
+
+	log.Trace().
+		Str("name", name).
+		Str("scope", string(symbol.Scope)).
+		Int("index", symbol.Index).Msg("Define function name")
 
 	return symbol
 }

@@ -6,6 +6,8 @@ import (
 	"path/filepath"
 	"shark/exception"
 	"shark/internal"
+
+	"github.com/phuslu/log"
 )
 
 type Config struct {
@@ -24,10 +26,12 @@ func NewConfigFromFile(path string) (*Config, error) {
 	file, err := internal.ReadFile(path)
 
 	if err != nil {
+		log.Error().Err(err).Msg("Could not read config file")
 		return nil, err
 	}
 
 	if err := json.Unmarshal(file, &conf); err != nil {
+		log.Error().Err(err).Msg("Could not unmarshal config file")
 		return nil, err
 	}
 
@@ -41,6 +45,8 @@ func NewConfigFromFile(path string) (*Config, error) {
 	if conf.NidumVM.MaxFrames == 0 {
 		conf.NidumVM.MaxFrames = defVmConf.MaxFrames
 	}
+
+	log.Debug().Str("path", path).Any("config", conf).Msg("Conf loaded")
 
 	return &conf, nil
 }

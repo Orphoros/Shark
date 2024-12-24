@@ -16,6 +16,7 @@ var Codename string
 func main() {
 	var file string
 	var cnf string
+	var logLevel string
 
 	flaggy.SetName("nidum")
 	flaggy.SetDescription("The Nidum Virtual Machine (NVM)")
@@ -26,6 +27,8 @@ func main() {
 	flaggy.AddPositionalValue(&file, "file", 1, true, "The Shark object file (.egg) to execute")
 	flaggy.String(&cnf, "c", "config", "The configuration file")
 	flaggy.Parse()
+
+	cmd.RegisterLogger(logLevel)
 
 	argConfig, err := config.LocateConfig(&cnf, &file)
 	if err != nil {

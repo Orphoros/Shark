@@ -3,6 +3,7 @@ package lsp
 import (
 	"fmt"
 
+	"github.com/phuslu/log"
 	"github.com/tliron/glsp"
 	protocol "github.com/tliron/glsp/protocol_3_16"
 	"github.com/tliron/glsp/server"
@@ -15,6 +16,8 @@ var (
 )
 
 func Start(port int) {
+	log.Debug().Int("port", port).Msg("Starting Shark language server")
+
 	handler = protocol.Handler{
 		Initialize:             initialize,
 		Initialized:            initialized,

@@ -14,12 +14,12 @@ var Build string
 var Codename string
 
 func main() {
-
 	var file string
 	var outName string
 	var compression string
 	var cnf string
 	var emitInstructionSet bool
+	var logLevel string
 
 	flaggy.SetName("shark")
 	flaggy.SetDescription("The Shark programming language")
@@ -30,6 +30,7 @@ func main() {
 	flaggy.DefaultParser.AdditionalHelpPrepend = "SDK for the Shark programming language."
 
 	flaggy.String(&cnf, "c", "config", "The configuration file")
+	flaggy.String(&logLevel, "l", "loglevel", "The log level (trace, debug, info, warn, error, fatal, panic)")
 
 	runCommand := flaggy.NewSubcommand("run")
 	runCommand.Description = "Interpret a SharkLang source code file"
@@ -64,6 +65,8 @@ func main() {
 	flaggy.AttachSubcommand(metaViewCommand, 1)
 	flaggy.AttachSubcommand(genConf, 1)
 	flaggy.Parse()
+
+	cmd.RegisterLogger(logLevel)
 
 	argConfig, err := config.LocateConfig(&cnf, &file)
 	if err != nil {
