@@ -73,6 +73,8 @@ const (
 	SharkErrorTypeMismatch
 
 	SharkErrorTupleDeconstructMismatch
+
+	SharkErrorInvalidNumber
 )
 
 const (
@@ -122,4 +124,5 @@ var errMessages = []struct {
 	{SharkErrorUnknownType, "unknown type '%v'"},
 	{SharkErrorTypeMismatch, "type mismatch '%v'"},
 	{SharkErrorTupleDeconstructMismatch, "cannot deconstruct a tuple with %v elements into %v variables"},
+	{SharkErrorInvalidNumber, "invalid number"},
 }

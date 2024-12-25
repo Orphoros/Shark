@@ -622,3 +622,31 @@ func TestUnicodeCharacters(t *testing.T) {
 		}
 	})
 }
+
+func TestDigits(t *testing.T) {
+	t.Run("should parse digits", func(t *testing.T) {
+		tests := []struct {
+			input           string
+			expectedLiteral string
+		}{
+			{"1", "1"},
+			{"123", "123"},
+			{"1234567890", "1234567890"},
+			{"123_456_789_0", "1234567890"},
+			{"0b10100011", "0b10100011"},
+			{"0b101_00011", "0b10100011"},
+			{"0xF4A06", "0xF4A06"},
+			{"0xF4A_06", "0xF4A06"},
+			{"0o1234567", "0o1234567"},
+			{"0o123_456_7", "0o1234567"},
+		}
+
+		for i, tt := range tests {
+			l := New(&tt.input)
+			tok := l.NextToken()
+			if tok.Literal != tt.expectedLiteral {
+				t.Fatalf("tests[%d] - Literal wrong, expected=%q, got=%q", i, tt.expectedLiteral, tok.Literal)
+			}
+		}
+	})
+}

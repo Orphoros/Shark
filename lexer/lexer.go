@@ -204,20 +204,26 @@ func (l *Lexer) NextToken() token.Token {
 // Reads a number from the input and returns it as a string.
 func (l *Lexer) readNumber() string {
 	str := ""
-	accept := "0123456789"
+	accept := "0123456789_"
 	if l.ch == '0' && l.peekChar() == 'x' {
-		accept = "0x123456789abcdefABCDEF"
+		accept = "0x123456789abcdefABCDEF_"
 	}
 	if l.ch == '0' && l.peekChar() == 'b' {
-		accept = "b01"
+		accept = "0b01_"
 	}
 	if l.ch == '0' && l.peekChar() == 'o' {
-		accept = "o01234567"
+		accept = "o01234567_"
 	}
 	for strings.Contains(accept, string(l.ch)) {
-		str += string(l.ch)
-		if !strings.Contains(accept, string(l.peekChar())) {
-			break
+		if l.ch == '_' {
+			if !strings.Contains(accept, string(l.peekChar())) {
+				l.errors = append(l.errors, newSharkError(exception.SharkErrorInvalidNumber, nil,
+					"Remove the underscore from the number",
+					exception.NewSharkErrorCause("Underscore is not permitted here", token.Position{Line: l.curLine, ColFrom: l.curCol - 1, LineTo: l.curLine, ColTo: l.curCol}),
+				))
+			}
+		} else {
+			str += string(l.ch)
 		}
 		l.readChar()
 	}

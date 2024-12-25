@@ -74,19 +74,19 @@
       "patterns": [
         {
           "name": "constant.numeric.hex.shark",
-          "match": "\\b0x[0-9a-fA-F]+\\b"
+          "match": "\\b0x[0-9a-fA-F]+(?:_[0-9a-fA-F]+)*\\b"
         },
         {
           "name": "constant.numeric.binary.shark",
-          "match": "\\b0b[01]+\\b"
+          "match": "\\b0b[01]+(?:_[01]+)*\\b"
         },
         {
           "name": "constant.numeric.octal.shark",
-          "match": "\\b0o[0-7]+\\b"
+          "match": "\\b0o[0-7]+(?:_[0-7]+)*\\b"
         },
         {
           "name": "constant.numeric.decimal.shark",
-          "match": "\\b\\d+\\b"
+          "match": "\\b\\d+(?:_\\d+)*\\b"
         }
       ]
     },
