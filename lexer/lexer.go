@@ -221,9 +221,13 @@ func (l *Lexer) readNumber() string {
 					"Remove the underscore from the number",
 					exception.NewSharkErrorCause("Underscore is not permitted here", token.Position{Line: l.curLine, ColFrom: l.curCol - 1, LineTo: l.curLine, ColTo: l.curCol}),
 				))
+				break
 			}
 		} else {
 			str += string(l.ch)
+			if !strings.Contains(accept, string(l.peekChar())) {
+				break
+			}
 		}
 		l.readChar()
 	}
