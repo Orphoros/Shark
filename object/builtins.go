@@ -5,6 +5,17 @@ import (
 	"os"
 )
 
+type Builtin struct {
+	CanCache bool
+	Fn       BuiltinFunction
+}
+
+type BuiltinFunction func(args ...Object) Object
+
+func (b *Builtin) Inspect() string { return "builtin function" }
+
+func (b *Builtin) Type() Type { return BUILTIN_OBJ }
+
 var Builtins = []struct {
 	Name    string
 	Builtin *Builtin

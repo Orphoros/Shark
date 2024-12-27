@@ -30,20 +30,3 @@ func (t Type) String() string {
 
 	return string(t)
 }
-
-type Null struct{}
-
-type Builtin struct {
-	CanCache bool
-	Fn       BuiltinFunction
-}
-
-type BuiltinFunction func(args ...Object) Object
-
-func (n *Null) Inspect() string { return "null" }
-
-func (n *Null) Type() Type { return NULL_OBJ }
-
-func (b *Builtin) Inspect() string { return "builtin function" }
-
-func (b *Builtin) Type() Type { return BUILTIN_OBJ }
