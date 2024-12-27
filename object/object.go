@@ -33,10 +33,6 @@ func (t Type) String() string {
 
 type Null struct{}
 
-type ReturnValue struct {
-	Value Object
-}
-
 type Builtin struct {
 	CanCache bool
 	Fn       BuiltinFunction
@@ -47,10 +43,6 @@ type BuiltinFunction func(args ...Object) Object
 func (n *Null) Inspect() string { return "null" }
 
 func (n *Null) Type() Type { return NULL_OBJ }
-
-func (rv *ReturnValue) Inspect() string { return rv.Value.Inspect() }
-
-func (rv *ReturnValue) Type() Type { return RETURN_VALUE_OBJ }
 
 func (b *Builtin) Inspect() string { return "builtin function" }
 

@@ -37,7 +37,6 @@ func RegisterTypes() {
 	gob.RegisterName(fmt.Sprintf("%c", TArray), &object.Array{})
 	gob.RegisterName(fmt.Sprintf("%c", TTuple), &object.Tuple{})
 	gob.RegisterName(fmt.Sprintf("%c", THash), &object.Hash{})
-	gob.RegisterName(fmt.Sprintf("%c", TReturnValue), &object.ReturnValue{})
 	gob.RegisterName(fmt.Sprintf("%c", TError), &object.Error{})
 	gob.RegisterName(fmt.Sprintf("%c", TBuiltin), &object.Builtin{})
 	gob.RegisterName(fmt.Sprintf("%c", TCompiledFunction), &object.CompiledFunction{})
