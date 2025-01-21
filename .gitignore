@@ -1,13 +1,17 @@
-#Go artifacts
+# Go artifacts
 coverage.out
 build
 out
+*.test
+*.prof
+*.out
 
-#IDE artifacts
+# IDE artifacts
 .idea
 .vscode
 
-#System files
+# System files
 *.DS_Store
 
+# NPM artifacts
 node_modules

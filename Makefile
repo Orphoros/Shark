@@ -36,7 +36,7 @@ LIB_FLAGS=-ldflags="-s -w" -trimpath -gcflags=all="-l -C" -buildmode=c-shared
 GOOS = linux darwin windows
 GOARCH = amd64 arm64
 
-.PHONY: all build clean test dep check coverage lint serve-coverage help
+.PHONY: all build clean test dep check coverage lint serve-coverage help field-align sec-check bench-profile
 
 ##@ Commands
 
@@ -154,6 +154,16 @@ field-align: ## Run field analysis
 	@fieldalignment -fix ./bytecode
 	@fieldalignment -fix ./ast
 	@echo "[DONE]: Field analysis completed"
+
+sec-check: ## Automatic Static Code Security Analysis
+	@echo "Static Code Checking for Security Vulnerabilities..."
+	@gosec ./...
+	@echo "[DONE]: Security Check completed"
+
+bench-profile: ## Run benchmark profiling
+	@echo "Running benchmark profiling..."
+	@go test -cpuprofile cpu.prof -memprofile mem.prof -trace trace.out -run ^TestRecursiveFibonacci$ -v ./vm
+	@echo "[DONE]: Benchmark profiling completed"
 
 help:
 	@awk 'BEGIN {FS = ":.*##"; printf "\nUsage:\n  make <command> \033[36m\033[0m\n"} /^[a-zA-Z_-]+:.*?##/ { printf "  \033[36m%-15s\033[0m %s\n", $$1, $$2 } /^##@/ { printf "\n\033[1m%s\033[0m\n", substr($$0, 5) } ' $(MAKEFILE_LIST)
