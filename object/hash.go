@@ -3,6 +3,7 @@ package object
 import (
 	"bytes"
 	"fmt"
+	"shark/types"
 	"strings"
 )
 
@@ -11,7 +12,7 @@ type Hash struct {
 }
 
 type HashKey struct {
-	Type  Type
+	Type  types.ISharkType
 	Value uint64
 }
 
@@ -25,7 +26,30 @@ type Hashable interface {
 	HashKey() HashKey
 }
 
-func (h *Hash) Type() Type { return HASH_OBJ }
+func (h *Hash) Type() types.ISharkType {
+	var keyType types.ISharkType
+	var valueType types.ISharkType
+
+	for _, pair := range h.Pairs {
+		if pair.Key.Type() != nil {
+			keyType = pair.Key.Type()
+		}
+
+		if pair.Value.Type() != nil {
+			valueType = pair.Value.Type()
+		}
+	}
+
+	if keyType == nil {
+		keyType = types.TSharkAny{}
+	}
+
+	if valueType == nil {
+		valueType = types.TSharkAny{}
+	}
+
+	return types.TSharkHashMap{Indexes: keyType, Collects: valueType}
+}
 
 func (h *Hash) Inspect() string {
 	var out bytes.Buffer

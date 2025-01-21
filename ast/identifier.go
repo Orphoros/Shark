@@ -1,7 +1,6 @@
 package ast
 
 import (
-	"shark/object"
 	"shark/token"
 )
 
@@ -11,10 +10,9 @@ type Identifier struct {
 	DefaultValue *Expression
 	Mutable      bool
 	VariadicType bool
-	ObjType      object.Type
 }
 
-func (i *Identifier) Type() object.Type { return i.ObjType }
+func (i *Identifier) expressionNode() {}
 
 func (i *Identifier) TokenPos() token.Position { return i.Token.Pos }
 

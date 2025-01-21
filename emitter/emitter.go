@@ -32,7 +32,7 @@ func New(sourceName *string, out io.Writer, vmConf *config.VmConf) *Emitter {
 		vmConf:      vmConf,
 	}
 	for i, v := range object.Builtins {
-		emitter.symbolTable.DefineBuiltin(i, v.Name)
+		emitter.symbolTable.DefineBuiltin(i, v.Name, v.Builtin.FuncType)
 	}
 
 	return emitter
@@ -75,11 +75,10 @@ func (i *Emitter) Exec(bytecode *bytecode.Bytecode) {
 	lastPopped := machine.LastPoppedStackElem()
 
 	if lastPopped != nil {
-		if lastPopped.Type() == object.ERROR_OBJ {
-			if _, err := io.WriteString(i.output, "\tERROR: "+lastPopped.Inspect()+"\n"); err != nil {
+		if errObj, ok := lastPopped.(*object.Error); ok {
+			if _, err := io.WriteString(i.output, "\tERROR: "+errObj.Inspect()+"\n"); err != nil {
 				return
 			}
-
 		}
 	}
 }
@@ -112,11 +111,10 @@ func (i *Emitter) Interpret(in string) {
 	lastPopped := machine.LastPoppedStackElem()
 
 	if lastPopped != nil {
-		if lastPopped.Type() == object.ERROR_OBJ {
-			if _, err := io.WriteString(i.output, "\tERROR: "+lastPopped.Inspect()+"\n"); err != nil {
+		if errObj, ok := lastPopped.(*object.Error); ok {
+			if _, err := io.WriteString(i.output, "\tERROR: "+errObj.Inspect()+"\n"); err != nil {
 				return
 			}
-
 		}
 	}
 }

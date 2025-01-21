@@ -2,7 +2,6 @@ package ast
 
 import (
 	"bytes"
-	"shark/object"
 	"shark/token"
 )
 
@@ -13,7 +12,7 @@ type InfixExpression struct {
 	Right    Expression
 }
 
-func (ie *InfixExpression) Type() object.Type { return ie.Right.Type() }
+func (ie *InfixExpression) expressionNode() {}
 
 func (ie *InfixExpression) TokenPos() token.Position { return ie.Token.Pos }
 

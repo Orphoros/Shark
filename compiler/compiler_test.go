@@ -1380,14 +1380,14 @@ func TestCompilerScopes(t *testing.T) {
 		}
 		globalSymbolTable := compiler.symbolTable
 
-		compiler.emit(code.OpMul)
+		compiler.emit(nil, code.OpMul)
 
 		compiler.enterScope()
 		if compiler.scopeIndex != 1 {
 			t.Errorf("scopeIndex wrong. got=%d, want=%d", compiler.scopeIndex, 1)
 		}
 
-		compiler.emit(code.OpSub)
+		compiler.emit(nil, code.OpSub)
 
 		if len(compiler.scopes[compiler.scopeIndex].instructions) != 1 {
 			t.Errorf("instructions length wrong. got=%d",
@@ -1417,7 +1417,7 @@ func TestCompilerScopes(t *testing.T) {
 			t.Errorf("compiler modified global symbol table incorrectly")
 		}
 
-		compiler.emit(code.OpAdd)
+		compiler.emit(nil, code.OpAdd)
 
 		if len(compiler.scopes[compiler.scopeIndex].instructions) != 2 {
 			t.Errorf("instructions length wrong. got=%d",
@@ -1781,7 +1781,7 @@ func testStringObject(expected string, actual object.Object) error {
 }
 
 func testIntegerObject(expected int64, actual object.Object) error {
-	result, ok := actual.(*object.Integer)
+	result, ok := actual.(*object.Int64)
 	if !ok {
 		return fmt.Errorf("object is not Integer. got=%T (%+v)", actual, actual)
 	}

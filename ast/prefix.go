@@ -2,7 +2,6 @@ package ast
 
 import (
 	"bytes"
-	"shark/object"
 	"shark/token"
 )
 
@@ -13,7 +12,7 @@ type PrefixExpression struct {
 	RightIdent *Identifier
 }
 
-func (pe *PrefixExpression) Type() object.Type { return pe.Right.Type() }
+func (pe *PrefixExpression) expressionNode() {}
 
 func (pe *PrefixExpression) TokenPos() token.Position { return pe.Token.Pos }
 

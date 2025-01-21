@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"encoding/gob"
 	"shark/code"
+	"shark/types"
 )
 
 type CompiledFunction struct {
@@ -11,9 +12,8 @@ type CompiledFunction struct {
 	NumLocals     int
 	NumParameters int
 	NumDefaults   int
+	ObjType       types.ISharkType
 }
-
-func (cf *CompiledFunction) Type() Type { return COMPILED_FUNCTION_OBJ }
 
 func (cf *CompiledFunction) Inspect() string { return "CompiledFunction" }
 
@@ -46,3 +46,5 @@ func (cf *CompiledFunction) GobDecode(buf []byte) error {
 	}
 	return nil
 }
+
+func (cf *CompiledFunction) Type() types.ISharkType { return cf.ObjType }

@@ -2,7 +2,6 @@ package ast
 
 import (
 	"bytes"
-	"shark/object"
 	"shark/token"
 )
 
@@ -12,7 +11,7 @@ type PostfixExpression struct {
 	Operator string
 }
 
-func (pe *PostfixExpression) Type() object.Type { return pe.Left.Type() }
+func (pe *PostfixExpression) expressionNode() {}
 
 func (pe *PostfixExpression) TokenPos() token.Position { return pe.Token.Pos }
 

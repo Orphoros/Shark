@@ -3,7 +3,6 @@ package ast
 import (
 	"bytes"
 	"fmt"
-	"shark/object"
 	"shark/token"
 	"strings"
 )
@@ -15,7 +14,7 @@ type FunctionLiteral struct {
 	Name       string
 }
 
-func (fl *FunctionLiteral) Type() object.Type { return object.FUNCTION_OBJ }
+func (fl *FunctionLiteral) expressionNode() {}
 
 func (fl *FunctionLiteral) TokenPos() token.Position { return fl.Token.Pos }
 

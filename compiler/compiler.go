@@ -8,15 +8,17 @@ import (
 	"shark/exception"
 	"shark/object"
 	"shark/token"
+	"shark/types"
 	"sort"
 )
 
 type Compiler struct {
-	scopes      []CompilationScope
-	scopeIndex  int
-	constants   []object.Object
-	symbolTable *SymbolTable
-	upToPos     *token.Position
+	scopes           []CompilationScope
+	scopeIndex       int
+	constants        []object.Object
+	symbolTable      *SymbolTable
+	upToPos          *token.Position
+	lastCompiledType types.ISharkType
 }
 
 type EmittedInstruction struct {
@@ -40,7 +42,7 @@ func New(upToPos ...token.Position) *Compiler {
 	SymbolTable := NewSymbolTable()
 
 	for i, v := range object.Builtins {
-		SymbolTable.DefineBuiltin(i, v.Name)
+		SymbolTable.DefineBuiltin(i, v.Name, v.Builtin.FuncType)
 	}
 
 	var pos *token.Position
@@ -91,7 +93,7 @@ func (c *Compiler) Compile(node ast.Node) (*exception.SharkError, bool) {
 		if err, stopped := c.Compile(node.Expression); err != nil || stopped {
 			return err, stopped
 		}
-		c.emit(code.OpPop)
+		c.emit(types.TSharkVariadic{Enclosed: c.lastCompiledType}, code.OpPop)
 	case *ast.PostfixExpression:
 		ident, ok := node.Left.(*ast.Identifier)
 		if !ok {
@@ -119,15 +121,15 @@ func (c *Compiler) Compile(node ast.Node) (*exception.SharkError, bool) {
 		switch node.Operator {
 		case "++":
 			if symbol.Scope == GlobalScope {
-				c.emit(code.OpIncrementGlobal, symbol.Index)
+				c.emit(symbol.ObjType, code.OpIncrementGlobal, symbol.Index)
 			} else {
-				c.emit(code.OpIncrementLocal, symbol.Index)
+				c.emit(symbol.ObjType, code.OpIncrementLocal, symbol.Index)
 			}
 		case "--":
 			if symbol.Scope == GlobalScope {
-				c.emit(code.OpDecrementGlobal, symbol.Index)
+				c.emit(symbol.ObjType, code.OpDecrementGlobal, symbol.Index)
 			} else {
-				c.emit(code.OpDecrementLocal, symbol.Index)
+				c.emit(symbol.ObjType, code.OpDecrementLocal, symbol.Index)
 			}
 		}
 	case *ast.InfixExpression:
@@ -138,7 +140,13 @@ func (c *Compiler) Compile(node ast.Node) (*exception.SharkError, bool) {
 			if err, stopped := c.Compile(node.Left); err != nil || stopped {
 				return err, stopped
 			}
-			c.emit(code.OpGreaterThan)
+			if _, ok := c.lastCompiledType.(types.TSharkI64); !ok {
+				return newSharkError(exception.SharkErrorTypeMismatch, c.lastCompiledType.SharkTypeString(),
+					"Use a number for comparison",
+					exception.NewSharkErrorCause(fmt.Sprintf("Cannot use type '%s' for left value comparison", c.lastCompiledType.SharkTypeString()), node.Token.Pos),
+				), false
+			}
+			c.emit(types.TSharkBool{}, code.OpGreaterThan)
 			return nil, false
 		} else if node.Operator == "<=" {
 			if err, stopped := c.Compile(node.Right); err != nil || stopped {
@@ -147,7 +155,7 @@ func (c *Compiler) Compile(node ast.Node) (*exception.SharkError, bool) {
 			if err, stopped := c.Compile(node.Left); err != nil || stopped {
 				return err, stopped
 			}
-			c.emit(code.OpGreaterThanEqual)
+			c.emit(types.TSharkBool{}, code.OpGreaterThanEqual)
 			return nil, false
 		}
 		if node.Operator != "=" &&
@@ -164,19 +172,19 @@ func (c *Compiler) Compile(node ast.Node) (*exception.SharkError, bool) {
 		}
 		switch node.Operator {
 		case "..":
-			c.emit(code.OpRange)
+			c.emit(types.TSharkArray{Collects: c.lastCompiledType}, code.OpRange)
 		case "+":
-			c.emit(code.OpAdd)
+			c.emit(types.TSharkVariadic{Enclosed: c.lastCompiledType}, code.OpAdd)
 		case "-":
-			c.emit(code.OpSub)
+			c.emit(types.TSharkVariadic{Enclosed: c.lastCompiledType}, code.OpSub)
 		case "*":
-			c.emit(code.OpMul)
+			c.emit(types.TSharkVariadic{Enclosed: c.lastCompiledType}, code.OpMul)
 		case "**":
-			c.emit(code.OpPower)
+			c.emit(types.TSharkVariadic{Enclosed: c.lastCompiledType}, code.OpPower)
 		case "/":
-			c.emit(code.OpDiv)
+			c.emit(types.TSharkVariadic{Enclosed: c.lastCompiledType}, code.OpDiv)
 		case "==":
-			c.emit(code.OpEqual)
+			c.emit(types.TSharkBool{}, code.OpEqual)
 		case "=", "+=", "-=", "*=", "/=":
 			identLeft, ok := node.Left.(*ast.Identifier)
 			if !ok {
@@ -211,17 +219,12 @@ func (c *Compiler) Compile(node ast.Node) (*exception.SharkError, bool) {
 						exception.NewSharkErrorCause("Variable not found for reassignment", node.Token.Pos),
 					), false
 				}
-				if symbolLeft.ObjType != symbolRight.ObjType && !symbolLeft.VariadicType {
-					return newSharkError(exception.SharkErrorTypeMismatch, symbolRight.ObjType,
+				if !symbolLeft.ObjType.Is(symbolRight.ObjType) && !symbolLeft.VariadicType {
+					return newSharkError(exception.SharkErrorTypeMismatch, symbolRight.ObjType.SharkTypeString(),
 						"Declare the variable with 'var' keyword instead",
-						exception.NewSharkErrorCause(fmt.Sprintf("Cannot assign type '%s' to type '%s'", symbolRight.ObjType, symbolLeft.ObjType), node.Token.Pos),
+						exception.NewSharkErrorCause(fmt.Sprintf("Cannot assign type '%s' to type '%s'", symbolRight.ObjType.SharkTypeString(), symbolLeft.ObjType.SharkTypeString()), node.Token.Pos),
 					), false
 				}
-			} else if symbolLeft.ObjType != node.Right.Type() && !symbolLeft.VariadicType {
-				return newSharkError(exception.SharkErrorTypeMismatch, node.Right.Type(),
-					"Declare the variable with 'var' keyword instead",
-					exception.NewSharkErrorCause(fmt.Sprintf("Cannot assign type '%s' to type '%s'", node.Right.Type(), symbolLeft.ObjType), node.Token.Pos),
-				), false
 			}
 
 			index := symbolLeft.Index
@@ -250,28 +253,34 @@ func (c *Compiler) Compile(node ast.Node) (*exception.SharkError, bool) {
 			}
 
 			if node.Operator != "=" {
-				c.emit(localityGet, index)
+				c.emit(symbolLeft.ObjType, localityGet, index)
 				if err, stopped := c.Compile(node.Right); err != nil || stopped {
 					return err, stopped
 				}
-				c.emit(op)
+				c.emit(types.TSharkVariadic{Enclosed: c.lastCompiledType}, op)
 			} else {
 				if err, stopped := c.Compile(node.Right); err != nil || stopped {
 					return err, stopped
 				}
 			}
-			c.emit(localitySet, index)
-			c.emit(localityGet, index)
+			if !symbolLeft.ObjType.Is(c.lastCompiledType) && !symbolLeft.VariadicType {
+				return newSharkError(exception.SharkErrorTypeMismatch, c.lastCompiledType.SharkTypeString(),
+					"Declare the variable with 'var' keyword instead",
+					exception.NewSharkErrorCause(fmt.Sprintf("Cannot assign type '%s' to type '%s'", c.lastCompiledType.SharkTypeString(), symbolLeft.ObjType.SharkTypeString()), node.Token.Pos),
+				), false
+			}
+			c.emit(types.TSharkVariadic{Enclosed: c.lastCompiledType}, localitySet, index)
+			c.emit(types.TSharkVariadic{Enclosed: c.lastCompiledType}, localityGet, index)
 		case "!=":
-			c.emit(code.OpNotEqual)
+			c.emit(types.TSharkBool{}, code.OpNotEqual)
 		case ">":
-			c.emit(code.OpGreaterThan)
+			c.emit(types.TSharkBool{}, code.OpGreaterThan)
 		case ">=":
-			c.emit(code.OpGreaterThanEqual)
+			c.emit(types.TSharkBool{}, code.OpGreaterThanEqual)
 		case "&&":
-			c.emit(code.OpAnd)
+			c.emit(types.TSharkBool{}, code.OpAnd)
 		case "||":
-			c.emit(code.OpOr)
+			c.emit(types.TSharkBool{}, code.OpOr)
 		default:
 			return newSharkError(exception.SharkErrorUnknownOperator, node.Operator,
 				"Try using an other operator, such as '&&' or '+'",
@@ -284,12 +293,12 @@ func (c *Compiler) Compile(node ast.Node) (*exception.SharkError, bool) {
 			if err, stopped := c.Compile(node.Right); err != nil || stopped {
 				return err, stopped
 			}
-			c.emit(code.OpBang)
+			c.emit(types.TSharkBool{}, code.OpBang)
 		case "-":
 			if err, stopped := c.Compile(node.Right); err != nil || stopped {
 				return err, stopped
 			}
-			c.emit(code.OpMinus)
+			c.emit(types.TSharkVariadic{Enclosed: c.lastCompiledType}, code.OpMinus)
 		case "++":
 			if node.RightIdent == nil {
 				return newSharkError(exception.SharkErrorIdentifierExpected, node.Token.Literal,
@@ -311,9 +320,9 @@ func (c *Compiler) Compile(node ast.Node) (*exception.SharkError, bool) {
 				), false
 			}
 			if symbol.Scope == GlobalScope {
-				c.emit(code.OpIncrementGlobal, symbol.Index)
+				c.emit(symbol.ObjType, code.OpIncrementGlobal, symbol.Index)
 			} else {
-				c.emit(code.OpIncrementLocal, symbol.Index)
+				c.emit(symbol.ObjType, code.OpIncrementLocal, symbol.Index)
 			}
 			c.loadSymbol(symbol)
 		case "--":
@@ -337,16 +346,16 @@ func (c *Compiler) Compile(node ast.Node) (*exception.SharkError, bool) {
 				), false
 			}
 			if symbol.Scope == GlobalScope {
-				c.emit(code.OpDecrementGlobal, symbol.Index)
+				c.emit(symbol.ObjType, code.OpDecrementGlobal, symbol.Index)
 			} else {
-				c.emit(code.OpDecrementLocal, symbol.Index)
+				c.emit(symbol.ObjType, code.OpDecrementLocal, symbol.Index)
 			}
 			c.loadSymbol(symbol)
 		case "...":
 			if err, stopped := c.Compile(node.Right); err != nil || stopped {
 				return err, stopped
 			}
-			c.emit(code.OpSpread)
+			c.emit(types.TSharkArray{Collects: c.lastCompiledType}, code.OpSpread)
 		default:
 			return newSharkError(exception.SharkErrorUnknownOperator, node.Operator,
 				"Try using an other operator",
@@ -354,20 +363,20 @@ func (c *Compiler) Compile(node ast.Node) (*exception.SharkError, bool) {
 			), false
 		}
 	case *ast.IntegerLiteral:
-		integer := &object.Integer{Value: node.Value}
-		c.emit(code.OpConstant, c.addConstant(integer))
+		integer := &object.Int64{Value: node.Value}
+		c.emit(types.TSharkI64{}, code.OpConstant, c.addConstant(integer))
 	case *ast.Boolean:
 		if node.Value {
-			c.emit(code.OpTrue)
+			c.emit(types.TSharkBool{}, code.OpTrue)
 		} else {
-			c.emit(code.OpFalse)
+			c.emit(types.TSharkBool{}, code.OpFalse)
 		}
 	case *ast.IfExpression:
 		//FIXME: No new scope is created for block statements inside "if" and "else"
 		if err, stopped := c.Compile(node.Condition); err != nil || stopped {
 			return err, stopped
 		}
-		jumpNotTruthyPos := c.emit(code.OpJumpNotTruthy, 9999)
+		jumpNotTruthyPos := c.emit(types.TSharkAny{}, code.OpJumpNotTruthy, 9999)
 
 		if err, stopped := c.Compile(node.Consequence); err != nil || stopped {
 			return err, stopped
@@ -378,16 +387,16 @@ func (c *Compiler) Compile(node ast.Node) (*exception.SharkError, bool) {
 		}
 
 		if c.lastInstructionIs(code.OpSetGlobal) || c.lastInstructionIs(code.OpSetLocal) || len(node.Consequence.Statements) == 0 {
-			c.emit(code.OpNull)
+			c.emit(types.TSharkNull{}, code.OpNull)
 		}
 
-		jumpPos := c.emit(code.OpJump, 9999)
+		jumpPos := c.emit(types.TSharkAny{}, code.OpJump, 9999)
 
 		afterConsequencePos := len(c.currentInstructions())
 		c.changeOperand(jumpNotTruthyPos, afterConsequencePos)
 
 		if node.Alternative == nil || len(node.Alternative.Statements) == 0 {
-			c.emit(code.OpNull)
+			c.emit(types.TSharkNull{}, code.OpNull)
 		} else {
 			if err, stopped := c.Compile(node.Alternative); err != nil || stopped {
 				return err, stopped
@@ -396,7 +405,7 @@ func (c *Compiler) Compile(node ast.Node) (*exception.SharkError, bool) {
 				c.removeLastPop()
 			}
 			if c.lastInstructionIs(code.OpSetGlobal) || c.lastInstructionIs(code.OpSetLocal) {
-				c.emit(code.OpNull)
+				c.emit(types.TSharkNull{}, code.OpNull)
 			}
 		}
 		afterAlternativePos := len(c.currentInstructions())
@@ -404,10 +413,11 @@ func (c *Compiler) Compile(node ast.Node) (*exception.SharkError, bool) {
 	case *ast.WhileStatement:
 		//FIXME: No new scope is created for block statements inside "while"
 		conditionPos := len(c.currentInstructions())
+		lastCompiledType := c.lastCompiledType
 		if err, stopped := c.Compile(node.Condition); err != nil || stopped {
 			return err, stopped
 		}
-		jumpNotTruthyPos := c.emit(code.OpJumpNotTruthy, 9999)
+		jumpNotTruthyPos := c.emit(types.TSharkVariadic{Enclosed: lastCompiledType}, code.OpJumpNotTruthy, 9999)
 
 		if err, stopped := c.Compile(node.Body); err != nil || stopped {
 			return err, stopped
@@ -417,7 +427,7 @@ func (c *Compiler) Compile(node ast.Node) (*exception.SharkError, bool) {
 			c.removeLastPop()
 		}
 
-		c.emit(code.OpJump, conditionPos)
+		c.emit(nil, code.OpJump, conditionPos)
 
 		afterBodyPos := len(c.currentInstructions())
 		c.changeOperand(jumpNotTruthyPos, afterBodyPos)
@@ -435,18 +445,20 @@ func (c *Compiler) Compile(node ast.Node) (*exception.SharkError, bool) {
 				exception.NewSharkErrorCause("Cannot use let to reassign value to an existing variable", node.Token.Pos),
 			), false
 		}
-		symbol = c.symbolTable.Define(node.Name.Value, node.Name.Mutable, node.Name.VariadicType, node.Name.ObjType, &node.Name.Token.Pos)
+
 		if err, stopped := c.Compile(node.Value); err != nil || stopped {
 			return err, stopped
 		}
+		symbol = c.symbolTable.Define(node.Name.Value, node.Name.Mutable, node.Name.VariadicType, c.lastCompiledType, &node.Name.Token.Pos)
 		if symbol.Scope == GlobalScope {
-			c.emit(code.OpSetGlobal, symbol.Index)
+			c.emit(symbol.ObjType, code.OpSetGlobal, symbol.Index)
 		} else {
-			c.emit(code.OpSetLocal, symbol.Index)
+			c.emit(symbol.ObjType, code.OpSetLocal, symbol.Index)
 		}
 	case *ast.TupleDeconstruction:
 		// check if the right value is an identifier tuple
 		rightIdent, ok := node.Value.(*ast.Identifier)
+		var tupleType types.TSharkTuple
 		if ok {
 			// check if ident is a tuple
 			symbol, ok := c.symbolTable.Resolve(rightIdent.Value)
@@ -456,27 +468,28 @@ func (c *Compiler) Compile(node ast.Node) (*exception.SharkError, bool) {
 					exception.NewSharkErrorCause("Variable not found for tuple deconstruction", node.Token.Pos),
 				), false
 			}
-			if symbol.ObjType != object.TUPLE_OBJ {
-				return newSharkError(exception.SharkErrorTypeMismatch, symbol.ObjType,
+			if !symbol.ObjType.Is(types.TSharkTuple{}) {
+				return newSharkError(exception.SharkErrorTypeMismatch, symbol.ObjType.SharkTypeString(),
 					"Use a tuple for tuple deconstruction",
-					exception.NewSharkErrorCause(fmt.Sprintf("Cannot deconstruct type '%s'", symbol.ObjType), node.Token.Pos),
+					exception.NewSharkErrorCause(fmt.Sprintf("Cannot deconstruct type '%s'", symbol.ObjType.SharkTypeString()), node.Token.Pos),
 				), false
 			}
+			tupleType = symbol.ObjType.(types.TSharkTuple)
 			c.loadSymbol(symbol)
 		} else {
-			rightValue := node.Value.Type()
-			if rightValue != object.TUPLE_OBJ && rightValue != object.RETURN_VALUE_OBJ {
-				return newSharkError(exception.SharkErrorTypeMismatch, rightValue,
-					"Use a tuple for tuple deconstruction",
-					exception.NewSharkErrorCause(fmt.Sprintf("Cannot deconstruct type '%s'", rightValue), node.Token.Pos),
-				), false
-			}
 			if err, stopped := c.Compile(node.Value); err != nil || stopped {
 				return err, stopped
 			}
+			if !c.lastCompiledType.Is(types.TSharkTuple{}) {
+				return newSharkError(exception.SharkErrorTypeMismatch, c.lastCompiledType.SharkTypeString(),
+					"Use a tuple for tuple deconstruction",
+					exception.NewSharkErrorCause(fmt.Sprintf("Cannot deconstruct type '%s'", c.lastCompiledType.SharkTypeString()), node.Token.Pos),
+				), false
+			}
+			tupleType = c.lastCompiledType.(types.TSharkTuple)
 		}
-		c.emit(code.OpTupleDeconstruct, len(node.Names))
-		for _, name := range node.Names {
+		c.emit(types.TSharkVariadic{Enclosed: c.lastCompiledType}, code.OpTupleDeconstruct, len(node.Names))
+		for i, name := range node.Names {
 			symbol, ok := c.symbolTable.Resolve(name.Value)
 			if ok {
 				return newSharkError(exception.SharkErrorDuplicateIdentifier, name.Value,
@@ -484,11 +497,11 @@ func (c *Compiler) Compile(node ast.Node) (*exception.SharkError, bool) {
 					exception.NewSharkErrorCause("Cannot use let to reassign value to an existing variable", node.Token.Pos),
 				), false
 			}
-			symbol = c.symbolTable.Define(name.Value, name.Mutable, name.VariadicType, name.ObjType, &name.Token.Pos)
+			symbol = c.symbolTable.Define(name.Value, name.Mutable, name.VariadicType, tupleType.Collects[i], &name.Token.Pos)
 			if symbol.Scope == GlobalScope {
-				c.emit(code.OpSetGlobal, symbol.Index)
+				c.emit(types.TSharkVariadic{Enclosed: c.lastCompiledType}, code.OpSetGlobal, symbol.Index)
 			} else {
-				c.emit(code.OpSetLocal, symbol.Index)
+				c.emit(types.TSharkVariadic{Enclosed: c.lastCompiledType}, code.OpSetLocal, symbol.Index)
 			}
 		}
 	case *ast.Identifier:
@@ -500,24 +513,37 @@ func (c *Compiler) Compile(node ast.Node) (*exception.SharkError, bool) {
 			), false
 		}
 		c.loadSymbol(symbol)
+		c.lastCompiledType = symbol.ObjType
 	case *ast.StringLiteral:
 		str := &object.String{Value: node.Value}
-		c.emit(code.OpConstant, c.addConstant(str))
+		c.emit(types.TSharkString{}, code.OpConstant, c.addConstant(str))
 	case *ast.ArrayLiteral:
+		var elementType types.ISharkType
 		for _, element := range node.Elements {
 			if err, stopped := c.Compile(element); err != nil || stopped {
 				return err, stopped
 			}
+			if elementType == nil {
+				elementType = c.lastCompiledType
+			} else if !elementType.Is(c.lastCompiledType) && !elementType.Is(types.TSharkAny{}) {
+				elementType = types.TSharkAny{}
+			} else {
+				elementType = c.lastCompiledType
+			}
+
 		}
-		c.emit(code.OpArray, len(node.Elements))
+		c.emit(elementType, code.OpArray, len(node.Elements))
 	case *ast.TupleLiteral:
+		var elementTypes []types.ISharkType
 		for _, element := range node.Elements {
 			if err, stopped := c.Compile(element); err != nil || stopped {
 				return err, stopped
 			}
+			elementTypes = append(elementTypes, c.lastCompiledType)
 		}
-		c.emit(code.OpTuple, len(node.Elements))
+		c.emit(types.TSharkTuple{Collects: elementTypes}, code.OpTuple, len(node.Elements))
 	case *ast.HashLiteral:
+		var keyType, valueType types.ISharkType
 		var keys []ast.Expression
 		for key := range node.Pairs {
 			keys = append(keys, key)
@@ -529,22 +555,38 @@ func (c *Compiler) Compile(node ast.Node) (*exception.SharkError, bool) {
 			if err, stopped := c.Compile(key); err != nil || stopped {
 				return err, stopped
 			}
+			if keyType == nil {
+				keyType = c.lastCompiledType
+			} else if !keyType.Is(c.lastCompiledType) && !keyType.Is(types.TSharkAny{}) {
+				keyType = types.TSharkAny{}
+			} else {
+				keyType = c.lastCompiledType
+			}
 			if err, stopped := c.Compile(node.Pairs[key]); err != nil || stopped {
 				return err, stopped
 			}
+			if valueType == nil {
+				valueType = c.lastCompiledType
+			} else if !valueType.Is(c.lastCompiledType) && !valueType.Is(types.TSharkAny{}) {
+				valueType = types.TSharkAny{}
+			} else {
+				valueType = c.lastCompiledType
+			}
 		}
 
-		c.emit(code.OpHash, len(node.Pairs)*2)
+		c.emit(types.TSharkHashMap{Indexes: keyType, Collects: valueType}, code.OpHash, len(node.Pairs)*2)
 	case *ast.IndexExpression:
 		if err, stopped := c.Compile(node.Left); err != nil || stopped {
 			return err, stopped
 		}
 
+		indexValueType := c.lastCompiledType
+
 		if err, stopped := c.Compile(node.Index); err != nil || stopped {
 			return err, stopped
 		}
 
-		c.emit(code.OpIndex)
+		c.emit(indexValueType, code.OpIndex)
 	case *ast.IndexAssignExpression:
 		if err, stopped := c.Compile(node.Value); err != nil || stopped {
 			return err, stopped
@@ -575,7 +617,7 @@ func (c *Compiler) Compile(node ast.Node) (*exception.SharkError, bool) {
 		if err, stopped := c.Compile(node.Index); err != nil || stopped {
 			return err, stopped
 		}
-		c.emit(code.OpIndexAssign)
+		c.emit(types.TSharkVariadic{Enclosed: c.lastCompiledType}, code.OpIndexAssign)
 	case *ast.FunctionLiteral:
 		c.enterScope()
 		if node.Name != "" {
@@ -583,21 +625,29 @@ func (c *Compiler) Compile(node ast.Node) (*exception.SharkError, bool) {
 		}
 		numDefaults := 0
 		isOptionalsActive := false
+		var paramTypes []types.ISharkType
 		for _, param := range node.Parameters {
-			symbol := c.symbolTable.Define(param.Value, param.Mutable, param.VariadicType, param.ObjType, &param.Token.Pos)
 			if param.DefaultValue != nil {
 				isOptionalsActive = true
 				numDefaults++
 				if err, stopped := c.Compile(*param.DefaultValue); err != nil || stopped {
 					return err, stopped
 				}
-				c.emit(code.OpSetLocalDefault, symbol.Index)
+				symbol := c.symbolTable.Define(param.Value, param.Mutable, param.VariadicType, c.lastCompiledType, &param.Token.Pos)
+				c.emit(types.TSharkVariadic{Enclosed: c.lastCompiledType}, code.OpSetLocalDefault, symbol.Index)
+			} else {
+				c.symbolTable.Define(param.Value, param.Mutable, param.VariadicType, types.TSharkAny{}, &param.Token.Pos)
 			}
 			if isOptionalsActive && param.DefaultValue == nil {
 				return newSharkError(exception.SharkErrorOptionalParameter, param.Value,
 					"Move this parameter before the optional parameters",
 					exception.NewSharkErrorCause("Non-optional parameter after optional parameter", param.Token.Pos),
 				), false
+			}
+			if c.lastCompiledType != nil && !c.lastCompiledType.Is(types.TSharkAny{}) {
+				paramTypes = append(paramTypes, c.lastCompiledType)
+			} else {
+				paramTypes = append(paramTypes, types.TSharkAny{})
 			}
 		}
 		if err, stopped := c.Compile(node.Body); err != nil || stopped {
@@ -607,7 +657,7 @@ func (c *Compiler) Compile(node ast.Node) (*exception.SharkError, bool) {
 			c.replaceLastPopWithReturn()
 		}
 		if !c.lastInstructionIs(code.OpReturnValue) {
-			c.emit(code.OpReturn)
+			c.emit(types.TSharkVariadic{Enclosed: c.lastCompiledType}, code.OpReturn)
 		}
 		freeSymbols := c.symbolTable.FreeSymbols
 		NumLocals := c.symbolTable.numDefinitions
@@ -622,9 +672,9 @@ func (c *Compiler) Compile(node ast.Node) (*exception.SharkError, bool) {
 			NumLocals:     NumLocals,
 			NumParameters: len(node.Parameters),
 			NumDefaults:   numDefaults,
+			ObjType:       types.TSharkFuncType{ArgsList: paramTypes, ReturnT: types.TSharkAny{}},
 		}
-
-		c.emit(code.OpClosure, c.addConstant(compiledFn), len(freeSymbols))
+		c.emit(types.TSharkFuncType{ArgsList: paramTypes, ReturnT: types.TSharkAny{}}, code.OpClosure, c.addConstant(compiledFn), len(freeSymbols))
 	case *ast.ReturnStatement:
 		if c.scopeIndex == 0 {
 			return newSharkError(exception.SharkErrorTopLeverReturn, nil,
@@ -636,17 +686,18 @@ func (c *Compiler) Compile(node ast.Node) (*exception.SharkError, bool) {
 			return err, stopped
 		}
 
-		c.emit(code.OpReturnValue)
+		c.emit(types.TSharkVariadic{Enclosed: c.lastCompiledType}, code.OpReturnValue)
 	case *ast.CallExpression:
 		if err, stopped := c.Compile(node.Function); err != nil || stopped {
 			return err, stopped
 		}
+		funcType := c.lastCompiledType
 		for _, arg := range node.Arguments {
 			if err, stopped := c.Compile(arg); err != nil || stopped {
 				return err, stopped
 			}
 		}
-		c.emit(code.OpCall, len(node.Arguments))
+		c.emit(funcType, code.OpCall, len(node.Arguments))
 	}
 
 	return nil, false
@@ -697,10 +748,10 @@ func (c *Compiler) GetSymbolTable() *SymbolTable {
 
 func (c *Compiler) addConstant(obj object.Object) int {
 	// TODO: Add detection for duplicate constants for functions and closures
-	if obj.Type() != object.FUNCTION_OBJ && obj.Type() != object.CLOSURE_OBJ && obj.Type() != object.COMPILED_FUNCTION_OBJ {
+	if !obj.Type().Is(types.TSharkFuncType{}) && !obj.Type().Is(types.TSharkClosure{}) {
 		for i, constant := range c.constants {
 
-			if constant.Type() == obj.Type() && constant.Inspect() == obj.Inspect() {
+			if constant.Type().Is(obj.Type()) && constant.Inspect() == obj.Inspect() {
 				return i
 			}
 		}
@@ -710,11 +761,15 @@ func (c *Compiler) addConstant(obj object.Object) int {
 	return len(c.constants) - 1
 }
 
-func (c *Compiler) emit(op code.Opcode, operands ...int) int {
+func (c *Compiler) emit(sharkType types.ISharkType, op code.Opcode, operands ...int) int {
 	ins := code.Make(op, operands...)
 	pos := c.addInstruction(ins)
 
 	c.setLastInstruction(op, pos)
+	if variadic, ok := sharkType.(types.TSharkVariadic); ok {
+		sharkType = variadic.Enclosed
+	}
+	c.lastCompiledType = sharkType
 
 	return pos
 }
@@ -768,15 +823,15 @@ func (c *Compiler) changeOperand(opPos, operand int) {
 func (c *Compiler) loadSymbol(s Symbol) {
 	switch s.Scope {
 	case GlobalScope:
-		c.emit(code.OpGetGlobal, s.Index)
+		c.emit(s.ObjType, code.OpGetGlobal, s.Index)
 	case LocalScope:
-		c.emit(code.OpGetLocal, s.Index)
+		c.emit(s.ObjType, code.OpGetLocal, s.Index)
 	case BuiltinScope:
-		c.emit(code.OpGetBuiltin, s.Index)
+		c.emit(s.ObjType, code.OpGetBuiltin, s.Index)
 	case FreeScope:
-		c.emit(code.OpGetFree, s.Index)
+		c.emit(s.ObjType, code.OpGetFree, s.Index)
 	case FunctionScope:
-		c.emit(code.OpCurrentClosure)
+		c.emit(s.ObjType, code.OpCurrentClosure)
 	}
 }
 

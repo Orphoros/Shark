@@ -177,8 +177,8 @@ func TestArrayLiterals(t *testing.T) {
 func TestTupleLiterals(t *testing.T) {
 	t.Run("should evaluate tuple literals", func(t *testing.T) {
 		tests := []vmTestCase{
-			{"(1, 2, 3)", object.Tuple{Elements: []object.Object{&object.Integer{Value: 1}, &object.Integer{Value: 2}, &object.Integer{Value: 3}}}},
-			{"(1 + 2, 3 * 4, 5 + 6)", object.Tuple{Elements: []object.Object{&object.Integer{Value: 3}, &object.Integer{Value: 12}, &object.Integer{Value: 11}}}},
+			{"(1, 2, 3)", object.Tuple{Elements: []object.Object{&object.Int64{Value: 1}, &object.Int64{Value: 2}, &object.Int64{Value: 3}}}},
+			{"(1 + 2, 3 * 4, 5 + 6)", object.Tuple{Elements: []object.Object{&object.Int64{Value: 3}, &object.Int64{Value: 12}, &object.Int64{Value: 11}}}},
 		}
 
 		runVmTests(t, tests)
@@ -261,12 +261,12 @@ func TestHashLiterals(t *testing.T) {
 		tests := []vmTestCase{
 			{"{}", map[object.HashKey]int64{}},
 			{"{1: 2, 2: 3}", map[object.HashKey]int64{
-				(&object.Integer{Value: 1}).HashKey(): 2,
-				(&object.Integer{Value: 2}).HashKey(): 3,
+				(&object.Int64{Value: 1}).HashKey(): 2,
+				(&object.Int64{Value: 2}).HashKey(): 3,
 			}},
 			{"{1 + 1: 2 * 2, 3 + 3: 4 * 4}", map[object.HashKey]int64{
-				(&object.Integer{Value: 2}).HashKey(): 4,
-				(&object.Integer{Value: 6}).HashKey(): 16,
+				(&object.Int64{Value: 2}).HashKey(): 4,
+				(&object.Int64{Value: 6}).HashKey(): 16,
 			}},
 		}
 
@@ -889,7 +889,7 @@ func TestBuiltinFunctions(t *testing.T) {
 			{`len("four")`, 4},
 			{`len("hello world")`, 11},
 			{`len((true, 2, "a"))`, 3},
-			{`len(1)`, &object.Error{Message: "argument to `len` not supported, got INTEGER"}},
+			{`len(1)`, &object.Error{Message: "argument to `len` not supported, got i64"}},
 			{`len("one", "two")`, &object.Error{Message: "wrong number of arguments. got=2, want=1"}},
 			{`len([1, 2, 3])`, 3},
 			{`len([])`, 0},
@@ -904,7 +904,7 @@ func TestBuiltinFunctions(t *testing.T) {
 			{`first([])`, Null},
 			{`first((1, true, "a"))`, 1},
 			{`first("hello")`, "h"},
-			{`first(1)`, &object.Error{Message: "argument to `first` not supported, got INTEGER"}},
+			{`first(1)`, &object.Error{Message: "argument to `first` not supported, got i64"}},
 		}
 
 		runVmTests(t, tests)
@@ -916,7 +916,7 @@ func TestBuiltinFunctions(t *testing.T) {
 			{`last([])`, Null},
 			{`last("hello")`, "o"},
 			{`last((1, true, "a"))`, "a"},
-			{`last(1)`, &object.Error{Message: "argument to `last` not supported, got INTEGER"}},
+			{`last(1)`, &object.Error{Message: "argument to `last` not supported, got i64"}},
 		}
 
 		runVmTests(t, tests)
@@ -926,7 +926,7 @@ func TestBuiltinFunctions(t *testing.T) {
 		tests := []vmTestCase{
 			{`rest([1, 2, 3])`, []int{2, 3}},
 			{`rest([])`, Null},
-			{`rest(1)`, &object.Error{Message: "argument to `rest` must be ARRAY, got INTEGER"}},
+			{`rest(1)`, &object.Error{Message: "argument to rest() must be array<T>, got i64"}},
 		}
 
 		runVmTests(t, tests)
@@ -935,7 +935,7 @@ func TestBuiltinFunctions(t *testing.T) {
 	t.Run("should evaluate push builtin functions", func(t *testing.T) {
 		tests := []vmTestCase{
 			{`push([], 1)`, []int{1}},
-			{`push(1, 1)`, &object.Error{Message: "argument to `push` must be ARRAY, got INTEGER"}},
+			{`push(1, 1)`, &object.Error{Message: "argument to push() must be array<T>, got i64"}},
 		}
 
 		runVmTests(t, tests)
@@ -943,14 +943,14 @@ func TestBuiltinFunctions(t *testing.T) {
 
 	t.Run("should evaluate type builtin functions", func(t *testing.T) {
 		tests := []vmTestCase{
-			{`type(1)`, "INTEGER"},
-			{`type("hello")`, "STRING"},
-			{`type([1, 2, 3])`, "ARRAY"},
-			{`type((1, true, "a"))`, "TUPLE"},
-			{`type({1: 1})`, "HASH"},
-			{`type(puts)`, "BUILTIN"},
-			{`type(type)`, "BUILTIN"},
-			{`type(type(1))`, "STRING"},
+			{`type(1)`, "i64"},
+			{`type("hello")`, "string"},
+			{`type([1, 2, 3])`, "array<i64>"},
+			{`type((1, true, "a"))`, "tuple<i64,bool,string>"},
+			{`type({1: 1})`, "hashmap<i64,i64>"},
+			{`type(puts)`, "func<(...T)->null>"},
+			{`type(type)`, "func<(any)->string>"},
+			{`type(type(1))`, "string"},
 		}
 
 		runVmTests(t, tests)
@@ -1215,7 +1215,7 @@ func testExpectedObject(t *testing.T, expected interface{}, actual object.Object
 		}
 
 		for i, expectedElem := range expected.Elements {
-			if err := testIntegerObject(int64(expectedElem.(*object.Integer).Value), tuple.Elements[i]); err != nil {
+			if err := testIntegerObject(int64(expectedElem.(*object.Int64).Value), tuple.Elements[i]); err != nil {
 				t.Fatalf("testIntegerObject failed: %s", err)
 			}
 		}
@@ -1303,7 +1303,7 @@ func parse(input string) *ast.Program {
 }
 
 func testIntegerObject(expected int64, actual object.Object) error {
-	result, ok := actual.(*object.Integer)
+	result, ok := actual.(*object.Int64)
 	if !ok {
 		return fmt.Errorf("object is not Integer. got=%T (%+v)", actual, actual)
 	}

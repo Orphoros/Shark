@@ -1,8 +1,8 @@
 package compiler
 
 import (
-	"shark/object"
 	"shark/token"
+	"shark/types"
 
 	"github.com/phuslu/log"
 )
@@ -21,7 +21,7 @@ type Symbol struct {
 	Name         string
 	Mutable      bool
 	VariadicType bool
-	ObjType      object.Type
+	ObjType      types.ISharkType
 	Scope        SymbolScope
 	Index        int
 	Pos          *token.Position
@@ -49,7 +49,7 @@ func NewEnclosedSymbolTable(outer *SymbolTable) *SymbolTable {
 	return st
 }
 
-func (s *SymbolTable) Define(name string, mutable, variadicType bool, objType object.Type, pos *token.Position) Symbol {
+func (s *SymbolTable) Define(name string, mutable, variadicType bool, objType types.ISharkType, pos *token.Position) Symbol {
 	symbol := Symbol{Name: name, Index: s.numDefinitions, Mutable: mutable, Pos: pos, VariadicType: variadicType, ObjType: objType}
 
 	if s.Outer == nil {
@@ -62,7 +62,7 @@ func (s *SymbolTable) Define(name string, mutable, variadicType bool, objType ob
 		Str("name", name).
 		Bool("mutable", mutable).
 		Bool("variadicType", variadicType).
-		Str("objType", objType.String()).
+		Str("objType", objType.SharkTypeString()).
 		Str("scope", string(symbol.Scope)).
 		Int("index", s.numDefinitions).Msg("Define new symbol")
 
@@ -110,15 +110,15 @@ func (s *SymbolTable) FindIdent(name string) (Symbol, bool) {
 	return obj, ok
 }
 
-func (s *SymbolTable) DefineBuiltin(index int, name string) Symbol {
-	symbol := Symbol{Name: name, Scope: BuiltinScope, Index: index, Mutable: false, VariadicType: false}
+func (s *SymbolTable) DefineBuiltin(index int, name string, objType types.ISharkType) Symbol {
+	symbol := Symbol{Name: name, Scope: BuiltinScope, Index: index, Mutable: false, VariadicType: false, ObjType: objType}
 
 	s.store[name] = symbol
 
 	return symbol
 }
 
-func (s *SymbolTable) DefineFree(original Symbol, mutable, variadicType bool, objType object.Type, pos *token.Position) Symbol {
+func (s *SymbolTable) DefineFree(original Symbol, mutable, variadicType bool, objType types.ISharkType, pos *token.Position) Symbol {
 	s.FreeSymbols = append(s.FreeSymbols, original)
 
 	symbol := Symbol{Name: original.Name, Scope: FreeScope, Index: len(s.FreeSymbols) - 1, Mutable: mutable, Pos: pos, VariadicType: variadicType, ObjType: objType}
@@ -129,7 +129,7 @@ func (s *SymbolTable) DefineFree(original Symbol, mutable, variadicType bool, ob
 		Str("name", original.Name).
 		Bool("mutable", mutable).
 		Bool("variadicType", variadicType).
-		Str("objType", objType.String()).
+		Str("objType", objType.SharkTypeString()).
 		Str("scope", string(symbol.Scope)).
 		Int("index", symbol.Index).Msg("Define free symbol")
 

@@ -1,7 +1,6 @@
 package ast
 
 import (
-	"shark/object"
 	"shark/token"
 )
 
@@ -10,7 +9,7 @@ type IntegerLiteral struct {
 	Value int64
 }
 
-func (il *IntegerLiteral) Type() object.Type { return object.INTEGER_OBJ }
+func (il *IntegerLiteral) expressionNode() {}
 
 func (il *IntegerLiteral) TokenPos() token.Position { return il.Token.Pos }
 

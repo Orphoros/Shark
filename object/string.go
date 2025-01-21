@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"encoding/gob"
 	"hash/fnv"
+	"shark/types"
 )
 
 type String struct {
@@ -11,8 +12,6 @@ type String struct {
 }
 
 func (s *String) Inspect() string { return s.Value }
-
-func (s *String) Type() Type { return STRING_OBJ }
 
 func (s *String) HashKey() HashKey {
 	// TODO: Implement separate chaining to handle collisions
@@ -22,6 +21,8 @@ func (s *String) HashKey() HashKey {
 	}
 	return HashKey{Type: s.Type(), Value: h.Sum64()}
 }
+
+func (s *String) Type() types.ISharkType { return types.TSharkString{} }
 
 func (s *String) GobEncode() ([]byte, error) {
 	w := new(bytes.Buffer)

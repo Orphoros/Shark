@@ -1,7 +1,6 @@
 package ast
 
 import (
-	"shark/object"
 	"shark/token"
 )
 
@@ -11,7 +10,7 @@ type IndexExpression struct {
 	Index Expression
 }
 
-func (ie *IndexExpression) Type() object.Type { return ie.Left.Type() }
+func (ie *IndexExpression) expressionNode() {}
 
 func (ie *IndexExpression) TokenPos() token.Position { return ie.Token.Pos }
 

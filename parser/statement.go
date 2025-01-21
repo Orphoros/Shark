@@ -82,8 +82,6 @@ func (p *Parser) parseLetStatement() *ast.LetStatement {
 		return nil
 	}
 
-	stmt.Name.ObjType = stmt.Value.Type()
-
 	if fl, ok := stmt.Value.(*ast.FunctionLiteral); ok {
 		fl.Name = stmt.Name.Value
 		fl.Token.Pos = stmt.Name.Token.Pos

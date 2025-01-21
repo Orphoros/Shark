@@ -48,7 +48,6 @@ func (p *Parser) parseFunctionParameters() []*ast.Identifier {
 		p.nextToken()
 		exp := p.parseExpression(LOWEST)
 		ident.DefaultValue = &exp
-		ident.ObjType = exp.Type()
 	}
 
 	identifiers = append(identifiers, ident)
@@ -75,7 +74,6 @@ func (p *Parser) parseFunctionParameters() []*ast.Identifier {
 			p.nextToken()
 			exp := p.parseExpression(LOWEST)
 			ident.DefaultValue = &exp
-			ident.ObjType = exp.Type()
 		}
 		identifiers = append(identifiers, ident)
 	}

@@ -167,11 +167,10 @@ func (b *Bytecode) ToString() string {
 	fmt.Fprintf(&buf, "\n@constants:\n")
 
 	for i, constant := range b.Constants {
-		switch constant.Type() {
-		case object.COMPILED_FUNCTION_OBJ:
+		switch constant := constant.(type) {
+		case *object.CompiledFunction:
 			fmt.Fprintf(&buf, "| %04d FUNC {\n", i)
-			cf := constant.(*object.CompiledFunction)
-			txt := cf.Instructions.String()
+			txt := constant.Instructions.String()
 			lines := bytes.Split([]byte(txt), []byte("\n"))
 			for i, line := range lines {
 				if i == len(lines)-1 {
@@ -180,7 +179,7 @@ func (b *Bytecode) ToString() string {
 				fmt.Fprintf(&buf, "| \t%s\n", line)
 			}
 			fmt.Fprintf(&buf, "| }\n")
-		case object.STRING_OBJ:
+		case *object.String:
 			fmt.Fprintf(&buf, "| %04d %s: \"%s\"\n", i, constant.Type(), constant.Inspect())
 		default:
 			fmt.Fprintf(&buf, "| %04d %s: %s\n", i, constant.Type(), constant.Inspect())

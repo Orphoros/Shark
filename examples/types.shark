@@ -7,6 +7,3 @@ let f = { "name": "John", "age": 25 }
 let g = false;
 let length = len(a);
 puts(length)
-
-let d = 1;
-// let bobby = let mark = "hello";

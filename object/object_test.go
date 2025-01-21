@@ -1,6 +1,7 @@
 package object
 
 import (
+	"shark/types"
 	"testing"
 )
 
@@ -27,26 +28,26 @@ func TestStringHashKey(t *testing.T) {
 
 func TestObjects(t *testing.T) {
 	t.Run("should return the correct array object", func(t *testing.T) {
-		arrayObj := &Array{Elements: []Object{&Integer{Value: 1}, &Integer{Value: 2}, &Integer{Value: 3}}} // [1, 2, 3]
-
-		if arrayObj.Type() != ARRAY_OBJ {
-			t.Errorf("wrong type. expected=%s, got=%s", ARRAY_OBJ, arrayObj.Type())
+		arrayObj := &Array{Elements: []Object{&Int64{Value: 1}, &Int64{Value: 2}, &Int64{Value: 3}}} // [1, 2, 3]
+		expectedType := types.TSharkArray{Collects: types.TSharkI64{}}
+		if !arrayObj.Type().Is(expectedType) {
+			t.Errorf("wrong type. expected=%s, got=%s", expectedType.SharkTypeString(), arrayObj.Type().SharkTypeString())
 		}
 
 		if len(arrayObj.Elements) != 3 {
 			t.Errorf("wrong number of elements. expected=%d, got=%d", 3, len(arrayObj.Elements))
 		}
 
-		if arrayObj.Elements[0].(*Integer).Value != 1 {
-			t.Errorf("wrong value for first element. expected=%d, got=%d", 1, arrayObj.Elements[0].(*Integer).Value)
+		if arrayObj.Elements[0].(*Int64).Value != 1 {
+			t.Errorf("wrong value for first element. expected=%d, got=%d", 1, arrayObj.Elements[0].(*Int64).Value)
 		}
 
-		if arrayObj.Elements[1].(*Integer).Value != 2 {
-			t.Errorf("wrong value for second element. expected=%d, got=%d", 2, arrayObj.Elements[1].(*Integer).Value)
+		if arrayObj.Elements[1].(*Int64).Value != 2 {
+			t.Errorf("wrong value for second element. expected=%d, got=%d", 2, arrayObj.Elements[1].(*Int64).Value)
 		}
 
-		if arrayObj.Elements[2].(*Integer).Value != 3 {
-			t.Errorf("wrong value for third element. expected=%d, got=%d", 3, arrayObj.Elements[2].(*Integer).Value)
+		if arrayObj.Elements[2].(*Int64).Value != 3 {
+			t.Errorf("wrong value for third element. expected=%d, got=%d", 3, arrayObj.Elements[2].(*Int64).Value)
 		}
 
 		if arrayObj.Inspect() != "[1, 2, 3]" {
@@ -56,9 +57,9 @@ func TestObjects(t *testing.T) {
 
 	t.Run("should return the correct boolean object", func(t *testing.T) {
 		boolObj := &Boolean{Value: true}
-
-		if boolObj.Type() != BOOLEAN_OBJ {
-			t.Errorf("wrong type. expected=%s, got=%s", BOOLEAN_OBJ, boolObj.Type())
+		expectedType := types.TSharkBool{}
+		if !(boolObj).Type().Is(expectedType) {
+			t.Errorf("wrong type. expected=%s, got=%s", expectedType.SharkTypeString(), boolObj.Type().SharkTypeString())
 		}
 
 		if boolObj.Value != true {
@@ -72,9 +73,9 @@ func TestObjects(t *testing.T) {
 
 	t.Run("should return the correct error object", func(t *testing.T) {
 		errorObj := &Error{Message: "something went wrong"}
-
-		if errorObj.Type() != ERROR_OBJ {
-			t.Errorf("wrong type. expected=%s, got=%s", ERROR_OBJ, errorObj.Type())
+		expectedType := types.TSharkError{}
+		if !errorObj.Type().Is(expectedType) {
+			t.Errorf("wrong type. expected=%s, got=%s", expectedType.SharkTypeString(), errorObj.Type().SharkTypeString())
 		}
 
 		if errorObj.Message != "something went wrong" {
@@ -88,12 +89,12 @@ func TestObjects(t *testing.T) {
 
 	t.Run("should return the correct hash object", func(t *testing.T) {
 		hashObj := &Hash{Pairs: map[HashKey]HashPair{
-			(&String{Value: "one"}).HashKey(): {Key: &String{Value: "one"}, Value: &Integer{Value: 1}},
-			(&String{Value: "two"}).HashKey(): {Key: &String{Value: "two"}, Value: &Integer{Value: 2}},
+			(&String{Value: "one"}).HashKey(): {Key: &String{Value: "one"}, Value: &Int64{Value: 1}},
+			(&String{Value: "two"}).HashKey(): {Key: &String{Value: "two"}, Value: &Int64{Value: 2}},
 		}}
-
-		if hashObj.Type() != HASH_OBJ {
-			t.Errorf("wrong type. expected=%s, got=%s", HASH_OBJ, hashObj.Type())
+		expectedType := types.TSharkHashMap{Indexes: types.TSharkString{}, Collects: types.TSharkI64{}}
+		if !hashObj.Type().Is(expectedType) {
+			t.Errorf("wrong type. expected=%s, got=%s", expectedType.SharkTypeString(), hashObj.Type().SharkTypeString())
 		}
 
 		if len(hashObj.Pairs) != 2 {
@@ -106,10 +107,10 @@ func TestObjects(t *testing.T) {
 	})
 
 	t.Run("should return the correct int object", func(t *testing.T) {
-		intObj := &Integer{Value: 1}
-
-		if intObj.Type() != INTEGER_OBJ {
-			t.Errorf("wrong type. expected=%s, got=%s", INTEGER_OBJ, intObj.Type())
+		intObj := &Int64{Value: 1}
+		expectedType := types.TSharkI64{}
+		if !intObj.Type().Is(expectedType) {
+			t.Errorf("wrong type. expected=%s, got=%s", expectedType.SharkTypeString(), intObj.Type().SharkTypeString())
 		}
 
 		if intObj.Value != 1 {
@@ -123,9 +124,9 @@ func TestObjects(t *testing.T) {
 
 	t.Run("should return the correct string object", func(t *testing.T) {
 		strObj := &String{Value: "Hello World"}
-
-		if strObj.Type() != STRING_OBJ {
-			t.Errorf("wrong type. expected=%s, got=%s", STRING_OBJ, strObj.Type())
+		expectedType := types.TSharkString{}
+		if !strObj.Type().Is(expectedType) {
+			t.Errorf("wrong type. expected=%s, got=%s", expectedType.SharkTypeString(), strObj.Type().SharkTypeString())
 		}
 
 		if strObj.Value != "Hello World" {

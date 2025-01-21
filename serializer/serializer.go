@@ -31,7 +31,7 @@ const (
 
 func RegisterTypes() {
 	gob.RegisterName(fmt.Sprintf("%c", TNull), &object.Null{})
-	gob.RegisterName(fmt.Sprintf("%c", TInteger), &object.Integer{})
+	gob.RegisterName(fmt.Sprintf("%c", TInteger), &object.Int64{})
 	gob.RegisterName(fmt.Sprintf("%c", TBoolean), &object.Boolean{})
 	gob.RegisterName(fmt.Sprintf("%c", TString), &object.String{})
 	gob.RegisterName(fmt.Sprintf("%c", TArray), &object.Array{})

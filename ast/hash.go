@@ -2,7 +2,6 @@ package ast
 
 import (
 	"bytes"
-	"shark/object"
 	"shark/token"
 	"strings"
 )
@@ -12,7 +11,7 @@ type HashLiteral struct {
 	Pairs map[Expression]Expression
 }
 
-func (hl HashLiteral) Type() object.Type { return object.HASH_OBJ }
+func (hl HashLiteral) expressionNode() {}
 
 func (hl HashLiteral) TokenPos() token.Position { return hl.Token.Pos }
 

@@ -113,37 +113,37 @@ func (vm *VM) Run() *exception.SharkError {
 		case code.OpIncrementGlobal:
 			globalIndex := code.ReadUint16(ins[ip+1:])
 			vm.currentFrame().ip += 2
-			intVal, ok := vm.globals[globalIndex].(*object.Integer)
+			intVal, ok := vm.globals[globalIndex].(*object.Int64)
 			if !ok {
 				return newSharkError(exception.SharkErrorNonNumberIncrement, vm.globals[globalIndex].Type())
 			}
-			vm.globals[globalIndex] = &object.Integer{Value: intVal.Value + 1}
+			vm.globals[globalIndex] = &object.Int64{Value: intVal.Value + 1}
 		case code.OpIncrementLocal:
 			localIndex := code.ReadUint8(ins[ip+1:])
 			vm.currentFrame().ip += 1
 			frame := vm.currentFrame()
-			intVal, ok := vm.stack[frame.basePointer+int(localIndex)].(*object.Integer)
+			intVal, ok := vm.stack[frame.basePointer+int(localIndex)].(*object.Int64)
 			if !ok {
 				return newSharkError(exception.SharkErrorNonNumberIncrement, vm.stack[frame.basePointer+int(localIndex)].Type())
 			}
-			vm.stack[frame.basePointer+int(localIndex)] = &object.Integer{Value: intVal.Value + 1}
+			vm.stack[frame.basePointer+int(localIndex)] = &object.Int64{Value: intVal.Value + 1}
 		case code.OpDecrementGlobal:
 			globalIndex := code.ReadUint16(ins[ip+1:])
 			vm.currentFrame().ip += 2
-			intVal, ok := vm.globals[globalIndex].(*object.Integer)
+			intVal, ok := vm.globals[globalIndex].(*object.Int64)
 			if !ok {
 				return newSharkError(exception.SharkErrorNonNumberDecrement, vm.globals[globalIndex].Type())
 			}
-			vm.globals[globalIndex] = &object.Integer{Value: intVal.Value - 1}
+			vm.globals[globalIndex] = &object.Int64{Value: intVal.Value - 1}
 		case code.OpDecrementLocal:
 			localIndex := code.ReadUint8(ins[ip+1:])
 			vm.currentFrame().ip += 1
 			frame := vm.currentFrame()
-			intVal, ok := vm.stack[frame.basePointer+int(localIndex)].(*object.Integer)
+			intVal, ok := vm.stack[frame.basePointer+int(localIndex)].(*object.Int64)
 			if !ok {
 				return newSharkError(exception.SharkErrorNonNumberIncrement, vm.stack[frame.basePointer+int(localIndex)].Type())
 			}
-			vm.stack[frame.basePointer+int(localIndex)] = &object.Integer{Value: intVal.Value - 1}
+			vm.stack[frame.basePointer+int(localIndex)] = &object.Int64{Value: intVal.Value - 1}
 		case code.OpJump:
 			pos := int(code.ReadUint16(ins[ip+1:]))
 			vm.currentFrame().ip = pos - 1
@@ -256,7 +256,7 @@ func (vm *VM) Run() *exception.SharkError {
 			tpl := vm.pop()
 			tuple, ok := tpl.(*object.Tuple)
 			if !ok {
-				return newSharkError(exception.SharkErrorMismatchedTypes, tpl.Type(), object.TUPLE_OBJ)
+				return newSharkError(exception.SharkErrorMismatchedTypes, tpl.Type(), "Tuple")
 			}
 			if len(tuple.Elements) != numElements {
 				return newSharkError(exception.SharkErrorTupleDeconstructMismatch, len(tuple.Elements), numElements)
@@ -270,7 +270,7 @@ func (vm *VM) Run() *exception.SharkError {
 			operand := vm.pop()
 			strObj, ok := operand.(*object.String)
 			if !ok {
-				return newSharkError(exception.SharkErrorMismatchedTypes, operand.Type(), object.STRING_OBJ)
+				return newSharkError(exception.SharkErrorMismatchedTypes, operand.Type(), "String")
 			}
 			str := strObj.Value
 			elements := make([]object.Object, 0, len(str))
@@ -284,8 +284,8 @@ func (vm *VM) Run() *exception.SharkError {
 			endObj := vm.pop()
 			startObj := vm.pop()
 
-			endInt, endOk := endObj.(*object.Integer)
-			startInt, startOk := startObj.(*object.Integer)
+			endInt, endOk := endObj.(*object.Int64)
+			startInt, startOk := startObj.(*object.Int64)
 
 			if !startOk || !endOk {
 				return newSharkError(exception.SharkErrorMismatchedTypes, "Integer", "Integer")
@@ -298,12 +298,12 @@ func (vm *VM) Run() *exception.SharkError {
 			if startVal > endVal {
 				elements = make([]object.Object, startVal-endVal+1)
 				for i, v := startVal, 0; i >= endVal; i, v = i-1, v+1 {
-					elements[v] = &object.Integer{Value: i}
+					elements[v] = &object.Int64{Value: i}
 				}
 			} else {
 				elements = make([]object.Object, endVal-startVal+1)
 				for i, v := startVal, 0; i <= endVal; i, v = i+1, v+1 {
-					elements[v] = &object.Integer{Value: i}
+					elements[v] = &object.Int64{Value: i}
 				}
 			}
 
@@ -406,9 +406,9 @@ func (vm *VM) executeBinaryOperation(op code.Opcode) *exception.SharkError {
 	left := vm.pop()
 
 	switch leftValue := left.(type) {
-	case *object.Integer:
+	case *object.Int64:
 		switch rightValue := right.(type) {
-		case *object.Integer:
+		case *object.Int64:
 			var result int64
 			switch op {
 			case code.OpAdd:
@@ -427,7 +427,7 @@ func (vm *VM) executeBinaryOperation(op code.Opcode) *exception.SharkError {
 			default:
 				return newSharkError(exception.SharkErrorUnknownOperator, op)
 			}
-			vm.push(&object.Integer{Value: result})
+			vm.push(&object.Int64{Value: result})
 			return nil
 		default:
 			return newSharkError(exception.SharkErrorMismatchedTypes, "Integer", right.Type())
@@ -461,8 +461,8 @@ func (vm *VM) executeComparison(op code.Opcode) *exception.SharkError {
 	left := vm.pop()
 
 	switch leftVal := left.(type) {
-	case *object.Integer:
-		if rightVal, ok := right.(*object.Integer); ok {
+	case *object.Int64:
+		if rightVal, ok := right.(*object.Int64); ok {
 			return vm.executeIntegerComparison(op, leftVal, rightVal)
 		}
 	case *object.Boolean:
@@ -497,8 +497,8 @@ func (vm *VM) executeBooleanComparison(op code.Opcode, left, right object.Object
 }
 
 func (vm *VM) executeIntegerComparison(op code.Opcode, left, right object.Object) *exception.SharkError {
-	leftValue := left.(*object.Integer).Value
-	rightValue := right.(*object.Integer).Value
+	leftValue := left.(*object.Int64).Value
+	rightValue := right.(*object.Int64).Value
 
 	switch op {
 	case code.OpEqual:
@@ -543,13 +543,14 @@ func (vm *VM) executeBangOperator() *exception.SharkError {
 
 func (vm *VM) executeMinusOperator() *exception.SharkError {
 	operand := vm.pop()
-
-	if operand.Type() != object.INTEGER_OBJ {
+	obj, ok := operand.(*object.Int64)
+	if !ok {
 		return newSharkError(exception.SharkErrorMismatchedTypes, operand.Type())
 	}
 
-	value := operand.(*object.Integer).Value
-	return vm.push(&object.Integer{Value: -value})
+	value := obj.Value
+
+	return vm.push(&object.Int64{Value: -value})
 }
 
 func (vm *VM) executeBinaryStringOperation(op code.Opcode, left, right object.Object) *exception.SharkError {
@@ -610,17 +611,17 @@ func (vm *VM) buildHash(startIndex, endIndex int) (object.Object, *exception.Sha
 func (vm *VM) executeIndexExpression(left, index object.Object) *exception.SharkError {
 	switch left := left.(type) {
 	case *object.Array:
-		if index, ok := index.(*object.Integer); ok {
+		if index, ok := index.(*object.Int64); ok {
 			return vm.executeArrayIndex(left, index)
 		}
 		return newSharkError(exception.SharkErrorNonIndexable, left.Type())
 	case *object.String:
-		if index, ok := index.(*object.Integer); ok {
+		if index, ok := index.(*object.Int64); ok {
 			return vm.executeStringIndex(left, index)
 		}
 		return newSharkError(exception.SharkErrorNonIndexable, left.Type())
 	case *object.Tuple:
-		if index, ok := index.(*object.Integer); ok {
+		if index, ok := index.(*object.Int64); ok {
 			return vm.executeTupleIndex(left, index)
 		}
 		return newSharkError(exception.SharkErrorNonIndexable, left.Type())
@@ -633,7 +634,7 @@ func (vm *VM) executeIndexExpression(left, index object.Object) *exception.Shark
 
 func (vm *VM) executeArrayIndex(array, index object.Object) *exception.SharkError {
 	arrayObject := array.(*object.Array)
-	i := index.(*object.Integer).Value
+	i := index.(*object.Int64).Value
 	m := int64(len(arrayObject.Elements) - 1)
 
 	if i < 0 || i > m {
@@ -645,7 +646,7 @@ func (vm *VM) executeArrayIndex(array, index object.Object) *exception.SharkErro
 
 func (vm *VM) executeStringIndex(str, index object.Object) *exception.SharkError {
 	strObject := str.(*object.String)
-	i := index.(*object.Integer).Value
+	i := index.(*object.Int64).Value
 	m := int64(len(strObject.Value) - 1)
 
 	if i < 0 || i > m {
@@ -657,7 +658,7 @@ func (vm *VM) executeStringIndex(str, index object.Object) *exception.SharkError
 
 func (vm *VM) executeTupleIndex(tpl, index object.Object) *exception.SharkError {
 	tplObject := tpl.(*object.Tuple)
-	i := index.(*object.Integer).Value
+	i := index.(*object.Int64).Value
 
 	if i < 0 || i >= int64(len(tplObject.Elements)) {
 		return vm.push(Null)
@@ -686,7 +687,7 @@ func (vm *VM) executeIndexAssign(left, index, value object.Object) *exception.Sh
 	switch left := left.(type) {
 	case *object.Array:
 		switch index := index.(type) {
-		case *object.Integer:
+		case *object.Int64:
 			return vm.executeArrayIndexAssign(left, index, value)
 		default:
 			return newSharkError(exception.SharkErrorNonIndexable, index.Type())
@@ -700,7 +701,7 @@ func (vm *VM) executeIndexAssign(left, index, value object.Object) *exception.Sh
 
 func (vm *VM) executeArrayIndexAssign(array, index, value object.Object) *exception.SharkError {
 	arrayObject := array.(*object.Array)
-	i := index.(*object.Integer).Value
+	i := index.(*object.Int64).Value
 	m := int64(len(arrayObject.Elements) - 1)
 	if i < 0 || i > m {
 		return newSharkError(exception.SharkErrorIndexOutOfBounds, i)

@@ -2,7 +2,6 @@ package ast
 
 import (
 	"bytes"
-	"shark/object"
 	"shark/token"
 	"strings"
 )
@@ -12,7 +11,7 @@ type TupleLiteral struct {
 	Elements []Expression
 }
 
-func (tl *TupleLiteral) Type() object.Type { return object.TUPLE_OBJ }
+func (tl *TupleLiteral) expressionNode() {}
 
 func (tl *TupleLiteral) TokenPos() token.Position { return tl.Token.Pos }
 

@@ -2,6 +2,7 @@ package object
 
 import (
 	"bytes"
+	"shark/types"
 	"strings"
 )
 
@@ -24,4 +25,19 @@ func (t *Tuple) Inspect() string {
 	return out.String()
 }
 
-func (a *Tuple) Type() Type { return TUPLE_OBJ }
+func (t *Tuple) Type() types.ISharkType {
+	if len(t.Elements) == 0 {
+		return types.TSharkTuple{}
+	}
+
+	if t.Elements[0] == nil {
+		return types.TSharkTuple{Collects: []types.ISharkType{types.TSharkNull{}}}
+	}
+
+	var collects []types.ISharkType
+	for _, e := range t.Elements {
+		collects = append(collects, e.Type())
+	}
+
+	return types.TSharkTuple{Collects: collects}
+}
