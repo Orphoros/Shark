@@ -7,9 +7,9 @@ import (
 )
 
 type CallExpression struct {
-	Token     token.Token
 	Function  Expression
 	Arguments []Expression
+	Token     token.Token
 }
 
 func (ce *CallExpression) expressionNode() {}

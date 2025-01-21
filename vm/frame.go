@@ -7,9 +7,9 @@ import (
 
 type Frame struct {
 	cl          *object.Closure
+	cacheKey    string
 	ip          int
 	basePointer int
-	cacheKey    string
 	canCache    bool
 }
 

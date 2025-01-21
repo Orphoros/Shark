@@ -6,10 +6,10 @@ import (
 )
 
 type IfExpression struct {
-	Token       token.Token
 	Condition   Expression
 	Consequence *BlockStatement
 	Alternative *BlockStatement
+	Token       token.Token
 }
 
 func (ie IfExpression) expressionNode() {}

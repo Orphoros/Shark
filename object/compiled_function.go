@@ -8,11 +8,11 @@ import (
 )
 
 type CompiledFunction struct {
+	ObjType       types.ISharkType
 	Instructions  code.Instructions
 	NumLocals     int
 	NumParameters int
 	NumDefaults   int
-	ObjType       types.ISharkType
 }
 
 func (cf *CompiledFunction) Inspect() string { return "CompiledFunction" }

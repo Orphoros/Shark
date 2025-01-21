@@ -7,8 +7,8 @@ import (
 )
 
 type HashLiteral struct {
-	Token token.Token // the '{' token
 	Pairs map[Expression]Expression
+	Token token.Token
 }
 
 func (hl HashLiteral) expressionNode() {}

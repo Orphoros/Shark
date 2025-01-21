@@ -18,14 +18,14 @@ var False = &object.Boolean{Value: false}
 var Null = &object.Null{}
 
 type VM struct {
-	constants   []object.Object
-	stack       []object.Object
-	sp          int // Always points to the next value. Top of stack is stack[sp-1]
-	globals     []object.Object
-	frames      []*Frame
-	framesIndex int
 	conf        *config.VmConf
 	cache       *expirable.LRU[string, object.Object]
+	constants   []object.Object
+	stack       []object.Object
+	globals     []object.Object
+	frames      []*Frame
+	sp          int
+	framesIndex int
 }
 
 func NewDefault(bytecode *bytecode.Bytecode) *VM {

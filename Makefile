@@ -134,5 +134,26 @@ coverage-report: test ## Serve coverage report in browser
 	@go tool cover -html=./${BUILD_DIR}/coverage.out  
 	@go tool cover -html=./${BUILD_DIR}/coverage.out -o ./${BUILD_DIR}/coverage.html
 
+field-align: ## Run field analysis
+	@echo "Running field analysis..."
+	@fieldalignment -fix ./vm
+	@fieldalignment -fix ./types
+	@fieldalignment -fix ./token
+	@fieldalignment -fix ./serializer
+	@fieldalignment -fix ./parser
+	@fieldalignment -fix ./object
+	@fieldalignment -fix ./lsp
+	@fieldalignment -fix ./lexer
+	@fieldalignment -fix ./internal
+	@fieldalignment -fix ./exception
+	@fieldalignment -fix ./emitter
+	@fieldalignment -fix ./config
+	@fieldalignment -fix ./compiler
+	@fieldalignment -fix ./code
+	@fieldalignment -fix ./cmd
+	@fieldalignment -fix ./bytecode
+	@fieldalignment -fix ./ast
+	@echo "[DONE]: Field analysis completed"
+
 help:
 	@awk 'BEGIN {FS = ":.*##"; printf "\nUsage:\n  make <command> \033[36m\033[0m\n"} /^[a-zA-Z_-]+:.*?##/ { printf "  \033[36m%-15s\033[0m %s\n", $$1, $$2 } /^##@/ { printf "\n\033[1m%s\033[0m\n", substr($$0, 5) } ' $(MAKEFILE_LIST)

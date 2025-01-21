@@ -22,8 +22,8 @@ type Expression interface {
 }
 
 type ExpressionStatement struct {
-	Token      token.Token
 	Expression Expression
+	Token      token.Token
 }
 
 func (es *ExpressionStatement) statementNode()           {}

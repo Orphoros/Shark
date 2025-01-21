@@ -6,9 +6,9 @@ import (
 )
 
 type LetStatement struct {
-	Token token.Token
-	Name  *Identifier
 	Value Expression
+	Name  *Identifier
+	Token token.Token
 }
 
 func (ls *LetStatement) statementNode() {}

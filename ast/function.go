@@ -8,10 +8,10 @@ import (
 )
 
 type FunctionLiteral struct {
-	Token      token.Token
-	Parameters []*Identifier
 	Body       *BlockStatement
 	Name       string
+	Parameters []*Identifier
+	Token      token.Token
 }
 
 func (fl *FunctionLiteral) expressionNode() {}

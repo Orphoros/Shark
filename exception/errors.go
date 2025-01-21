@@ -22,13 +22,13 @@ func NewSharkErrorCause(causeMsg string, pos token.Position) SharkErrorCause {
 }
 
 type SharkError struct {
-	ErrMsg       string
-	ErrCause     []SharkErrorCause
 	ErrHelpMsg   *string
-	ErrCode      SharkErrorCode
-	ErrType      SharkErrorType
 	InputName    *string
 	InputContent *string
+	ErrMsg       string
+	ErrCause     []SharkErrorCause
+	ErrCode      SharkErrorCode
+	ErrType      SharkErrorType
 }
 
 func NewSharkError(errType SharkErrorType, errCode SharkErrorCode, parameters ...interface{}) *SharkError {

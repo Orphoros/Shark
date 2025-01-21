@@ -7,8 +7,8 @@ import (
 )
 
 type TupleLiteral struct {
-	Token    token.Token
 	Elements []Expression
+	Token    token.Token
 }
 
 func (tl *TupleLiteral) expressionNode() {}
@@ -33,9 +33,9 @@ func (tl *TupleLiteral) String() string {
 }
 
 type TupleDeconstruction struct {
-	Token token.Token
-	Names []*Identifier
 	Value Expression
+	Names []*Identifier
+	Token token.Token
 }
 
 func (td *TupleDeconstruction) statementNode() {}

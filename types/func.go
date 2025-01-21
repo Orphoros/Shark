@@ -4,8 +4,8 @@ import "bytes"
 
 type TSharkFuncType struct {
 	ISharkType
-	ArgsList []ISharkType
 	ReturnT  ISharkType
+	ArgsList []ISharkType
 }
 
 func (t TSharkFuncType) Args() []ISharkType {

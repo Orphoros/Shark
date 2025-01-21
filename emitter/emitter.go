@@ -14,12 +14,12 @@ import (
 )
 
 type Emitter struct {
-	constants   []object.Object
-	globals     []object.Object
-	symbolTable *compiler.SymbolTable
 	output      io.Writer
+	symbolTable *compiler.SymbolTable
 	sourceName  *string
 	vmConf      *config.VmConf
+	constants   []object.Object
+	globals     []object.Object
 }
 
 func New(sourceName *string, out io.Writer, vmConf *config.VmConf) *Emitter {

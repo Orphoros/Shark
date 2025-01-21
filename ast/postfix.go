@@ -7,8 +7,8 @@ import (
 
 type PostfixExpression struct {
 	Left     Expression
-	Token    token.Token
 	Operator string
+	Token    token.Token
 }
 
 func (pe *PostfixExpression) expressionNode() {}

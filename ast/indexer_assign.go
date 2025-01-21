@@ -5,10 +5,10 @@ import (
 )
 
 type IndexAssignExpression struct {
-	Token token.Token
 	Left  Expression
 	Index Expression
 	Value Expression
+	Token token.Token
 }
 
 func (ia *IndexAssignExpression) expressionNode() {}

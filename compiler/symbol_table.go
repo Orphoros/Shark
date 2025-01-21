@@ -18,20 +18,20 @@ const (
 )
 
 type Symbol struct {
-	Name         string
-	Mutable      bool
-	VariadicType bool
 	ObjType      types.ISharkType
+	Pos          *token.Position
+	Name         string
 	Scope        SymbolScope
 	Index        int
-	Pos          *token.Position
+	Mutable      bool
+	VariadicType bool
 }
 
 type SymbolTable struct {
 	Outer          *SymbolTable
 	Inner          *SymbolTable
-	FreeSymbols    []Symbol
 	store          map[string]Symbol
+	FreeSymbols    []Symbol
 	numDefinitions int
 }
 

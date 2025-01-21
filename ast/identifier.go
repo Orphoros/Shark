@@ -5,9 +5,9 @@ import (
 )
 
 type Identifier struct {
-	Token        token.Token
-	Value        string
 	DefaultValue *Expression
+	Value        string
+	Token        token.Token
 	Mutable      bool
 	VariadicType bool
 }

@@ -6,8 +6,8 @@ import (
 )
 
 type ArrayLiteral struct {
-	Token    token.Token
 	Elements []Expression
+	Token    token.Token
 }
 
 func (al *ArrayLiteral) expressionNode() {}

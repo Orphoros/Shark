@@ -5,8 +5,8 @@ import (
 )
 
 type StringLiteral struct {
-	Token token.Token
 	Value string
+	Token token.Token
 }
 
 func (sl *StringLiteral) expressionNode() {}

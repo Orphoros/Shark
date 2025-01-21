@@ -9,15 +9,15 @@ import (
 
 // Lexer is a struct that is used to tokenize the input string.
 type Lexer struct {
+	characters   []rune
+	errors       []exception.SharkError
 	position     int
 	readPosition int
-	ch           rune
-	characters   []rune
 	curLine      int
 	prevLine     int
 	curCol       int
 	prevCol      int
-	errors       []exception.SharkError
+	ch           rune
 }
 
 // Creates a new Lexer struct and initializes it with the input string.

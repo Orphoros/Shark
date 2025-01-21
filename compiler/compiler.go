@@ -13,12 +13,12 @@ import (
 )
 
 type Compiler struct {
-	scopes           []CompilationScope
-	scopeIndex       int
-	constants        []object.Object
+	lastCompiledType types.ISharkType
 	symbolTable      *SymbolTable
 	upToPos          *token.Position
-	lastCompiledType types.ISharkType
+	scopes           []CompilationScope
+	constants        []object.Object
+	scopeIndex       int
 }
 
 type EmittedInstruction struct {

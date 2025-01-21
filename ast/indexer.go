@@ -5,9 +5,9 @@ import (
 )
 
 type IndexExpression struct {
-	Token token.Token
 	Left  Expression
 	Index Expression
+	Token token.Token
 }
 
 func (ie *IndexExpression) expressionNode() {}

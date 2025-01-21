@@ -65,12 +65,12 @@ type (
 // Parser is a Shark parser struct.
 type Parser struct {
 	l               *lexer.Lexer
-	curToken        token.Token
-	peekToken       token.Token
-	errors          []exception.SharkError
 	prefixParseFns  map[token.Type]prefixParseFn
 	infixParseFns   map[token.Type]infixParseFn
 	postfixParseFns map[token.Type]postfixParseFn
+	errors          []exception.SharkError
+	curToken        token.Token
+	peekToken       token.Token
 }
 
 // Creates a new Shark parser. It takes a lexer as input.

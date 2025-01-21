@@ -6,9 +6,9 @@ import (
 )
 
 type WhileStatement struct {
-	Token     token.Token
 	Condition Expression
 	Body      *BlockStatement
+	Token     token.Token
 }
 
 func (w *WhileStatement) statementNode() {}
