@@ -330,8 +330,8 @@ func TestResolveUnresolvableFree(t *testing.T) {
 func TestDefineAndResolveFunctionName(t *testing.T) {
 	t.Run("should define and resolve function name", func(t *testing.T) {
 		global := NewSymbolTable()
-		global.DefineFunctionName("a", nil)
-		expected := Symbol{Name: "a", Scope: FunctionScope, Index: 0, Mutable: false, VariadicType: false}
+		global.DefineFunctionName("a", types.TSharkI64{}, nil)
+		expected := Symbol{Name: "a", Scope: FunctionScope, Index: 0, Mutable: false, VariadicType: false, ObjType: types.TSharkI64{}}
 
 		result, ok := global.Resolve(expected.Name)
 		if !ok {
@@ -349,7 +349,7 @@ func TestDefineAndResolveFunctionName(t *testing.T) {
 func TestShadowingFunctionName(t *testing.T) {
 	t.Run("should shadow function name", func(t *testing.T) {
 		global := NewSymbolTable()
-		global.DefineFunctionName("a", nil)
+		global.DefineFunctionName("a", types.TSharkI64{}, nil)
 		global.Define("a", true, true, types.TSharkI64{}, nil)
 
 		expected := Symbol{Name: "a", Scope: GlobalScope, Index: 0, Mutable: true, VariadicType: true, ObjType: types.TSharkI64{}}

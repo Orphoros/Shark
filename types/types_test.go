@@ -96,8 +96,8 @@ func TestPrimitiveTypes(t *testing.T) {
 		if !sharkSpread.Is(TSharkSpread{}) {
 			t.Error("Expected TSharkSpread.Is(TSharkSpread{}) to return true")
 		}
-		if !sharkSpread.Is(TSharkAny{}) {
-			t.Error("Expected TSharkSpread.Is(TSharkAny{}) to return true")
+		if sharkSpread.Is(TSharkAny{}) {
+			t.Error("Expected TSharkSpread.Is(TSharkAny{}) to return false")
 		}
 	})
 
@@ -113,11 +113,11 @@ func TestPrimitiveTypes(t *testing.T) {
 		if sharkSpread.Is(TSharkSpread{Type: TSharkBool{}}) {
 			t.Error("Expected TSharkSpread.Is(TSharkSpread{Type: TSharkBool{}}) to return false")
 		}
-		if !sharkSpread.Is(TSharkAny{}) {
-			t.Error("Expected TSharkSpread.Is(TSharkAny{}) to return true")
+		if sharkSpread.Is(TSharkAny{}) {
+			t.Error("Expected TSharkSpread.Is(TSharkAny{}) to return false")
 		}
-		if sharkSpread.Is(TSharkSpread{}) {
-			t.Error("Expected TSharkSpread.Is(TSharkSpread{}) to return false")
+		if !sharkSpread.Is(TSharkSpread{}) {
+			t.Error("Expected TSharkSpread.Is(TSharkSpread{}) to return true")
 		}
 		if sharkSpread.Is(TSharkSpread{Type: TSharkString{}}) {
 			t.Error("Expected TSharkSpread.Is(TSharkSpread{Type: TSharkString{}}) to return false")
@@ -140,15 +140,15 @@ func TestCollectionTypes(t *testing.T) {
 	})
 
 	t.Run("TSharkArray Typed", func(t *testing.T) {
-		sharkArray := TSharkArray{Collects: TSharkI64{}}
+		sharkArray := TSharkArray{Collection: TSharkI64{}}
 
 		if sharkArray.SharkTypeString() != "array<i64>" {
 			t.Errorf("Expected TSharkArray.SharkTypeString() to return 'array<i64>', got %s", sharkArray.SharkTypeString())
 		}
-		if !sharkArray.Is(TSharkArray{Collects: TSharkI64{}}) {
+		if !sharkArray.Is(TSharkArray{Collection: TSharkI64{}}) {
 			t.Error("Expected TSharkArray.Is(TSharkArray{Collects: TSharkI64{}}) to return true")
 		}
-		if sharkArray.Is(TSharkArray{Collects: TSharkBool{}}) {
+		if sharkArray.Is(TSharkArray{Collection: TSharkBool{}}) {
 			t.Error("Expected TSharkArray.Is(TSharkArray{Collects: TSharkBool{}}) to return false")
 		}
 		if sharkArray.Is(TSharkAny{}) {
@@ -157,10 +157,10 @@ func TestCollectionTypes(t *testing.T) {
 		if !sharkArray.Is(TSharkArray{}) {
 			t.Error("Expected TSharkArray.Is(TSharkArray{}) to return true")
 		}
-		if !sharkArray.Is(TSharkArray{Collects: TSharkAny{}}) {
-			t.Error("Expected TSharkArray.Is(TSharkArray{Collects: TSharkAny{}}) to return true")
+		if sharkArray.Is(TSharkArray{Collection: TSharkAny{}}) {
+			t.Error("Expected TSharkArray.Is(TSharkArray{Collects: TSharkAny{}}) to return false")
 		}
-		if sharkArray.Is(TSharkArray{Collects: TSharkString{}}) {
+		if sharkArray.Is(TSharkArray{Collection: TSharkString{}}) {
 			t.Error("Expected TSharkArray.Is(TSharkArray{Collects: TSharkString{}}) to return false")
 		}
 	})
@@ -190,11 +190,11 @@ func TestCollectionTypes(t *testing.T) {
 		if sharkMap.Is(TSharkHashMap{Indexes: TSharkBool{}, Collects: TSharkString{}}) {
 			t.Error("Expected TSharkMap.Is(TSharkMap{Indexes: TSharkBool{}, Collects: TSharkString{}}) to return false")
 		}
-		if !sharkMap.Is(TSharkHashMap{Indexes: TSharkI64{}, Collects: TSharkAny{}}) {
-			t.Error("Expected TSharkMap.Is(TSharkMap{Indexes: TSharkI64{}, Collects: TSharkAny{}}) to return true")
+		if sharkMap.Is(TSharkHashMap{Indexes: TSharkI64{}, Collects: TSharkAny{}}) {
+			t.Error("Expected TSharkMap.Is(TSharkMap{Indexes: TSharkI64{}, Collects: TSharkAny{}}) to return false")
 		}
-		if !sharkMap.Is(TSharkHashMap{Indexes: TSharkAny{}, Collects: TSharkString{}}) {
-			t.Error("Expected TSharkMap.Is(TSharkMap{Indexes: TSharkAny{}, Collects: TSharkString{}}) to return true")
+		if sharkMap.Is(TSharkHashMap{Indexes: TSharkAny{}, Collects: TSharkString{}}) {
+			t.Error("Expected TSharkMap.Is(TSharkMap{Indexes: TSharkAny{}, Collects: TSharkString{}}) to return false")
 		}
 		if !sharkMap.Is(TSharkHashMap{}) {
 			t.Error("Expected TSharkMap.Is(TSharkMap{}) to return true")
@@ -215,15 +215,15 @@ func TestCollectionTypes(t *testing.T) {
 	})
 
 	t.Run("TSharkTuple Typed", func(t *testing.T) {
-		sharkTuple := TSharkTuple{Collects: []ISharkType{TSharkI64{}}}
+		sharkTuple := TSharkTuple{Collection: []ISharkType{TSharkI64{}}}
 
 		if sharkTuple.SharkTypeString() != "tuple<i64>" {
 			t.Errorf("Expected TSharkTuple.SharkTypeString() to return 'tuple<i64>', got %s", sharkTuple.SharkTypeString())
 		}
-		if !sharkTuple.Is(TSharkTuple{Collects: []ISharkType{TSharkI64{}}}) {
+		if !sharkTuple.Is(TSharkTuple{Collection: []ISharkType{TSharkI64{}}}) {
 			t.Error("Expected TSharkTuple.Is(TSharkTuple{Collects: []ISharkType{TSharkI64{}}}) to return true")
 		}
-		if sharkTuple.Is(TSharkTuple{Collects: []ISharkType{TSharkBool{}}}) {
+		if sharkTuple.Is(TSharkTuple{Collection: []ISharkType{TSharkBool{}}}) {
 			t.Error("Expected TSharkTuple.Is(TSharkTuple{Collects: []ISharkType{TSharkBool{}}}) to return false")
 		}
 		if sharkTuple.Is(TSharkAny{}) {
@@ -232,21 +232,21 @@ func TestCollectionTypes(t *testing.T) {
 		if !sharkTuple.Is(TSharkTuple{}) {
 			t.Error("Expected TSharkTuple.Is(TSharkTuple{}) to return true")
 		}
-		if sharkTuple.Is(TSharkTuple{Collects: []ISharkType{TSharkString{}}}) {
+		if sharkTuple.Is(TSharkTuple{Collection: []ISharkType{TSharkString{}}}) {
 			t.Error("Expected TSharkTuple.Is(TSharkTuple{Collects: []ISharkType{TSharkString{}}}) to return false")
 		}
 	})
 
 	t.Run("TSharkTuple Typed with multiple types", func(t *testing.T) {
-		sharkTuple := TSharkTuple{Collects: []ISharkType{TSharkI64{}, TSharkString{}}}
+		sharkTuple := TSharkTuple{Collection: []ISharkType{TSharkI64{}, TSharkString{}}}
 
 		if sharkTuple.SharkTypeString() != "tuple<i64,string>" {
 			t.Errorf("Expected TSharkTuple.SharkTypeString() to return 'tuple<i64,string>', got %s", sharkTuple.SharkTypeString())
 		}
-		if !sharkTuple.Is(TSharkTuple{Collects: []ISharkType{TSharkI64{}, TSharkString{}}}) {
+		if !sharkTuple.Is(TSharkTuple{Collection: []ISharkType{TSharkI64{}, TSharkString{}}}) {
 			t.Error("Expected TSharkTuple.Is(TSharkTuple{Collects: []ISharkType{TSharkI64{}, TSharkString{}}}) to return true")
 		}
-		if sharkTuple.Is(TSharkTuple{Collects: []ISharkType{TSharkBool{}}}) {
+		if sharkTuple.Is(TSharkTuple{Collection: []ISharkType{TSharkBool{}}}) {
 			t.Error("Expected TSharkTuple.Is(TSharkTuple{Collects: []ISharkType{TSharkBool{}}}) to return false")
 		}
 		if sharkTuple.Is(TSharkAny{}) {
@@ -255,8 +255,56 @@ func TestCollectionTypes(t *testing.T) {
 		if !sharkTuple.Is(TSharkTuple{}) {
 			t.Error("Expected TSharkTuple.Is(TSharkTuple{}) to return true")
 		}
-		if sharkTuple.Is(TSharkTuple{Collects: []ISharkType{TSharkString{}, TSharkI64{}}}) {
+		if sharkTuple.Is(TSharkTuple{Collection: []ISharkType{TSharkString{}, TSharkI64{}}}) {
 			t.Error("Expected TSharkTuple.Is(TSharkTuple{Collects: []ISharkType{TSharkString{}, TSharkI64{}}}) to return false")
+		}
+	})
+
+	t.Run("should validate collection interface type", func(t *testing.T) {
+		var sharkCollection TSharkCollection
+
+		if sharkCollection.SharkTypeString() != "collection<>" {
+			t.Errorf("Expected TSharkCollection.SharkTypeString() to return 'collection<>', got %s", sharkCollection.SharkTypeString())
+		}
+
+		if !sharkCollection.Is(TSharkCollection{}) {
+			t.Error("Expected TSharkCollection.Is(TSharkCollection{}) to return true")
+		}
+
+		if sharkCollection.Is(TSharkAny{}) {
+			t.Error("Expected TSharkCollection.Is(TSharkAny{}) to return false")
+		}
+
+		if !sharkCollection.Is(TSharkArray{}) {
+			t.Error("Expected TSharkCollection.Is(TSharkArray{}) to return true")
+		}
+
+		if sharkCollection.Is(TSharkBool{}) {
+			t.Error("Expected TSharkCollection.Is(TSharkBool{}) to return false")
+		}
+	})
+
+	t.Run("should validate collection interface type with collection", func(t *testing.T) {
+		sharkCollection := TSharkCollection{Collection: []ISharkType{TSharkI64{}}}
+
+		if sharkCollection.SharkTypeString() != "collection<i64>" {
+			t.Errorf("Expected TSharkCollection.SharkTypeString() to return 'collection<i64>', got %s", sharkCollection.SharkTypeString())
+		}
+
+		if !sharkCollection.Is(TSharkCollection{Collection: []ISharkType{TSharkI64{}}}) {
+			t.Error("Expected TSharkCollection.Is(TSharkCollection{Collection: []ISharkType{TSharkI64{}}}) to return true")
+		}
+
+		if sharkCollection.Is(TSharkCollection{Collection: []ISharkType{TSharkBool{}}}) {
+			t.Error("Expected TSharkCollection.Is(TSharkCollection{Collection: []ISharkType{TSharkBool{}}}) to return false")
+		}
+
+		if sharkCollection.Is(TSharkAny{}) {
+			t.Error("Expected TSharkCollection.Is(TSharkAny{}) to return false")
+		}
+
+		if !sharkCollection.Is(TSharkArray{Collection: TSharkI64{}}) {
+			t.Error("Expected TSharkCollection.Is(TSharkArray{Collection: TSharkI64{}}) to return true")
 		}
 	})
 }
@@ -418,21 +466,21 @@ func TestVariadicTypes(t *testing.T) {
 	})
 
 	t.Run("Array with TSharkVariadic unenclosed", func(t *testing.T) {
-		sharkArray := TSharkArray{Collects: TSharkVariadic{}}
+		sharkArray := TSharkArray{Collection: TSharkVariadic{}}
 
 		if sharkArray.SharkTypeString() != "array<T>" {
 			t.Errorf("Expected TSharkArray.SharkTypeString() to return 'array<T>', got %s", sharkArray.SharkTypeString())
 		}
-		if !sharkArray.Is(TSharkArray{Collects: TSharkVariadic{Enclosed: TSharkI64{}}}) {
+		if !sharkArray.Is(TSharkArray{Collection: TSharkVariadic{Enclosed: TSharkI64{}}}) {
 			t.Error("Expected TSharkArray.Is(TSharkArray{Collects: TSharkVariadic{Enclosed: TSharkI64{}}}) to return true")
 		}
-		if !sharkArray.Is(TSharkArray{Collects: TSharkVariadic{Enclosed: TSharkBool{}}}) {
+		if !sharkArray.Is(TSharkArray{Collection: TSharkVariadic{Enclosed: TSharkBool{}}}) {
 			t.Error("Expected TSharkArray.Is(TSharkArray{Collects: TSharkVariadic{Enclosed: TSharkBool{}}}) to return false")
 		}
 		if sharkArray.Is(TSharkAny{}) {
 			t.Error("Expected TSharkArray.Is(TSharkAny{}) to return false")
 		}
-		if !sharkArray.Is(TSharkArray{Collects: TSharkI64{}}) {
+		if !sharkArray.Is(TSharkArray{Collection: TSharkI64{}}) {
 			t.Error("Expected TSharkArray.Is(TSharkArray{Collects: TSharkI64{}}) to return true")
 		}
 	})

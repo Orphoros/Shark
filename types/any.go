@@ -6,4 +6,11 @@ type TSharkAny struct {
 
 func (TSharkAny) SharkTypeString() string { return "any" }
 
-func (TSharkAny) Is(sharkType ISharkType) bool { return true }
+func (TSharkAny) Is(sharkType ISharkType) bool {
+	switch sharkType.(type) {
+	case TSharkSpread, TSharkOptional:
+		return false
+	default:
+		return true
+	}
+}

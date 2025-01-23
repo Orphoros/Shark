@@ -22,14 +22,62 @@ var Builtins = []struct {
 	Name    string
 	Builtin *Builtin
 }{
-	{"exit", &Builtin{Fn: Exit, CanCache: true, FuncType: types.TSharkFuncType{ArgsList: []types.ISharkType{types.TSharkI64{}}, ReturnT: types.TSharkNull{}}}},
-	{"puts", &Builtin{Fn: Puts, CanCache: false, FuncType: types.TSharkFuncType{ArgsList: []types.ISharkType{types.TSharkSpread{Type: types.TSharkVariadic{}}}, ReturnT: types.TSharkNull{}}}},
-	{"len", &Builtin{Fn: Len, CanCache: true, FuncType: types.TSharkFuncType{ArgsList: []types.ISharkType{types.TSharkArray{Collects: types.TSharkVariadic{}}}, ReturnT: types.TSharkI64{}}}},
-	{"first", &Builtin{Fn: First, CanCache: true, FuncType: types.TSharkFuncType{ArgsList: []types.ISharkType{types.TSharkArray{Collects: types.TSharkVariadic{}}}, ReturnT: types.TSharkAny{}}}},
-	{"last", &Builtin{Fn: Last, CanCache: true, FuncType: types.TSharkFuncType{ArgsList: []types.ISharkType{types.TSharkArray{Collects: types.TSharkVariadic{}}}, ReturnT: types.TSharkAny{}}}},
-	{"rest", &Builtin{Fn: Rest, CanCache: true, FuncType: types.TSharkFuncType{ArgsList: []types.ISharkType{types.TSharkArray{Collects: types.TSharkVariadic{}}}, ReturnT: types.TSharkArray{Collects: types.TSharkVariadic{}}}}},
-	{"push", &Builtin{Fn: Push, CanCache: true, FuncType: types.TSharkFuncType{ArgsList: []types.ISharkType{types.TSharkArray{Collects: types.TSharkVariadic{}}, types.TSharkVariadic{}}, ReturnT: types.TSharkArray{Collects: types.TSharkVariadic{}}}}},
-	{"type", &Builtin{Fn: ObjType, CanCache: true, FuncType: types.TSharkFuncType{ArgsList: []types.ISharkType{types.TSharkAny{}}, ReturnT: types.TSharkString{}}}},
+	{"exit",
+		&Builtin{
+			Fn:       Exit,
+			CanCache: true,
+			FuncType: types.TSharkFuncType{ArgsList: []types.ISharkType{types.TSharkI64{}}, ReturnT: types.TSharkNull{}},
+		},
+	},
+	{"puts",
+		&Builtin{
+			Fn:       Puts,
+			CanCache: false,
+			FuncType: types.TSharkFuncType{ArgsList: []types.ISharkType{types.TSharkSpread{Type: types.TSharkAny{}}}, ReturnT: types.TSharkNull{}},
+		},
+	},
+	{"len",
+		&Builtin{
+			Fn:       Len,
+			CanCache: true,
+			FuncType: types.TSharkFuncType{ArgsList: []types.ISharkType{types.TSharkCollection{Collection: []types.ISharkType{types.TSharkSpread{Type: types.TSharkAny{}}}}}, ReturnT: types.TSharkI64{}},
+		},
+	},
+	{"first",
+		&Builtin{
+			Fn:       First,
+			CanCache: true,
+			FuncType: types.TSharkFuncType{ArgsList: []types.ISharkType{types.TSharkCollection{Collection: []types.ISharkType{types.TSharkSpread{Type: types.TSharkVariadic{}}}}}, ReturnT: types.TSharkVariadic{}},
+		},
+	},
+	{"last",
+		&Builtin{
+			Fn:       Last,
+			CanCache: true,
+			FuncType: types.TSharkFuncType{ArgsList: []types.ISharkType{types.TSharkCollection{Collection: []types.ISharkType{types.TSharkSpread{Type: types.TSharkVariadic{}}}}}, ReturnT: types.TSharkVariadic{}},
+		},
+	},
+	{"rest",
+		&Builtin{
+			Fn:       Rest,
+			CanCache: true,
+			FuncType: types.TSharkFuncType{ArgsList: []types.ISharkType{types.TSharkCollection{Collection: []types.ISharkType{types.TSharkSpread{Type: types.TSharkVariadic{}}}}}, ReturnT: types.TSharkArray{Collection: types.TSharkVariadic{}}},
+		},
+	},
+	{"push",
+		&Builtin{
+			Fn:       Push,
+			CanCache: true,
+			FuncType: types.TSharkFuncType{ArgsList: []types.ISharkType{types.TSharkArray{Collection: types.TSharkVariadic{}}, types.TSharkVariadic{}}, ReturnT: types.TSharkArray{Collection: types.TSharkVariadic{}}},
+		},
+	},
+	{"type",
+		&Builtin{
+			Fn:       ObjType,
+			CanCache: true,
+			FuncType: types.TSharkFuncType{ArgsList: []types.ISharkType{types.TSharkAny{}}, ReturnT: types.TSharkString{}},
+		},
+	},
 }
 
 func ObjType(args ...Object) Object {
@@ -50,8 +98,9 @@ func Len(args ...Object) Object {
 		return &Int64{Value: int64(len(arg.Value))}
 	case *Array:
 		return &Int64{Value: int64(len(arg.Elements))}
-	case *Hash:
-		return &Int64{Value: int64(len(arg.Pairs))}
+	// FIXME: Make new type collection to support hash maps for length
+	// case *Hash:
+	// 	return &Int64{Value: int64(len(arg.Pairs))}
 	case *Tuple:
 		return &Int64{Value: int64(len(arg.Elements))}
 	default:
@@ -129,12 +178,6 @@ func Rest(args ...Object) Object {
 		return newError("wrong number of arguments. got=%d, want=1", len(args))
 	}
 
-	acceptedType := types.TSharkArray{Collects: types.TSharkVariadic{}}
-
-	if !args[0].Type().Is(acceptedType) {
-		return newError("argument to rest() must be %s, got %s", acceptedType.SharkTypeString(), args[0].Type().SharkTypeString())
-	}
-
 	arr := args[0].(*Array)
 	length := len(arr.Elements)
 	if length > 0 {
@@ -149,12 +192,6 @@ func Rest(args ...Object) Object {
 func Push(args ...Object) Object {
 	if len(args) != 2 {
 		return newError("wrong number of arguments. got=%d, want=2", len(args))
-	}
-
-	acceptedType := types.TSharkArray{Collects: types.TSharkVariadic{}}
-
-	if !args[0].Type().Is(acceptedType) {
-		return newError("argument to push() must be %s, got %s", acceptedType.SharkTypeString(), args[0].Type().SharkTypeString())
 	}
 
 	arr := args[0].(*Array)

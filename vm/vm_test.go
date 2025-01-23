@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"shark/ast"
 	"shark/compiler"
-	"shark/exception"
 	"shark/lexer"
 	"shark/object"
 	"shark/parser"
@@ -503,47 +502,6 @@ func TestCallingFunctionsWithArgumentsAndBindings(t *testing.T) {
 	})
 }
 
-func TestCallingFunctionWithWrongArguments(t *testing.T) {
-	t.Run("should evaluate calling functions with wrong arguments", func(t *testing.T) {
-		tests := []vmTestCase{
-			{
-				input: `
-			() => { 1; }(1);
-			`,
-				expected: exception.SharkErrorArgumentNumberMismatch,
-			},
-			{
-				input: `
-			(a) => { a; }();
-			`,
-				expected: exception.SharkErrorArgumentNumberMismatch,
-			},
-			{
-				input: `
-			(a, b) => { a + b; }(1);
-			`,
-				expected: exception.SharkErrorArgumentNumberMismatch,
-			},
-		}
-
-		for _, tt := range tests {
-			program := parse(tt.input)
-			comp := compiler.New()
-			if err, _ := comp.Compile(program); err != nil {
-				t.Fatalf("compiler error: %+v", err)
-			}
-			vm := NewDefault(comp.Bytecode())
-			if err := vm.Run(); err == nil {
-				t.Fatalf("expected error, got none")
-			} else {
-				if err.ErrCode != tt.expected {
-					t.Fatalf("expected error %q, got %q", tt.expected, err)
-				}
-			}
-		}
-	})
-}
-
 func TestFunctionWithoutReturnValue(t *testing.T) {
 	t.Run("should evaluate function without return value", func(t *testing.T) {
 		tests := []vmTestCase{
@@ -889,8 +847,6 @@ func TestBuiltinFunctions(t *testing.T) {
 			{`len("four")`, 4},
 			{`len("hello world")`, 11},
 			{`len((true, 2, "a"))`, 3},
-			{`len(1)`, &object.Error{Message: "argument to `len` not supported, got i64"}},
-			{`len("one", "two")`, &object.Error{Message: "wrong number of arguments. got=2, want=1"}},
 			{`len([1, 2, 3])`, 3},
 			{`len([])`, 0},
 		}
@@ -904,7 +860,6 @@ func TestBuiltinFunctions(t *testing.T) {
 			{`first([])`, Null},
 			{`first((1, true, "a"))`, 1},
 			{`first("hello")`, "h"},
-			{`first(1)`, &object.Error{Message: "argument to `first` not supported, got i64"}},
 		}
 
 		runVmTests(t, tests)
@@ -916,7 +871,6 @@ func TestBuiltinFunctions(t *testing.T) {
 			{`last([])`, Null},
 			{`last("hello")`, "o"},
 			{`last((1, true, "a"))`, "a"},
-			{`last(1)`, &object.Error{Message: "argument to `last` not supported, got i64"}},
 		}
 
 		runVmTests(t, tests)
@@ -926,7 +880,6 @@ func TestBuiltinFunctions(t *testing.T) {
 		tests := []vmTestCase{
 			{`rest([1, 2, 3])`, []int{2, 3}},
 			{`rest([])`, Null},
-			{`rest(1)`, &object.Error{Message: "argument to rest() must be array<T>, got i64"}},
 		}
 
 		runVmTests(t, tests)
@@ -935,7 +888,6 @@ func TestBuiltinFunctions(t *testing.T) {
 	t.Run("should evaluate push builtin functions", func(t *testing.T) {
 		tests := []vmTestCase{
 			{`push([], 1)`, []int{1}},
-			{`push(1, 1)`, &object.Error{Message: "argument to push() must be array<T>, got i64"}},
 		}
 
 		runVmTests(t, tests)
@@ -948,7 +900,7 @@ func TestBuiltinFunctions(t *testing.T) {
 			{`type([1, 2, 3])`, "array<i64>"},
 			{`type((1, true, "a"))`, "tuple<i64,bool,string>"},
 			{`type({1: 1})`, "hashmap<i64,i64>"},
-			{`type(puts)`, "func<(...T)->null>"},
+			{`type(puts)`, "func<(...any)->null>"},
 			{`type(type)`, "func<(any)->string>"},
 			{`type(type(1))`, "string"},
 		}

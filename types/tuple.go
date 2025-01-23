@@ -4,30 +4,19 @@ import "bytes"
 
 type TSharkTuple struct {
 	ISharkType
-	Collects []ISharkType
-}
-
-func (t TSharkTuple) CollectionOf() ISharkType {
-	if t.Collects == nil {
-		return TSharkNull{}
-	}
-	for i := 1; i < len(t.Collects); i++ {
-		if !t.Collects[i].Is(t.Collects[i-1]) {
-			return TSharkAny{}
-		}
-	}
-	return t.Collects[0]
+	ISharkCollection
+	Collection []ISharkType
 }
 
 func (t TSharkTuple) SharkTypeString() string {
-	if t.Collects == nil {
+	if t.Collection == nil {
 		return "tuple<>"
 	}
 	var buf bytes.Buffer
 	buf.WriteString("tuple<")
-	for i, collect := range t.Collects {
+	for i, collect := range t.Collection {
 		buf.WriteString(collect.SharkTypeString())
-		if i != len(t.Collects)-1 {
+		if i != len(t.Collection)-1 {
 			buf.WriteString(",")
 		}
 	}
@@ -38,14 +27,14 @@ func (t TSharkTuple) SharkTypeString() string {
 func (t TSharkTuple) Is(sharkType ISharkType) bool {
 	switch sharkType := sharkType.(type) {
 	case TSharkTuple:
-		if sharkType.Collects == nil {
+		if sharkType.Collection == nil {
 			return true
 		}
-		if len(sharkType.Collects) != len(t.Collects) {
+		if len(sharkType.Collection) != len(t.Collection) {
 			return false
 		}
-		for i := 0; i < len(t.Collects); i++ {
-			if !t.Collects[i].Is(sharkType.Collects[i]) {
+		for i := 0; i < len(t.Collection); i++ {
+			if !t.Collection[i].Is(sharkType.Collection[i]) {
 				return false
 			}
 		}
@@ -53,4 +42,8 @@ func (t TSharkTuple) Is(sharkType ISharkType) bool {
 	default:
 		return false
 	}
+}
+
+func (t TSharkTuple) Collects() []ISharkType {
+	return t.Collection
 }

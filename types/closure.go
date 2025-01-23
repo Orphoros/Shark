@@ -17,6 +17,9 @@ func (t TSharkClosure) Is(sharkType ISharkType) bool {
 		if tt.FuncType == nil {
 			return true
 		}
+		if t.FuncType == nil {
+			return false
+		}
 		return t.FuncType.Is(tt.FuncType)
 	}
 	return false

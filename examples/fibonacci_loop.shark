@@ -20,4 +20,4 @@ let fibonacci = (number = 35) => {
     return b;
 };
 
-puts(fibonacci())
+puts(fibonacci());

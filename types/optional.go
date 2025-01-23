@@ -1,20 +1,20 @@
 package types
 
-type TSharkSpread struct {
+type TSharkOptional struct {
 	ISharkType
 	Type ISharkType
 }
 
-func (t TSharkSpread) SharkTypeString() string {
+func (t TSharkOptional) SharkTypeString() string {
 	if t.Type == nil {
-		return "..."
+		return "?"
 	}
-	return "..." + t.Type.SharkTypeString()
+	return t.Type.SharkTypeString() + "?"
 }
 
-func (t TSharkSpread) Is(sharkType ISharkType) bool {
+func (t TSharkOptional) Is(sharkType ISharkType) bool {
 	switch sharkType := sharkType.(type) {
-	case TSharkSpread:
+	case TSharkOptional:
 		if sharkType.Type == nil {
 			return true
 		}

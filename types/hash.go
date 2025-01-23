@@ -27,7 +27,7 @@ func (t TSharkHashMap) Is(sharkType ISharkType) bool {
 		if t.Indexes == nil || t.Collects == nil {
 			return false
 		}
-		if sharkType.Indexes.Is(t.Indexes) && sharkType.Collects.Is(t.Collects) {
+		if t.Indexes.Is(sharkType.Indexes) && t.Collects.Is(sharkType.Collects) {
 			return true
 		}
 		return false

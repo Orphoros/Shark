@@ -31,7 +31,7 @@ func (t *Tuple) Type() types.ISharkType {
 	}
 
 	if t.Elements[0] == nil {
-		return types.TSharkTuple{Collects: []types.ISharkType{types.TSharkNull{}}}
+		return types.TSharkTuple{Collection: []types.ISharkType{types.TSharkNull{}}}
 	}
 
 	var collects []types.ISharkType
@@ -39,5 +39,5 @@ func (t *Tuple) Type() types.ISharkType {
 		collects = append(collects, e.Type())
 	}
 
-	return types.TSharkTuple{Collects: collects}
+	return types.TSharkTuple{Collection: collects}
 }

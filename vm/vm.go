@@ -430,17 +430,17 @@ func (vm *VM) executeBinaryOperation(op code.Opcode) *exception.SharkError {
 			vm.push(&object.Int64{Value: result})
 			return nil
 		default:
-			return newSharkError(exception.SharkErrorMismatchedTypes, "Integer", right.Type())
+			return newSharkError(exception.SharkErrorMismatchedTypes, "Integer", right.Type().SharkTypeString())
 		}
 	case *object.String:
 		switch rightValue := right.(type) {
 		case *object.String:
 			return vm.executeBinaryStringOperation(op, leftValue, rightValue)
 		default:
-			return newSharkError(exception.SharkErrorMismatchedTypes, "String", right.Type())
+			return newSharkError(exception.SharkErrorMismatchedTypes, "String", right.Type().SharkTypeString())
 		}
 	default:
-		return newSharkError(exception.SharkErrorUnknownType, left.Type())
+		return newSharkError(exception.SharkErrorUnknownType, left.Type().SharkTypeString())
 	}
 }
 
@@ -475,7 +475,7 @@ func (vm *VM) executeComparison(op code.Opcode) *exception.SharkError {
 		}
 	}
 
-	return newSharkError(exception.SharkErrorMismatchedTypes, left.Type(), right.Type())
+	return newSharkError(exception.SharkErrorMismatchedTypes, left.Type().SharkTypeString(), right.Type().SharkTypeString())
 }
 
 func (vm *VM) executeBooleanComparison(op code.Opcode, left, right object.Object) *exception.SharkError {
@@ -545,7 +545,7 @@ func (vm *VM) executeMinusOperator() *exception.SharkError {
 	operand := vm.pop()
 	obj, ok := operand.(*object.Int64)
 	if !ok {
-		return newSharkError(exception.SharkErrorMismatchedTypes, operand.Type())
+		return newSharkError(exception.SharkErrorMismatchedTypes, operand.Type().SharkTypeString())
 	}
 
 	value := obj.Value
@@ -596,7 +596,7 @@ func (vm *VM) buildHash(startIndex, endIndex int) (object.Object, *exception.Sha
 		hashKey, ok := key.(object.Hashable)
 		if !ok {
 			return nil, &exception.SharkError{
-				ErrMsg:  fmt.Sprintf("cannot hash %s as hash key", key.Type()),
+				ErrMsg:  fmt.Sprintf("cannot hash %s as hash key", key.Type().SharkTypeString()),
 				ErrCode: exception.SharkErrorNonHashable,
 				ErrType: exception.SharkErrorTypeRuntime,
 			}
@@ -614,21 +614,21 @@ func (vm *VM) executeIndexExpression(left, index object.Object) *exception.Shark
 		if index, ok := index.(*object.Int64); ok {
 			return vm.executeArrayIndex(left, index)
 		}
-		return newSharkError(exception.SharkErrorNonIndexable, left.Type())
+		return newSharkError(exception.SharkErrorNonIndexable, left.Type().SharkTypeString())
 	case *object.String:
 		if index, ok := index.(*object.Int64); ok {
 			return vm.executeStringIndex(left, index)
 		}
-		return newSharkError(exception.SharkErrorNonIndexable, left.Type())
+		return newSharkError(exception.SharkErrorNonIndexable, left.Type().SharkTypeString())
 	case *object.Tuple:
 		if index, ok := index.(*object.Int64); ok {
 			return vm.executeTupleIndex(left, index)
 		}
-		return newSharkError(exception.SharkErrorNonIndexable, left.Type())
+		return newSharkError(exception.SharkErrorNonIndexable, left.Type().SharkTypeString())
 	case *object.Hash:
 		return vm.executeHashIndex(left, index)
 	default:
-		return newSharkError(exception.SharkErrorNonIndexable, left.Type())
+		return newSharkError(exception.SharkErrorNonIndexable, left.Type().SharkTypeString())
 	}
 }
 
@@ -672,7 +672,7 @@ func (vm *VM) executeHashIndex(hash, index object.Object) *exception.SharkError 
 
 	key, ok := index.(object.Hashable)
 	if !ok {
-		return newSharkError(exception.SharkErrorNonHashable, index.Type())
+		return newSharkError(exception.SharkErrorNonHashable, index.Type().SharkTypeString())
 	}
 
 	pair, ok := hashObject.Pairs[key.HashKey()]
@@ -690,12 +690,12 @@ func (vm *VM) executeIndexAssign(left, index, value object.Object) *exception.Sh
 		case *object.Int64:
 			return vm.executeArrayIndexAssign(left, index, value)
 		default:
-			return newSharkError(exception.SharkErrorNonIndexable, index.Type())
+			return newSharkError(exception.SharkErrorNonIndexable, index.Type().SharkTypeString())
 		}
 	case *object.Hash:
 		return vm.executeHashIndexAssign(left, index, value)
 	default:
-		return newSharkError(exception.SharkErrorNonIndexable, left.Type())
+		return newSharkError(exception.SharkErrorNonIndexable, left.Type().SharkTypeString())
 	}
 }
 
@@ -714,7 +714,7 @@ func (vm *VM) executeHashIndexAssign(hash, index, value object.Object) *exceptio
 	hashObject := hash.(*object.Hash)
 	key, ok := index.(object.Hashable)
 	if !ok {
-		return newSharkError(exception.SharkErrorNonHashable, index.Type())
+		return newSharkError(exception.SharkErrorNonHashable, index.Type().SharkTypeString())
 	}
 	hashObject.Pairs[key.HashKey()] = object.HashPair{Key: index, Value: value}
 	return vm.push(hashObject)
@@ -839,7 +839,7 @@ func (vm *VM) executeCall(numArgs int) *exception.SharkError {
 		return nil
 
 	default:
-		return newSharkError(exception.SharkErrorNonFunctionCall, callee.Type())
+		return newSharkError(exception.SharkErrorNonFunctionCall, callee.Type().SharkTypeString())
 	}
 }
 
@@ -864,7 +864,7 @@ func (vm *VM) createCacheKey(callee object.Object, args []object.Object) (string
 			keyBuilder.WriteString(",")
 		}
 		if hashableArg, ok := arg.(object.Hashable); ok {
-			keyBuilder.WriteString(fmt.Sprintf("%s:%v", arg.Type(), hashableArg.HashKey()))
+			keyBuilder.WriteString(fmt.Sprintf("%s:%v", arg.Type().SharkTypeString(), hashableArg.HashKey()))
 		} else {
 			return "", false
 		}

@@ -29,7 +29,7 @@ func TestStringHashKey(t *testing.T) {
 func TestObjects(t *testing.T) {
 	t.Run("should return the correct array object", func(t *testing.T) {
 		arrayObj := &Array{Elements: []Object{&Int64{Value: 1}, &Int64{Value: 2}, &Int64{Value: 3}}} // [1, 2, 3]
-		expectedType := types.TSharkArray{Collects: types.TSharkI64{}}
+		expectedType := types.TSharkArray{Collection: types.TSharkI64{}}
 		if !arrayObj.Type().Is(expectedType) {
 			t.Errorf("wrong type. expected=%s, got=%s", expectedType.SharkTypeString(), arrayObj.Type().SharkTypeString())
 		}

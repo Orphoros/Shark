@@ -136,8 +136,8 @@ func (s *SymbolTable) DefineFree(original Symbol, mutable, variadicType bool, ob
 	return symbol
 }
 
-func (s *SymbolTable) DefineFunctionName(name string, pos *token.Position) Symbol {
-	symbol := Symbol{Name: name, Scope: FunctionScope, Index: 0, Pos: pos}
+func (s *SymbolTable) DefineFunctionName(name string, objType types.ISharkType, pos *token.Position) Symbol {
+	symbol := Symbol{Name: name, Scope: FunctionScope, Index: 0, Pos: pos, ObjType: objType}
 
 	s.store[name] = symbol
 
