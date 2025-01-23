@@ -14,12 +14,12 @@ type String struct {
 func (s *String) Inspect() string { return s.Value }
 
 func (s *String) HashKey() HashKey {
-	// TODO: Implement separate chaining to handle collisions
 	h := fnv.New64a()
 	if write, err := h.Write([]byte(s.Value)); write != len(s.Value) || err != nil {
 		return HashKey{}
 	}
-	return HashKey{Type: s.Type(), Value: h.Sum64()}
+	hashValue := h.Sum64()
+	return HashKey{Type: s.Type(), Value: hashValue ^ uint64(len(s.Value))}
 }
 
 func (s *String) Type() types.ISharkType { return types.TSharkString{} }
