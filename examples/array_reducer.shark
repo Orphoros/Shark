@@ -1,5 +1,5 @@
-let reduce = (arr, initial, f) => {
-    let iter = (arr, result) => {
+let reduce = (arr: array<i64>, initial: i64, f: func<(i64, i64)->i64>) => {
+    let iter = (arr: array<i64>, result: i64) => {
         if (len(arr) == 0) {
             result
         } else {
@@ -8,8 +8,8 @@ let reduce = (arr, initial, f) => {
     } iter(arr, initial)
 };
 
-let sum = (arr) => {
-    reduce(arr, 0, (initial, el) => {
+let sum = (arr: array<i64>) => {
+    reduce(arr, 0, (initial: i64, el: i64): i64 => {
         initial + el
     })
 };

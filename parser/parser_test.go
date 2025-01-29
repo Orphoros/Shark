@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"shark/ast"
 	"shark/lexer"
+	"shark/types"
 	"testing"
 )
 
@@ -1045,10 +1046,32 @@ func TestFunctionParameterParsing(t *testing.T) {
 
 			for i, param := range tt.expected {
 				testLiteralExpression(t, function.Parameters[i], param.identifier)
-				if function.Parameters[i].VariadicType != param.variable {
-					t.Errorf("parameter %s variable wrong. want %t, got=%t", param.identifier, param.variable, function.Parameters[i].VariadicType)
+				if function.Parameters[i].IsVariadic != param.variable {
+					t.Errorf("parameter %s variable wrong. want %t, got=%t", param.identifier, param.variable, function.Parameters[i].IsVariadic)
 				}
 			}
+		}
+	})
+}
+
+func TestTypeParsing(t *testing.T) {
+	t.Run("should parse integer type in let statement", func(t *testing.T) {
+		input := `let x: i64 = 5;`
+
+		l := lexer.New(&input)
+		p := New(l)
+		program := p.ParseProgram()
+
+		checkParserErrors(t, p)
+
+		stmt := program.Statements[0].(*ast.LetStatement)
+
+		if stmt.Name.DefinedType == nil {
+			t.Fatalf("stmt.Name.DefinedType is nil")
+		}
+
+		if !stmt.Name.DefinedType.Is(types.TSharkI64{}) {
+			t.Errorf("stmt.Name.DefinedType is not i64. got=%T", stmt.Name.DefinedType)
 		}
 	})
 }
@@ -1360,7 +1383,7 @@ func TestParsingTupleDeconstruct(t *testing.T) {
 		testIdentifier(t, stmt.Names[2], "c")
 
 		for i, name := range stmt.Names {
-			if name.VariadicType {
+			if name.IsVariadic {
 				t.Fatalf("name %d is variadic", i)
 			}
 			if name.Mutable {
@@ -1394,7 +1417,7 @@ func TestParsingTupleDeconstruct(t *testing.T) {
 		testIdentifier(t, stmt.Names[2], "c")
 
 		for i, name := range stmt.Names {
-			if name.VariadicType {
+			if name.IsVariadic {
 				t.Fatalf("name %d is variadic", i)
 			}
 			if !name.Mutable {
@@ -1428,7 +1451,7 @@ func TestParsingTupleDeconstruct(t *testing.T) {
 		testIdentifier(t, stmt.Names[2], "c")
 
 		for i, name := range stmt.Names {
-			if !name.VariadicType {
+			if !name.IsVariadic {
 				t.Fatalf("name %d is not variadic", i)
 			}
 			if name.Mutable {

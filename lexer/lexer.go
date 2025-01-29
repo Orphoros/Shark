@@ -94,6 +94,8 @@ func (l *Lexer) NextToken() token.Token {
 		tok = l.newToken(token.LBRACKET, string(l.ch))
 	case ']':
 		tok = l.newToken(token.RBRACKET, string(l.ch))
+	case '?':
+		tok = l.newToken(token.QUESTION, string(l.ch))
 	case '-':
 		if l.peekChar() == '-' {
 			ch := l.ch
@@ -103,6 +105,10 @@ func (l *Lexer) NextToken() token.Token {
 			ch := l.ch
 			l.readChar()
 			tok = l.newToken(token.MIN_EQ, string(ch)+string(l.ch))
+		} else if l.peekChar() == '>' {
+			ch := l.ch
+			l.readChar()
+			tok = l.newToken(token.POINTER, string(ch)+string(l.ch))
 		} else {
 			tok = l.newToken(token.MINUS, string(l.ch))
 		}
@@ -238,9 +244,9 @@ func (l *Lexer) readNumber() string {
 // Returns the identifier as a string.
 func (l *Lexer) readIdentifier() string {
 	id := ""
-	for unicode.IsLetter(l.ch) {
+	for unicode.IsLetter(l.ch) || unicode.IsDigit(l.ch) || l.ch == '_' {
 		id += string(l.ch)
-		if !unicode.IsLetter(l.peekChar()) {
+		if !unicode.IsLetter(l.peekChar()) && !unicode.IsDigit(l.peekChar()) && l.peekChar() != '_' {
 			break
 		}
 		l.readChar()

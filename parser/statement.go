@@ -2,6 +2,7 @@ package parser
 
 import (
 	"shark/ast"
+	"shark/exception"
 	"shark/token"
 )
 
@@ -68,7 +69,20 @@ func (p *Parser) parseLetStatement() *ast.LetStatement {
 		return nil
 	}
 
-	stmt.Name = &ast.Identifier{Token: p.curToken, Value: p.curToken.Literal, Mutable: mutable, VariadicType: variadicType}
+	stmt.Name = &ast.Identifier{Token: p.curToken, Value: p.curToken.Literal, Mutable: mutable, IsVariadic: variadicType}
+
+	if p.peekTokenIs(token.COLON) && variadicType {
+		p.errors = append(p.errors, newSharkError(exception.SharkErrorTypeSyntax, p.curToken.Literal,
+			"Use 'let' instead of 'var' or remove the type definition",
+			exception.NewSharkErrorCause("variadic type cannot have a defined type", p.curToken.Pos),
+		))
+	}
+
+	if p.peekTokenIs(token.COLON) {
+		p.nextToken()
+		p.nextToken()
+		stmt.Name.DefinedType = p.parseType()
+	}
 
 	if !p.expectPeek(token.ASSIGN) {
 		return nil
@@ -173,7 +187,7 @@ func (p *Parser) parseIdentifierList(variadicType bool) []*ast.Identifier {
 		p.nextToken()
 	}
 
-	ident := &ast.Identifier{Token: p.curToken, Value: p.curToken.Literal, Mutable: mutable, VariadicType: variadicType}
+	ident := &ast.Identifier{Token: p.curToken, Value: p.curToken.Literal, Mutable: mutable, IsVariadic: variadicType}
 	identifiers = append(identifiers, ident)
 
 	for p.peekTokenIs(token.COMMA) {
@@ -189,7 +203,7 @@ func (p *Parser) parseIdentifierList(variadicType bool) []*ast.Identifier {
 			mutable = true
 			p.nextToken()
 		}
-		ident := &ast.Identifier{Token: p.curToken, Value: p.curToken.Literal, Mutable: mutable, VariadicType: variadicType}
+		ident := &ast.Identifier{Token: p.curToken, Value: p.curToken.Literal, Mutable: mutable, IsVariadic: variadicType}
 		identifiers = append(identifiers, ident)
 	}
 

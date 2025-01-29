@@ -4,14 +4,16 @@ import (
 	"bytes"
 	"fmt"
 	"shark/token"
+	"shark/types"
 	"strings"
 )
 
 type FunctionLiteral struct {
-	Body       *BlockStatement
-	Name       string
-	Parameters []*Identifier
-	Token      token.Token
+	Body        *BlockStatement
+	Name        string
+	Parameters  []*Identifier
+	Token       token.Token
+	DefinedType types.ISharkType
 }
 
 func (fl *FunctionLiteral) expressionNode() {}

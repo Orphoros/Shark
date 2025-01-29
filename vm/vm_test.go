@@ -371,7 +371,7 @@ func TestCallingFunctionsWithDefaultArguments(t *testing.T) {
 			},
 			{
 				input: `
-			let array = [5, 20, 30]
+			let arr = [5, 20, 30]
 			let test = (a = 2) => { a * 2; };
 			test();
 			`,
@@ -810,16 +810,16 @@ func TestFirstClassFunctions(t *testing.T) {
 		tests := []vmTestCase{
 			{
 				input: `
-			let returnsOne = () => { 1; };
-			let returnsOneReturner = () => { returnsOne; };
+			let returnsOne = (): i64 => { 1; };
+			let returnsOneReturner = (): func<()->i64> => { returnsOne; };
 			returnsOneReturner()();
 			`,
 				expected: 1,
 			},
 			{
 				input: `
-			let returnsOneReturner = () => {
-				let returnsOne = () => { 1; };
+			let returnsOneReturner = (): func<()->i64> => {
+				let returnsOne = (): i64 => { 1; };
 				returnsOne;
 			};
 			returnsOneReturner()();
@@ -913,8 +913,8 @@ func TestClosures(t *testing.T) {
 	tests := []vmTestCase{
 		{
 			input: `
-		let newClosure = (a) => {
-			() => { a; };
+		let newClosure = (a: i64): func<()->i64> => {
+			(): i64 => { a; };
 		};
 		let closure = newClosure(99);
 		closure();
@@ -923,8 +923,8 @@ func TestClosures(t *testing.T) {
 		},
 		{
 			input: `
-		let newAdder = (a, b) => {
-			(c) => { a + b + c };
+		let newAdder = (a: i64, b: i64): func<(i64)->i64> => {
+			(c: i64): i64 => { a + b + c };
 		};
 		let adder = newAdder(1, 2);
 		adder(8);
@@ -933,9 +933,9 @@ func TestClosures(t *testing.T) {
 		},
 		{
 			input: `
-		let newAdder = (a, b) => {
+		let newAdder = (a: i64, b: i64): func<(i64)->i64> => {
 			let c = a + b;
-			(d) => { c + d };
+			(d: i64): i64 => { c + d };
 		};
 		let adder = newAdder(1, 2);
 
@@ -945,11 +945,11 @@ func TestClosures(t *testing.T) {
 		},
 		{
 			input: `
-			let newAdderOuter = (a, b) => {
+			let newAdderOuter = (a: i64, b: i64): func<(i64)->func<(i64)->i64>> => {
 				let c = a + b;
-				(d) => {
+				(d: i64): func<(i64)->i64> => {
 					let e = d + c;
-					(f) => { e + f };
+					(f: i64): i64 => { e + f };
 				};
 			};
 			let newAdderInner = newAdderOuter(1, 2);
@@ -961,9 +961,9 @@ func TestClosures(t *testing.T) {
 		{
 			input: `
 			let a = 1;
-			let newAdderOuter = (b) => {
-				(c) => {
-					(d) => { a + b + c + d };
+			let newAdderOuter = (b: i64): func<(i64)->func<(i64)->i64>> => {
+				(c: i64): func<(i64)->i64> => {
+					(d: i64): i64 => { a + b + c + d };
 				};
 			};
 			let newAdderInner = newAdderOuter(2);
@@ -974,7 +974,7 @@ func TestClosures(t *testing.T) {
 		},
 		{
 			input: `
-			let newClosure = (a, b) => {
+			let newClosure = (a: i64, b: i64): func<()->i64> => {
 				let one = () => { a; };
 				let two = () => { b; };
 				() => { one() + two(); };

@@ -1,9 +1,8 @@
-let a = "Hello World";
-let b = true;
-let c = 55555;
-let d = (x) => { x + 10; };
-let e = [1, false, "John"]
-let f = { "name": "John", "age": 25 }
-let g = false;
+let a: string = "Hello World";
+let b: bool = true;
+let c: i64 = 55555;
+let d: func<(i64)->i64> = (x: i64): i64 => { x + 10; };
+let e: array<any> = [1, false, "John"]
+let f: hashmap<string,any> = { "name": "John", "age": 25 }
 let length = len(a);
-puts(length)
+puts(length);

@@ -21,10 +21,7 @@ func (t TSharkOptional) Is(sharkType ISharkType) bool {
 		if t.Type == nil {
 			return false
 		}
-		if t.Type.Is(sharkType.Type) {
-			return true
-		}
-		return false
+		return t.Type.Is(sharkType.Type)
 	default:
 		if t.Type == nil {
 			return false

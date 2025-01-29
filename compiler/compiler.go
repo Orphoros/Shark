@@ -450,7 +450,20 @@ func (c *Compiler) Compile(node ast.Node) (*exception.SharkError, bool) {
 		if err, stopped := c.Compile(node.Value); err != nil || stopped {
 			return err, stopped
 		}
-		symbol = c.symbolTable.Define(node.Name.Value, node.Name.Mutable, node.Name.VariadicType, c.lastCompiledType, &node.Name.Token.Pos)
+		statementType := c.lastCompiledType
+		// check if node type is the same as the given type
+		if node.Name.DefinedType != nil {
+			if !node.Name.DefinedType.Is(c.lastCompiledType) {
+				return newSharkError(exception.SharkErrorTypeMismatch, c.lastCompiledType.SharkTypeString(),
+					"Check the type of the value",
+					exception.NewSharkErrorCause(fmt.Sprintf("Cannot assign type '%s' to type '%s'", c.lastCompiledType.SharkTypeString(), node.Name.DefinedType.SharkTypeString()), node.Token.Pos),
+				), false
+			}
+
+			statementType = node.Name.DefinedType
+		}
+		symbol = c.symbolTable.Define(node.Name.Value, node.Name.Mutable, node.Name.IsVariadic, statementType, &node.Name.Token.Pos)
+
 		if symbol.Scope == GlobalScope {
 			c.emit(symbol.ObjType, code.OpSetGlobal, symbol.Index)
 		} else {
@@ -498,7 +511,7 @@ func (c *Compiler) Compile(node ast.Node) (*exception.SharkError, bool) {
 					exception.NewSharkErrorCause("Cannot use let to reassign value to an existing variable", node.Token.Pos),
 				), false
 			}
-			symbol = c.symbolTable.Define(name.Value, name.Mutable, name.VariadicType, tupleType.Collection[i], &name.Token.Pos)
+			symbol = c.symbolTable.Define(name.Value, name.Mutable, name.IsVariadic, tupleType.Collection[i], &name.Token.Pos)
 			if symbol.Scope == GlobalScope {
 				c.emit(c.lastCompiledType, code.OpSetGlobal, symbol.Index)
 			} else {
@@ -631,10 +644,32 @@ func (c *Compiler) Compile(node ast.Node) (*exception.SharkError, bool) {
 				if err, stopped := c.Compile(*param.DefaultValue); err != nil || stopped {
 					return err, stopped
 				}
-				symbol := c.symbolTable.Define(param.Value, param.Mutable, param.VariadicType, c.lastCompiledType, &param.Token.Pos)
-				c.emit(types.TSharkOptional{Type: c.lastCompiledType}, code.OpSetLocalDefault, symbol.Index)
+				paramType := param.DefinedType
+				if paramType == nil {
+					paramType = types.TSharkOptional{Type: c.lastCompiledType}
+				}
+				if !paramType.Is(c.lastCompiledType) {
+					return newSharkError(exception.SharkErrorTypeMismatch, c.lastCompiledType.SharkTypeString(),
+						"Check the type of the default value",
+						exception.NewSharkErrorCause(fmt.Sprintf("Cannot assign type '%s' to type '%s'", c.lastCompiledType.SharkTypeString(), paramType.SharkTypeString()), node.Token.Pos),
+					), false
+				}
+				symbol := c.symbolTable.Define(param.Value, param.Mutable, param.IsVariadic, paramType, &param.Token.Pos)
+				c.emit(paramType, code.OpSetLocalDefault, symbol.Index)
+				paramTypes = append(paramTypes, paramType)
 			} else {
-				c.symbolTable.Define(param.Value, param.Mutable, param.VariadicType, types.TSharkAny{}, &param.Token.Pos)
+				paramType := param.DefinedType
+				if paramType == nil {
+					paramType = types.TSharkAny{}
+				}
+				if paramType.Is(types.TSharkOptional{}) {
+					return newSharkError(exception.SharkErrorTypeSyntax, param.Value,
+						"Optional parameter without default value",
+						exception.NewSharkErrorCause("Optional parameters must be given a default value using '=`.", param.Token.Pos),
+					), false
+				}
+				c.symbolTable.Define(param.Value, param.Mutable, param.IsVariadic, paramType, &param.Token.Pos)
+				paramTypes = append(paramTypes, paramType)
 			}
 			if isOptionalsActive && param.DefaultValue == nil {
 				return newSharkError(exception.SharkErrorOptionalParameter, param.Value,
@@ -642,21 +677,21 @@ func (c *Compiler) Compile(node ast.Node) (*exception.SharkError, bool) {
 					exception.NewSharkErrorCause("Non-optional parameter after optional parameter", param.Token.Pos),
 				), false
 			}
-			if !c.lastCompiledType.Is(types.TSharkNull{}) && !c.lastCompiledType.Is(types.TSharkAny{}) {
-				paramTypes = append(paramTypes, c.lastCompiledType)
-			} else {
-				paramTypes = append(paramTypes, types.TSharkAny{})
-			}
 		}
-		funcType := types.TSharkFuncType{ArgsList: paramTypes, ReturnT: types.TSharkAny{}}
+		var returnType types.ISharkType
+		if node.DefinedType != nil && node.DefinedType.Is(types.TSharkFuncType{}) && node.DefinedType.(*types.TSharkFuncType).ReturnT != nil {
+			returnType = node.DefinedType.(*types.TSharkFuncType).ReturnT
+		} else {
+			returnType = types.TSharkAny{}
+		}
+		funcType := types.TSharkFuncType{ArgsList: paramTypes, ReturnT: returnType}
 		c.symbolTable.DefineFunctionName(node.Name, funcType, &node.Token.Pos)
 
 		if err, stopped := c.Compile(node.Body); err != nil || stopped {
 			return err, stopped
 		}
 
-		// FIXME: Resolving function return type needs to be improved
-		funcType.ReturnT = c.lastCompiledType
+		// TODO: Check if the function's returned type is the same as the defined type
 
 		if c.lastInstructionIs(code.OpPop) {
 			c.replaceLastPopWithReturn()
@@ -732,7 +767,7 @@ func (c *Compiler) Compile(node ast.Node) (*exception.SharkError, bool) {
 			if !funcType.(types.TSharkFuncType).ArgsList[i].Is(c.lastCompiledType) {
 				return newSharkError(exception.SharkErrorTypeMismatch, c.lastCompiledType.SharkTypeString(),
 					"Check the type of the argument",
-					exception.NewSharkErrorCause(fmt.Sprintf("Expected type '%s', but got type '%s'.", funcType.(types.TSharkFuncType).ArgsList[0].SharkTypeString(), c.lastCompiledType.SharkTypeString()), node.Token.Pos),
+					exception.NewSharkErrorCause(fmt.Sprintf("Expected type '%s' for argument %d, but got type '%s'.", funcType.(types.TSharkFuncType).ArgsList[i].SharkTypeString(), i+1, c.lastCompiledType.SharkTypeString()), node.Token.Pos),
 				), false
 			}
 		}

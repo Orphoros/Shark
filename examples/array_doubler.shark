@@ -1,9 +1,9 @@
 let a = [1, 2, 10, 4];
 
-let double = (x = 20) => { x * 2 };
+let double = (x = 20): i64 => { x * 2 };
 
-let map = (arr, f) => {
-    let iter = (arr, accumulated) => {
+let map = (arr: array<i64>, f: func<(i64?)->i64>): array<i64> => {
+    let iter = (arr: array<i64>, accumulated: array<i64>): array<i64> => {
         if (len(arr) == 0) {
             accumulated
         } else {

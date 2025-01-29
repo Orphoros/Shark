@@ -79,6 +79,10 @@ const (
 	SharkErrorArgumentCount
 
 	SharkErrorNotCallable
+
+	SharkErrorTypeNotFound
+
+	SharkErrorTypeSyntax
 )
 
 const (
@@ -131,4 +135,6 @@ var errMessages = []struct {
 	{SharkErrorInvalidNumber, "invalid number"},
 	{SharkErrorArgumentCount, "wrong number of arguments"},
 	{SharkErrorNotCallable, "not callable"},
+	{SharkErrorTypeNotFound, "type '%v' not found"},
+	{SharkErrorTypeSyntax, "syntax error: %v"},
 }

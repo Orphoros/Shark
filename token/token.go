@@ -40,6 +40,7 @@ const (
 	LET         = "LET"
 	MINUS       = "-"
 	BANG        = "!"
+	QUESTION    = "?"
 	ASTERISK    = "*"
 	POW         = "**"
 	SLASH       = "/"
@@ -65,23 +66,40 @@ const (
 	MUL_EQ      = "*="
 	WHILE       = "WHILE"
 	ARROW       = "=>"
+	POINTER     = "->"
 	RANGE       = ".."
 	SPREAD      = "..."
 	MUTABLE     = "MUTABLE"
 	VAR         = "VAR"
+	T_I64       = "I64"
+	T_BOOL      = "BOOL"
+	T_ANY       = "ANY"
+	T_STRING    = "STRING"
+	T_ARRAY     = "ARRAY"
+	T_TUPLE     = "TUPLE"
+	T_HASHMAP   = "HASHMAP"
+	T_FUNCTION  = "FUNCTION"
 )
 
 // List of reserved Shark keywords.
 var keywords = map[string]Type{
-	"let":    LET,
-	"true":   TRUE,
-	"false":  FALSE,
-	"if":     IF,
-	"else":   ELSE,
-	"return": RETURN,
-	"while":  WHILE,
-	"mut":    MUTABLE,
-	"var":    VAR,
+	"let":     LET,
+	"true":    TRUE,
+	"false":   FALSE,
+	"if":      IF,
+	"else":    ELSE,
+	"return":  RETURN,
+	"while":   WHILE,
+	"mut":     MUTABLE,
+	"var":     VAR,
+	"i64":     T_I64,
+	"bool":    T_BOOL,
+	"any":     T_ANY,
+	"string":  T_STRING,
+	"array":   T_ARRAY,
+	"tuple":   T_TUPLE,
+	"hashmap": T_HASHMAP,
+	"func":    T_FUNCTION,
 }
 
 // Checks if an identifier is a reserved Shark keyword. If it is, it returns the token type.

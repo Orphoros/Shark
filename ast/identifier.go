@@ -2,6 +2,7 @@ package ast
 
 import (
 	"shark/token"
+	"shark/types"
 )
 
 type Identifier struct {
@@ -9,7 +10,8 @@ type Identifier struct {
 	Value        string
 	Token        token.Token
 	Mutable      bool
-	VariadicType bool
+	IsVariadic   bool
+	DefinedType  types.ISharkType
 }
 
 func (i *Identifier) expressionNode() {}

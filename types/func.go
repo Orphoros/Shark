@@ -1,6 +1,8 @@
 package types
 
-import "bytes"
+import (
+	"bytes"
+)
 
 type TSharkFuncType struct {
 	ISharkType

@@ -85,6 +85,7 @@ func ObjType(args ...Object) Object {
 		return newError("wrong number of arguments. got=%d, want=1", len(args))
 	}
 
+	// FIXME: when ident is defined as :bool?, type() returns only bool
 	return &String{Value: args[0].Type().SharkTypeString()}
 }
 

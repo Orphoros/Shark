@@ -1,5 +1,4 @@
-let ᚠᚢᚦᚨᚱᚲ = "Γειά σου..
-Κόσμε!";
+let ᚠᚢᚦᚨᚱᚲ = "Γειά σου..Κόσμε!";
 let hexNum = 0xF00D;
 let binNum = 0b101010;
 let octNum = 0o744;
