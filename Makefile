@@ -36,11 +36,11 @@ LIB_FLAGS=-ldflags="-s -w" -trimpath -gcflags=all="-l -C" -buildmode=c-shared
 GOOS = linux darwin windows
 GOARCH = amd64 arm64
 
-.PHONY: all build clean test dep check coverage lint serve-coverage help field-align sec-check bench-profile
+.PHONY: all build clean test dep check coverage lint serve-coverage help field-align sec-check bench-profile sdk-size-report
 
 ##@ Commands
 
-all: clean dep test build ## Run all commands
+all: clean dep lint test build ## Run all commands
 
 build: ## Build the Shark binaries
 	@echo "Compiling Shark SDK..."
@@ -136,6 +136,7 @@ coverage-report: test ## Serve coverage report in browser
 
 field-align: ## Run field analysis
 	@echo "Running field analysis..."
+	@command -v fieldalignment >/dev/null 2>&1 || { echo >&2 "fieldalignment is required but not installed. Aborting."; exit 1; }
 	@fieldalignment -fix ./vm
 	@fieldalignment -fix ./types
 	@fieldalignment -fix ./token
@@ -164,6 +165,12 @@ bench-profile: ## Run benchmark profiling
 	@echo "Running benchmark profiling..."
 	@go test -cpuprofile cpu.prof -memprofile mem.prof -trace trace.out -run ^TestRecursiveFibonacci$ -v ./vm
 	@echo "[DONE]: Benchmark profiling completed"
+
+sdk-size-report: build ## Generate macOS ARM SDK size report
+	@echo "Generating SDK size report..."
+	@command -v gsa >/dev/null 2>&1 || { echo >&2 "gsa is required but not installed. Aborting."; exit 1; }
+	@gsa ./build/bin/darwin/arm64/nidum --hide-sections
+	@echo "[DONE]: SDK size report generated"
 
 help:
 	@awk 'BEGIN {FS = ":.*##"; printf "\nUsage:\n  make <command> \033[36m\033[0m\n"} /^[a-zA-Z_-]+:.*?##/ { printf "  \033[36m%-15s\033[0m %s\n", $$1, $$2 } /^##@/ { printf "\n\033[1m%s\033[0m\n", substr($$0, 5) } ' $(MAKEFILE_LIST)
