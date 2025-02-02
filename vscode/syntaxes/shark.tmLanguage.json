@@ -1,35 +1,20 @@
 {
   "scopeName": "source.shark",
   "name": "Shark",
-  "fileTypes": ["shark"],
+  "fileTypes": [
+    "shark"
+  ],
   "patterns": [
-    {
-      "include": "#comments"
-    },
-    {
-      "include": "#strings"
-    },
-    {
-      "include": "#numbers"
-    },
-    {
-      "include": "#keywords"
-    },
-    {
-      "include": "#functions"
-    },
-    {
-      "include": "#variables"
-    },
-    {
-      "include": "#operators"
-    },
-    {
-      "include": "#constants"
-    },
-    {
-      "include": "#punctuation"
-    }
+    { "include": "#comments" },
+    { "include": "#strings" },
+    { "include": "#numbers" },
+    { "include": "#keywords" },
+    { "include": "#functions" },
+    { "include": "#variables" },
+    { "include": "#operators" },
+    { "include": "#constants" },
+    { "include": "#typeAnnotation" },
+    { "include": "#punctuation" }
   ],
   "repository": {
     "comments": {
@@ -52,14 +37,10 @@
           "begin": "\"",
           "end": "\"",
           "beginCaptures": {
-            "0": {
-              "name": "punctuation.definition.string.begin.shark"
-            }
+            "0": { "name": "punctuation.definition.string.begin.shark" }
           },
           "endCaptures": {
-            "0": {
-              "name": "punctuation.definition.string.end.shark"
-            }
+            "0": { "name": "punctuation.definition.string.end.shark" }
           },
           "patterns": [
             {
@@ -152,24 +133,15 @@
           "name": "meta.function.definition.shark",
           "begin": "\\b(let|var)\\s+(mut\\s+)?([a-zA-Z_][a-zA-Z0-9_]*)\\s*=\\s*\\(",
           "beginCaptures": {
-            "1": {
-              "name": "storage.type.shark"
-            },
-            "2": {
-              "name": "storage.modifier.shark"
-            },
-            "3": {
-              "name": "entity.name.function.shark"
-            }
+            "1": { "name": "storage.type.shark" },
+            "2": { "name": "storage.modifier.shark" },
+            "3": { "name": "entity.name.function.shark" }
           },
-          "end": "\\};?",
+          "end": "\\)",
           "patterns": [
-            {
-              "include": "#parameters"
-            },
-            {
-              "include": "#statements"
-            }
+            { "include": "#typeAnnotation" },
+            { "include": "#parameters" },
+            { "include": "#statements" }
           ]
         },
         {
@@ -178,9 +150,7 @@
             {
               "match": "\\b([a-zA-Z_][a-zA-Z0-9_]*)\\s*(?=\\()",
               "captures": {
-                "1": {
-                  "name": "entity.name.function.shark"
-                }
+                "1": { "name": "entity.name.function.shark" }
               }
             }
           ]
@@ -191,51 +161,28 @@
       "patterns": [
         {
           "name": "variable.parameter.shark",
-          "match": "\\b(mut\\s+)?(var)\\s+[a-zA-Z_][a-zA-Z0-9_]*\\b",
-          "captures": {
-            "1": {
-              "name": "storage.modifier.shark"
-            }
-          }
+          "match": "\\b[a-zA-Z_][a-zA-Z0-9_]*\\b"
         },
-        {
-          "include": "#operators"
-        },
-        {
-          "include": "#numbers"
-        },
-        {
-          "include": "#strings"
-        },
-        {
-          "include": "#variables"
-        },
-        {
-          "include": "#keywords"
-        }
+        { "include": "#typeAnnotation" },
+        { "include": "#operators" },
+        { "include": "#numbers" },
+        { "include": "#strings" },
+        { "include": "#keywords" }
       ]
     },
     "variables": {
       "patterns": [
         {
           "name": "meta.variable.declaration.shark",
-          "begin": "\\b(let|var)\\s+(mut\\s+)?([a-zA-Z_][a-zA-Z0-9_]*)\\s*=",
+          "begin": "\\b(let|var)\\s+(mut\\s+)?([a-zA-Z_][a-zA-Z0-9_]*)",
           "beginCaptures": {
-            "1": {
-              "name": "storage.type.shark"
-            },
-            "2": {
-              "name": "storage.modifier.shark"
-            },
-            "3": {
-              "name": "variable.other.readwrite.shark"
-            }
+            "1": { "name": "storage.type.shark" },
+            "2": { "name": "storage.modifier.shark" },
+            "3": { "name": "variable.other.readwrite.shark" }
           },
-          "end": ";",
+          "end": "(?=\\s*=)",
           "patterns": [
-            {
-              "include": "#statements"
-            }
+            { "include": "#typeAnnotation" }
           ]
         },
         {
@@ -283,10 +230,6 @@
           "match": ","
         },
         {
-          "name": "punctuation.separator.colon.shark",
-          "match": ":"
-        },
-        {
           "name": "punctuation.terminator.statement.shark",
           "match": ";"
         }
@@ -294,29 +237,77 @@
     },
     "statements": {
       "patterns": [
+        { "include": "#typeAnnotation" },
+        { "include": "#comments" },
+        { "include": "#strings" },
+        { "include": "#numbers" },
+        { "include": "#keywords" },
+        { "include": "#operators" },
+        { "include": "#variables" },
+        { "include": "#constants" },
+        { "include": "#punctuation" }
+      ]
+    },
+    "typeAnnotation": {
+      "name": "meta.type.annotation.shark",
+      "begin": ":(?=\\s*(\\.{3}|[a-zA-Z]))",
+      "beginCaptures": {
+        "0": { "name": "punctuation.separator.type.shark" }
+      },
+      "end": "(?=\\s*(,|\\)|\\}|;|=))",
+      "patterns": [
+        { "include": "#typeExpression" }
+      ]
+    },
+    "typeExpression": {
+      "patterns": [
         {
-          "include": "#comments"
+          "name": "keyword.operator.ellipsis.shark",
+          "match": "\\.{3}"
         },
         {
-          "include": "#strings"
+          "name": "punctuation.whitespace.shark",
+          "match": "\\s+"
         },
         {
-          "include": "#numbers"
+          "name": "support.type.primitive.shark",
+          "match": "\\b(?:bool|i64|any|array|tuple|func|string|collection|error|hashmap|null)(\\?\\b)?"
         },
         {
-          "include": "#keywords"
+          "name": "meta.generic-type.shark",
+          "begin": "<",
+          "beginCaptures": {
+            "0": { "name": "punctuation.definition.generic.begin.shark" }
+          },
+          "end": ">",
+          "endCaptures": {
+            "0": { "name": "punctuation.definition.generic.end.shark" }
+          },
+          "patterns": [
+            { "include": "#typeExpression" }
+          ]
         },
         {
-          "include": "#operators"
+          "name": "meta.function-type.shark",
+          "begin": "\\(",
+          "beginCaptures": {
+            "0": { "name": "punctuation.definition.parameters.begin.shark" }
+          },
+          "end": "\\)",
+          "endCaptures": {
+            "0": { "name": "punctuation.definition.parameters.end.shark" }
+          },
+          "patterns": [
+            { "include": "#typeExpression" }
+          ]
         },
         {
-          "include": "#variables"
+          "name": "keyword.operator.arrow.shark",
+          "match": "->"
         },
         {
-          "include": "#constants"
-        },
-        {
-          "include": "#punctuation"
+          "name": "variable.other.type.shark",
+          "match": "\\b[a-zA-Z_][a-zA-Z0-9_]*\\b"
         }
       ]
     }
