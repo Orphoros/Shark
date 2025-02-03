@@ -10,20 +10,6 @@ type TSharkFuncType struct {
 	ArgsList []ISharkType
 }
 
-func (t TSharkFuncType) Args() []ISharkType {
-	if t.ArgsList == nil {
-		return nil
-	}
-	return t.ArgsList
-}
-
-func (t TSharkFuncType) Return() ISharkType {
-	if t.ReturnT == nil {
-		return nil
-	}
-	return t.ReturnT
-}
-
 func (t TSharkFuncType) SharkTypeString() string {
 	var buf bytes.Buffer
 	buf.WriteString("func<(")

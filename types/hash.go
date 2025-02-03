@@ -7,10 +7,6 @@ type TSharkHashMap struct {
 	Collects ISharkType
 }
 
-func (t TSharkHashMap) KeyType() ISharkType { return t.Indexes }
-
-func (t TSharkHashMap) ValueType() ISharkType { return t.Collects }
-
 func (t TSharkHashMap) SharkTypeString() string {
 	if t.Indexes == nil || t.Collects == nil {
 		return "hashmap<>"
@@ -35,5 +31,3 @@ func (t TSharkHashMap) Is(sharkType ISharkType) bool {
 		return false
 	}
 }
-
-func (t TSharkHashMap) CollectionOf() {}
