@@ -180,9 +180,9 @@ func (b *Bytecode) ToString() string {
 			}
 			fmt.Fprintf(&buf, "| }\n")
 		case *object.String:
-			fmt.Fprintf(&buf, "| %04d %s: \"%s\"\n", i, constant.Type(), constant.Inspect())
+			fmt.Fprintf(&buf, "| %04d %s: \"%s\"\n", i, constant.Type().SharkTypeString(), constant.Inspect())
 		default:
-			fmt.Fprintf(&buf, "| %04d %s: %s\n", i, constant.Type(), constant.Inspect())
+			fmt.Fprintf(&buf, "| %04d %s: %s\n", i, constant.Type().SharkTypeString(), constant.Inspect())
 		}
 	}
 
