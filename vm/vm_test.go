@@ -1067,6 +1067,40 @@ func TestRecursiveFibonacci(t *testing.T) {
 
 		runVmTests(t, tests)
 	})
+
+	t.Run("should evaluate loop fibonacci", func(t *testing.T) {
+		tests := []vmTestCase{
+			{
+				input: `
+				let fibonacci = (number = 50) => {
+					var a = 0;
+					var b = 1;
+					var c = 1;
+
+					if (number == 0) {
+						return a;
+					}
+
+					let mut i = 2;
+
+					while(i <= number) {
+						c = a + b
+						a = b
+						b = c
+						i++;
+					}
+
+					return b;
+				};
+
+				fibonacci();
+			`,
+				expected: 12586269025,
+			},
+		}
+
+		runVmTests(t, tests)
+	})
 }
 
 func TestCache(t *testing.T) {
@@ -1220,7 +1254,10 @@ func testExpectedObject(t *testing.T, expected interface{}, actual object.Object
 		}
 		if errObj.Message != expected.Message {
 			t.Fatalf("wrong error message. expected=%q, got=%q", expected.Message, errObj.Message)
+
+			return
 		}
+		t.Fatalf("error: %s", errObj.Message)
 	}
 }
 

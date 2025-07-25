@@ -3,6 +3,7 @@ package serializer
 import (
 	"encoding/gob"
 	"fmt"
+	"go/types"
 	"shark/bytecode"
 	"shark/code"
 	"shark/compiler"
@@ -27,6 +28,9 @@ const (
 	TCompilationScope
 	TEmittedInstruction
 	TObject
+
+	// type information
+	TFuncT
 )
 
 func RegisterTypes() {
@@ -46,4 +50,7 @@ func RegisterTypes() {
 	gob.RegisterName(fmt.Sprintf("%c", TCompilationScope), &compiler.CompilationScope{})
 	gob.RegisterName(fmt.Sprintf("%c", TEmittedInstruction), &compiler.EmittedInstruction{})
 	gob.RegisterName(fmt.Sprintf("%c", TObject), []object.Object{})
+
+	// type information
+	gob.RegisterName(fmt.Sprintf("%c", TFuncT), &types.Func{})
 }
